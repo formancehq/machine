@@ -6,6 +6,11 @@ import (
 	"github.com/numary/machine/vm/program"
 )
 
+const (
+	EXIT_OK = byte(iota + 1)
+	EXIT_FAIL
+)
+
 func StdOutPrinter(c chan byte) {
 	for v := range c {
 		fmt.Println(v)
@@ -32,7 +37,7 @@ type Machine struct {
 	outchan chan byte
 }
 
-func (m *Machine) Tick() bool {
+func (m *Machine) Tick() (bool, byte) {
 	op := m.Program[m.P]
 
 	switch op {
@@ -56,6 +61,10 @@ func (m *Machine) Tick() bool {
 		a := m.Stack[l-1]
 		m.Stack = m.Stack[:l-1]
 		m.outchan <- a
+	case program.OP_FAIL:
+		fmt.Println("program failed")
+		fmt.Println("stack: ", m.Stack)
+		return true, EXIT_FAIL
 	}
 
 	m.P += 1
@@ -64,20 +73,26 @@ func (m *Machine) Tick() bool {
 		fmt.Println("end of program")
 		fmt.Println("stack: ", m.Stack)
 
-		return false
+		return true, EXIT_OK
 	}
 
-	return true
+	return false, 0
 }
 
-func (m *Machine) Execute() {
+func (m *Machine) Execute() byte {
 	go m.Printer(m.outchan)
 
+	var exit_code byte
+
 	for {
-		if !m.Tick() {
+		finished, code := m.Tick()
+		if finished {
+			exit_code = code
 			break
 		}
 	}
 
 	close(m.outchan)
+
+	return exit_code
 }

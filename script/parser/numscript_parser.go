@@ -16,27 +16,33 @@ var _ = reflect.Copy
 var _ = strconv.Itoa
 
 var parserATN = []uint16{
-	3, 24715, 42794, 33075, 47597, 16764, 15335, 30598, 22884, 3, 9, 26, 4,
-	2, 9, 2, 4, 3, 9, 3, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 7, 2, 13, 10,
-	2, 12, 2, 14, 2, 16, 11, 2, 3, 3, 7, 3, 19, 10, 3, 12, 3, 14, 3, 22, 11,
-	3, 3, 3, 3, 3, 3, 3, 2, 3, 2, 4, 2, 4, 2, 3, 3, 2, 6, 7, 2, 25, 2, 6, 3,
-	2, 2, 2, 4, 20, 3, 2, 2, 2, 6, 7, 8, 2, 1, 2, 7, 8, 7, 5, 2, 2, 8, 14,
-	3, 2, 2, 2, 9, 10, 12, 4, 2, 2, 10, 11, 9, 2, 2, 2, 11, 13, 5, 2, 2, 5,
-	12, 9, 3, 2, 2, 2, 13, 16, 3, 2, 2, 2, 14, 12, 3, 2, 2, 2, 14, 15, 3, 2,
-	2, 2, 15, 3, 3, 2, 2, 2, 16, 14, 3, 2, 2, 2, 17, 19, 5, 2, 2, 2, 18, 17,
-	3, 2, 2, 2, 19, 22, 3, 2, 2, 2, 20, 18, 3, 2, 2, 2, 20, 21, 3, 2, 2, 2,
-	21, 23, 3, 2, 2, 2, 22, 20, 3, 2, 2, 2, 23, 24, 7, 2, 2, 3, 24, 5, 3, 2,
-	2, 2, 4, 14, 20,
+	3, 24715, 42794, 33075, 47597, 16764, 15335, 30598, 22884, 3, 12, 38, 4,
+	2, 9, 2, 4, 3, 9, 3, 4, 4, 9, 4, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 7,
+	2, 15, 10, 2, 12, 2, 14, 2, 18, 11, 2, 3, 3, 3, 3, 3, 3, 5, 3, 23, 10,
+	3, 3, 4, 3, 4, 3, 4, 7, 4, 28, 10, 4, 12, 4, 14, 4, 31, 11, 4, 3, 4, 5,
+	4, 34, 10, 4, 3, 4, 3, 4, 3, 4, 2, 3, 2, 5, 2, 4, 6, 2, 3, 3, 2, 9, 10,
+	2, 38, 2, 8, 3, 2, 2, 2, 4, 22, 3, 2, 2, 2, 6, 29, 3, 2, 2, 2, 8, 9, 8,
+	2, 1, 2, 9, 10, 7, 8, 2, 2, 10, 16, 3, 2, 2, 2, 11, 12, 12, 4, 2, 2, 12,
+	13, 9, 2, 2, 2, 13, 15, 5, 2, 2, 5, 14, 11, 3, 2, 2, 2, 15, 18, 3, 2, 2,
+	2, 16, 14, 3, 2, 2, 2, 16, 17, 3, 2, 2, 2, 17, 3, 3, 2, 2, 2, 18, 16, 3,
+	2, 2, 2, 19, 20, 7, 4, 2, 2, 20, 23, 5, 2, 2, 2, 21, 23, 7, 5, 2, 2, 22,
+	19, 3, 2, 2, 2, 22, 21, 3, 2, 2, 2, 23, 5, 3, 2, 2, 2, 24, 25, 5, 4, 3,
+	2, 25, 26, 7, 3, 2, 2, 26, 28, 3, 2, 2, 2, 27, 24, 3, 2, 2, 2, 28, 31,
+	3, 2, 2, 2, 29, 27, 3, 2, 2, 2, 29, 30, 3, 2, 2, 2, 30, 33, 3, 2, 2, 2,
+	31, 29, 3, 2, 2, 2, 32, 34, 5, 4, 3, 2, 33, 32, 3, 2, 2, 2, 33, 34, 3,
+	2, 2, 2, 34, 35, 3, 2, 2, 2, 35, 36, 7, 2, 2, 3, 36, 7, 3, 2, 2, 2, 6,
+	16, 22, 29, 33,
 }
 var literalNames = []string{
-	"", "", "", "", "'+'", "'-'", "';'",
+	"", "", "'calc'", "'fail'", "", "", "", "'+'", "'-'", "';'",
 }
 var symbolicNames = []string{
-	"", "IDENTIFIER", "ASSET", "NUMBER", "OP_ADD", "OP_SUB", "SEP", "WHITESPACE",
+	"", "NEWLINE", "CALC", "FAIL", "IDENTIFIER", "ASSET", "NUMBER", "OP_ADD",
+	"OP_SUB", "SEP", "WHITESPACE",
 }
 
 var ruleNames = []string{
-	"expression", "script",
+	"expression", "statement", "script",
 }
 
 type NumScriptParser struct {
@@ -71,19 +77,23 @@ func NewNumScriptParser(input antlr.TokenStream) *NumScriptParser {
 // NumScriptParser tokens.
 const (
 	NumScriptParserEOF        = antlr.TokenEOF
-	NumScriptParserIDENTIFIER = 1
-	NumScriptParserASSET      = 2
-	NumScriptParserNUMBER     = 3
-	NumScriptParserOP_ADD     = 4
-	NumScriptParserOP_SUB     = 5
-	NumScriptParserSEP        = 6
-	NumScriptParserWHITESPACE = 7
+	NumScriptParserNEWLINE    = 1
+	NumScriptParserCALC       = 2
+	NumScriptParserFAIL       = 3
+	NumScriptParserIDENTIFIER = 4
+	NumScriptParserASSET      = 5
+	NumScriptParserNUMBER     = 6
+	NumScriptParserOP_ADD     = 7
+	NumScriptParserOP_SUB     = 8
+	NumScriptParserSEP        = 9
+	NumScriptParserWHITESPACE = 10
 )
 
 // NumScriptParser rules.
 const (
 	NumScriptParserRULE_expression = 0
-	NumScriptParserRULE_script     = 1
+	NumScriptParserRULE_statement  = 1
+	NumScriptParserRULE_script     = 2
 )
 
 // IExpressionContext is an interface to support dynamic dispatch.
@@ -274,12 +284,12 @@ func (p *NumScriptParser) expression(_p int) (localctx IExpressionContext) {
 	_prevctx = localctx
 
 	{
-		p.SetState(5)
+		p.SetState(7)
 		p.Match(NumScriptParserNUMBER)
 	}
 
 	p.GetParserRuleContext().SetStop(p.GetTokenStream().LT(-1))
-	p.SetState(12)
+	p.SetState(14)
 	p.GetErrorHandler().Sync(p)
 	_alt = p.GetInterpreter().AdaptivePredict(p.GetTokenStream(), 0, p.GetParserRuleContext())
 
@@ -291,13 +301,13 @@ func (p *NumScriptParser) expression(_p int) (localctx IExpressionContext) {
 			_prevctx = localctx
 			localctx = NewAddSubContext(p, NewExpressionContext(p, _parentctx, _parentState))
 			p.PushNewRecursionContext(localctx, _startState, NumScriptParserRULE_expression)
-			p.SetState(7)
+			p.SetState(9)
 
 			if !(p.Precpred(p.GetParserRuleContext(), 2)) {
 				panic(antlr.NewFailedPredicateException(p, "p.Precpred(p.GetParserRuleContext(), 2)", ""))
 			}
 			{
-				p.SetState(8)
+				p.SetState(10)
 
 				var _lt = p.GetTokenStream().LT(1)
 
@@ -315,14 +325,201 @@ func (p *NumScriptParser) expression(_p int) (localctx IExpressionContext) {
 				}
 			}
 			{
-				p.SetState(9)
+				p.SetState(11)
 				p.expression(3)
 			}
 
 		}
-		p.SetState(14)
+		p.SetState(16)
 		p.GetErrorHandler().Sync(p)
 		_alt = p.GetInterpreter().AdaptivePredict(p.GetTokenStream(), 0, p.GetParserRuleContext())
+	}
+
+	return localctx
+}
+
+// IStatementContext is an interface to support dynamic dispatch.
+type IStatementContext interface {
+	antlr.ParserRuleContext
+
+	// GetParser returns the parser.
+	GetParser() antlr.Parser
+
+	// IsStatementContext differentiates from other interfaces.
+	IsStatementContext()
+}
+
+type StatementContext struct {
+	*antlr.BaseParserRuleContext
+	parser antlr.Parser
+}
+
+func NewEmptyStatementContext() *StatementContext {
+	var p = new(StatementContext)
+	p.BaseParserRuleContext = antlr.NewBaseParserRuleContext(nil, -1)
+	p.RuleIndex = NumScriptParserRULE_statement
+	return p
+}
+
+func (*StatementContext) IsStatementContext() {}
+
+func NewStatementContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokingState int) *StatementContext {
+	var p = new(StatementContext)
+
+	p.BaseParserRuleContext = antlr.NewBaseParserRuleContext(parent, invokingState)
+
+	p.parser = parser
+	p.RuleIndex = NumScriptParserRULE_statement
+
+	return p
+}
+
+func (s *StatementContext) GetParser() antlr.Parser { return s.parser }
+
+func (s *StatementContext) CopyFrom(ctx *StatementContext) {
+	s.BaseParserRuleContext.CopyFrom(ctx.BaseParserRuleContext)
+}
+
+func (s *StatementContext) GetRuleContext() antlr.RuleContext {
+	return s
+}
+
+func (s *StatementContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
+	return antlr.TreesStringTree(s, ruleNames, recog)
+}
+
+type CalcContext struct {
+	*StatementContext
+	expr IExpressionContext
+}
+
+func NewCalcContext(parser antlr.Parser, ctx antlr.ParserRuleContext) *CalcContext {
+	var p = new(CalcContext)
+
+	p.StatementContext = NewEmptyStatementContext()
+	p.parser = parser
+	p.CopyFrom(ctx.(*StatementContext))
+
+	return p
+}
+
+func (s *CalcContext) GetExpr() IExpressionContext { return s.expr }
+
+func (s *CalcContext) SetExpr(v IExpressionContext) { s.expr = v }
+
+func (s *CalcContext) GetRuleContext() antlr.RuleContext {
+	return s
+}
+
+func (s *CalcContext) CALC() antlr.TerminalNode {
+	return s.GetToken(NumScriptParserCALC, 0)
+}
+
+func (s *CalcContext) Expression() IExpressionContext {
+	var t = s.GetTypedRuleContext(reflect.TypeOf((*IExpressionContext)(nil)).Elem(), 0)
+
+	if t == nil {
+		return nil
+	}
+
+	return t.(IExpressionContext)
+}
+
+func (s *CalcContext) EnterRule(listener antlr.ParseTreeListener) {
+	if listenerT, ok := listener.(NumScriptListener); ok {
+		listenerT.EnterCalc(s)
+	}
+}
+
+func (s *CalcContext) ExitRule(listener antlr.ParseTreeListener) {
+	if listenerT, ok := listener.(NumScriptListener); ok {
+		listenerT.ExitCalc(s)
+	}
+}
+
+type FailContext struct {
+	*StatementContext
+}
+
+func NewFailContext(parser antlr.Parser, ctx antlr.ParserRuleContext) *FailContext {
+	var p = new(FailContext)
+
+	p.StatementContext = NewEmptyStatementContext()
+	p.parser = parser
+	p.CopyFrom(ctx.(*StatementContext))
+
+	return p
+}
+
+func (s *FailContext) GetRuleContext() antlr.RuleContext {
+	return s
+}
+
+func (s *FailContext) FAIL() antlr.TerminalNode {
+	return s.GetToken(NumScriptParserFAIL, 0)
+}
+
+func (s *FailContext) EnterRule(listener antlr.ParseTreeListener) {
+	if listenerT, ok := listener.(NumScriptListener); ok {
+		listenerT.EnterFail(s)
+	}
+}
+
+func (s *FailContext) ExitRule(listener antlr.ParseTreeListener) {
+	if listenerT, ok := listener.(NumScriptListener); ok {
+		listenerT.ExitFail(s)
+	}
+}
+
+func (p *NumScriptParser) Statement() (localctx IStatementContext) {
+	localctx = NewStatementContext(p, p.GetParserRuleContext(), p.GetState())
+	p.EnterRule(localctx, 2, NumScriptParserRULE_statement)
+
+	defer func() {
+		p.ExitRule()
+	}()
+
+	defer func() {
+		if err := recover(); err != nil {
+			if v, ok := err.(antlr.RecognitionException); ok {
+				localctx.SetException(v)
+				p.GetErrorHandler().ReportError(p, v)
+				p.GetErrorHandler().Recover(p, v)
+			} else {
+				panic(err)
+			}
+		}
+	}()
+
+	p.SetState(20)
+	p.GetErrorHandler().Sync(p)
+
+	switch p.GetTokenStream().LA(1) {
+	case NumScriptParserCALC:
+		localctx = NewCalcContext(p, localctx)
+		p.EnterOuterAlt(localctx, 1)
+		{
+			p.SetState(17)
+			p.Match(NumScriptParserCALC)
+		}
+		{
+			p.SetState(18)
+
+			var _x = p.expression(0)
+
+			localctx.(*CalcContext).expr = _x
+		}
+
+	case NumScriptParserFAIL:
+		localctx = NewFailContext(p, localctx)
+		p.EnterOuterAlt(localctx, 2)
+		{
+			p.SetState(19)
+			p.Match(NumScriptParserFAIL)
+		}
+
+	default:
+		panic(antlr.NewNoViableAltException(p, nil, nil, nil, nil, nil))
 	}
 
 	return localctx
@@ -370,27 +567,35 @@ func (s *ScriptContext) EOF() antlr.TerminalNode {
 	return s.GetToken(NumScriptParserEOF, 0)
 }
 
-func (s *ScriptContext) AllExpression() []IExpressionContext {
-	var ts = s.GetTypedRuleContexts(reflect.TypeOf((*IExpressionContext)(nil)).Elem())
-	var tst = make([]IExpressionContext, len(ts))
+func (s *ScriptContext) AllStatement() []IStatementContext {
+	var ts = s.GetTypedRuleContexts(reflect.TypeOf((*IStatementContext)(nil)).Elem())
+	var tst = make([]IStatementContext, len(ts))
 
 	for i, t := range ts {
 		if t != nil {
-			tst[i] = t.(IExpressionContext)
+			tst[i] = t.(IStatementContext)
 		}
 	}
 
 	return tst
 }
 
-func (s *ScriptContext) Expression(i int) IExpressionContext {
-	var t = s.GetTypedRuleContext(reflect.TypeOf((*IExpressionContext)(nil)).Elem(), i)
+func (s *ScriptContext) Statement(i int) IStatementContext {
+	var t = s.GetTypedRuleContext(reflect.TypeOf((*IStatementContext)(nil)).Elem(), i)
 
 	if t == nil {
 		return nil
 	}
 
-	return t.(IExpressionContext)
+	return t.(IStatementContext)
+}
+
+func (s *ScriptContext) AllNEWLINE() []antlr.TerminalNode {
+	return s.GetTokens(NumScriptParserNEWLINE)
+}
+
+func (s *ScriptContext) NEWLINE(i int) antlr.TerminalNode {
+	return s.GetToken(NumScriptParserNEWLINE, i)
 }
 
 func (s *ScriptContext) GetRuleContext() antlr.RuleContext {
@@ -415,7 +620,7 @@ func (s *ScriptContext) ExitRule(listener antlr.ParseTreeListener) {
 
 func (p *NumScriptParser) Script() (localctx IScriptContext) {
 	localctx = NewScriptContext(p, p.GetParserRuleContext(), p.GetState())
-	p.EnterRule(localctx, 2, NumScriptParserRULE_script)
+	p.EnterRule(localctx, 4, NumScriptParserRULE_script)
 	var _la int
 
 	defer func() {
@@ -434,23 +639,42 @@ func (p *NumScriptParser) Script() (localctx IScriptContext) {
 		}
 	}()
 
+	var _alt int
+
 	p.EnterOuterAlt(localctx, 1)
-	p.SetState(18)
+	p.SetState(27)
+	p.GetErrorHandler().Sync(p)
+	_alt = p.GetInterpreter().AdaptivePredict(p.GetTokenStream(), 2, p.GetParserRuleContext())
+
+	for _alt != 2 && _alt != antlr.ATNInvalidAltNumber {
+		if _alt == 1 {
+			{
+				p.SetState(22)
+				p.Statement()
+			}
+			{
+				p.SetState(23)
+				p.Match(NumScriptParserNEWLINE)
+			}
+
+		}
+		p.SetState(29)
+		p.GetErrorHandler().Sync(p)
+		_alt = p.GetInterpreter().AdaptivePredict(p.GetTokenStream(), 2, p.GetParserRuleContext())
+	}
+	p.SetState(31)
 	p.GetErrorHandler().Sync(p)
 	_la = p.GetTokenStream().LA(1)
 
-	for _la == NumScriptParserNUMBER {
+	if _la == NumScriptParserCALC || _la == NumScriptParserFAIL {
 		{
-			p.SetState(15)
-			p.expression(0)
+			p.SetState(30)
+			p.Statement()
 		}
 
-		p.SetState(20)
-		p.GetErrorHandler().Sync(p)
-		_la = p.GetTokenStream().LA(1)
 	}
 	{
-		p.SetState(21)
+		p.SetState(33)
 		p.Match(NumScriptParserEOF)
 	}
 

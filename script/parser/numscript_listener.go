@@ -14,6 +14,12 @@ type NumScriptListener interface {
 	// EnterAddSub is called when entering the AddSub production.
 	EnterAddSub(c *AddSubContext)
 
+	// EnterCalc is called when entering the Calc production.
+	EnterCalc(c *CalcContext)
+
+	// EnterFail is called when entering the Fail production.
+	EnterFail(c *FailContext)
+
 	// EnterScript is called when entering the script production.
 	EnterScript(c *ScriptContext)
 
@@ -22,6 +28,12 @@ type NumScriptListener interface {
 
 	// ExitAddSub is called when exiting the AddSub production.
 	ExitAddSub(c *AddSubContext)
+
+	// ExitCalc is called when exiting the Calc production.
+	ExitCalc(c *CalcContext)
+
+	// ExitFail is called when exiting the Fail production.
+	ExitFail(c *FailContext)
 
 	// ExitScript is called when exiting the script production.
 	ExitScript(c *ScriptContext)

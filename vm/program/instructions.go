@@ -5,4 +5,5 @@ const (
 	OP_IADD
 	OP_ISUB
 	OP_PRINT
+	OP_FAIL
 )

@@ -12,15 +12,15 @@ func TestMachine(t *testing.T) {
 		Expected []byte
 	}{
 		{
-			Case:     "29 + 15 - 2",
+			Case:     "calc 29 + 15 - 2",
 			Expected: []byte{42},
 		},
 		{
-			Case:     "1 + 1",
+			Case:     "calc 1 + 1",
 			Expected: []byte{2},
 		},
 		{
-			Case:     "1",
+			Case:     "calc 1",
 			Expected: []byte{1},
 		},
 	}
