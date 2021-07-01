@@ -9,8 +9,14 @@ import (
 
 func main() {
 
-	p := compiler.Compile(`calc 29 + 15 - 2
+	p, err := compiler.Compile(`calc 29 + 15 - 2
 fail`)
+
+	fmt.Println(p)
+
+	if err != nil {
+		panic(err)
+	}
 
 	machine := vm.NewMachine(p)
 
