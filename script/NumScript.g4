@@ -1,5 +1,9 @@
 grammar NumScript;
 
+NEWLINE: [\r\n]+;
+
+CALC: 'calc';
+FAIL: 'fail';
 IDENTIFIER: [a-z]+;
 ASSET: [A-Z]+;
 NUMBER: [0-9]+;
@@ -14,7 +18,13 @@ expression
   | NUMBER # Number
   ;
 
+statement
+  : CALC expr=expression # Calc
+  | FAIL # Fail
+  ;
+
 script:
-  expression*
+  (statement NEWLINE)*
+  statement?
   EOF
   ;

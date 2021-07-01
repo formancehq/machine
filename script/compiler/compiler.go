@@ -13,6 +13,14 @@ type parseListener struct {
 	program program.Program
 }
 
+func (p *parseListener) ExitFail(c *parser.FailContext) {
+	p.program = append(p.program, program.OP_FAIL)
+}
+
+func (p *parseListener) ExitCalc(c *parser.CalcContext) {
+	p.program = append(p.program, program.OP_PRINT)
+}
+
 func (p *parseListener) ExitAddSub(c *parser.AddSubContext) {
 	switch c.GetOp().GetTokenType() {
 	case parser.NumScriptParserOP_ADD:
@@ -25,10 +33,6 @@ func (p *parseListener) ExitAddSub(c *parser.AddSubContext) {
 func (p *parseListener) ExitNumber(c *parser.NumberContext) {
 	a, _ := strconv.Atoi(c.GetText())
 	p.program = append(p.program, program.OP_IPUSH, byte(a))
-}
-
-func (p *parseListener) ExitScript(c *parser.ScriptContext) {
-	p.program = append(p.program, program.OP_PRINT)
 }
 
 func Compile(input string) program.Program {
