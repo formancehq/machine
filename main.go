@@ -1,8 +1,8 @@
 package main
 
 import (
-	"numary.com/machine/script/compiler"
-	"numary.com/machine/vm"
+	"github.com/numary/machine/script/compiler"
+	"github.com/numary/machine/vm"
 )
 
 func main() {

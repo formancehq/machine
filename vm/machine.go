@@ -3,7 +3,7 @@ package vm
 import (
 	"fmt"
 
-	"numary.com/machine/vm/program"
+	"github.com/numary/machine/vm/program"
 )
 
 func StdOutPrinter(c chan byte) {

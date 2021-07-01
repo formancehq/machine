@@ -4,8 +4,8 @@ import (
 	"strconv"
 
 	"github.com/antlr/antlr4/runtime/Go/antlr"
-	"numary.com/machine/script/parser"
-	"numary.com/machine/vm/program"
+	"github.com/numary/machine/script/parser"
+	"github.com/numary/machine/vm/program"
 )
 
 type parseListener struct {

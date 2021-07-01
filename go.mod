@@ -1,4 +1,4 @@
-module numary.com/machine
+module github.com/numary/machine
 
 go 1.16
 

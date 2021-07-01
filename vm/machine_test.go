@@ -3,7 +3,7 @@ package vm
 import (
 	"testing"
 
-	"numary.com/machine/script/compiler"
+	"github.com/numary/machine/script/compiler"
 )
 
 func TestMachine(t *testing.T) {
