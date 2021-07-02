@@ -1,6 +1,7 @@
 package vm
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/numary/machine/script/compiler"
@@ -26,7 +27,11 @@ func TestMachine(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		p := compiler.Compile(c.Case)
+		p, err := compiler.Compile(c.Case)
+
+		if err != nil {
+			t.Error(fmt.Errorf("compile error: %v", err))
+		}
 
 		printed := []byte{}
 
@@ -40,7 +45,7 @@ func TestMachine(t *testing.T) {
 
 		for i := range printed {
 			if printed[i] != c.Expected[i] {
-				t.Fail()
+				t.Error(fmt.Errorf("unexpected output: %v", printed[i]))
 			}
 		}
 	}
