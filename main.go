@@ -9,10 +9,11 @@ import (
 
 func main() {
 
-	p, err := compiler.Compile(`calc 29 + 15 - 2
+	p, err := compiler.Compile(`print 29 + 15 - 2
+send(monetary=[EUR 100], source=alice, destination=bob)
 fail`)
 
-	fmt.Println(p)
+	// fmt.Println(p)
 
 	if err != nil {
 		panic(err)
@@ -21,6 +22,7 @@ fail`)
 	machine := vm.NewMachine(p)
 
 	machine.Program.Print()
-	exit_code := machine.Execute()
+	exit_code := machine.Execute(map[string]string{})
 	fmt.Println(exit_code)
+	fmt.Println(machine.Postings)
 }

@@ -1,6 +1,8 @@
 package compiler
 
 import (
+	"bytes"
+	"errors"
 	"fmt"
 	"testing"
 
@@ -8,76 +10,123 @@ import (
 )
 
 type CaseResult struct {
-	Program []byte
-	Error   error
+	Instructions []byte
+	Data         []string
+	Error        error
 }
 
-func TestCompiler(t *testing.T) {
-	cases := []struct {
-		Case     string
-		Expected CaseResult
-	}{
-		{
-			Case: "calc 29 + 15 - 2",
-			Expected: CaseResult{
-				Program: []byte{program.OP_IPUSH, 29, program.OP_IPUSH, 15, program.OP_IADD, program.OP_IPUSH, 2, program.OP_ISUB, program.OP_PRINT},
-				Error:   nil,
-			},
-		},
-		{
-			Case: "calc 1 + 1",
-			Expected: CaseResult{
-				Program: []byte{program.OP_IPUSH, 1, program.OP_IPUSH, 1, program.OP_IADD, program.OP_PRINT},
-				Error:   nil,
-			},
-		},
-		{
-			Case: "calc 1",
-			Expected: CaseResult{
-				Program: []byte{program.OP_IPUSH, 1, program.OP_PRINT},
-				Error:   nil,
-			},
-		},
-		{
-			Case: "fail",
-			Expected: CaseResult{
-				Program: []byte{program.OP_FAIL},
-				Error:   nil,
-			},
-		},
-		{
-			Case: "calc fail",
-			Expected: CaseResult{
-				Program: nil,
-				Error: &CompileError{
-					SyntaxError{
-						line:   1,
-						column: 5,
-						msg:    "no viable alternative at input 'calcfail'",
-					},
-				},
-			},
-		},
-	}
+type TestCase struct {
+	Case     string
+	Expected CaseResult
+}
 
-	for _, c := range cases {
-		p, err := Compile(c.Case)
+func test(t *testing.T, c TestCase) {
+	p, err := Compile(c.Case)
 
-		if err != nil {
-			if c.Expected.Error == nil {
-				t.Error(fmt.Errorf("did not expect error: %v", err))
-			}
-			if err.Error() != c.Expected.Error.Error() {
-				t.Error(fmt.Errorf("error is not the one expected: %v", err))
-			}
+	if c.Expected.Error != nil {
+		if err == nil {
+			t.Error(errors.New("expected error and got none"))
+			return
+		} else if err.Error() != c.Expected.Error.Error() {
+			t.Error(fmt.Errorf("error is not the one expected: %v", err))
+			return
 		}
-
-		if p != nil {
-			for i, op := range p {
-				if op != c.Expected.Program[i] {
-					t.Error(fmt.Errorf("generated program is incorrect: %v", p))
+	} else {
+		if err != nil {
+			t.Error(fmt.Errorf("did not expect error: %v", err))
+			return
+		} else if p == nil {
+			t.Error(errors.New("did not receive any output"))
+			return
+		} else if !bytes.Equal(p.Instructions, c.Expected.Instructions) {
+			t.Error(fmt.Errorf("generated program is incorrect: %v", p.Instructions))
+			return
+		} else if len(p.Data) != len(c.Expected.Data) {
+			t.Error(fmt.Errorf("unexpected program data: %v", p.Data))
+			return
+		} else {
+			for i := range c.Expected.Data {
+				if p.Data[i] != c.Expected.Data[i] {
+					t.Error(fmt.Errorf("unexpected program data: %v", p.Data))
+					return
 				}
 			}
 		}
 	}
+}
+
+func TestSimplePrint(t *testing.T) {
+	test(t, TestCase{
+		Case: "print 1",
+		Expected: CaseResult{
+			Instructions: []byte{
+				program.OP_PUSH8, 01, 00, 00, 00, 00, 00, 00, 00,
+				program.OP_PRINT,
+			},
+			Data:  []string{},
+			Error: nil,
+		},
+	})
+}
+
+func TestCompositeExpr(t *testing.T) {
+	test(t, TestCase{
+		Case: "print 29 + 15 - 2",
+		Expected: CaseResult{
+			Instructions: []byte{
+				program.OP_PUSH8, 29, 00, 00, 00, 00, 00, 00, 00,
+				program.OP_PUSH8, 15, 00, 00, 00, 00, 00, 00, 00,
+				program.OP_IADD,
+				program.OP_PUSH8, 02, 00, 00, 00, 00, 00, 00, 00,
+				program.OP_ISUB,
+				program.OP_PRINT,
+			},
+			Data:  []string{},
+			Error: nil,
+		},
+	})
+}
+
+func TestFail(t *testing.T) {
+	test(t, TestCase{
+		Case: "fail",
+		Expected: CaseResult{
+			Instructions: []byte{program.OP_FAIL},
+			Data:         []string{},
+			Error:        nil,
+		},
+	})
+}
+
+func TestSend(t *testing.T) {
+	test(t, TestCase{
+		Case: "send(monetary=[EUR/2 99], source=alice, destination=bob)",
+		Expected: CaseResult{
+			Instructions: []byte{
+				program.OP_PUSH2, 00, 00,
+				program.OP_PUSH8, 99, 00, 00, 00, 00, 00, 00, 00,
+				program.OP_PUSH2, 01, 00,
+				program.OP_PUSH2, 02, 00,
+				program.OP_SEND,
+			}, Data: []string{"EUR/2", "alice", "bob"},
+			Error: nil,
+		},
+	})
+}
+
+func TestSyntaxError(t *testing.T) {
+	test(t, TestCase{
+		Case: "print fail",
+		Expected: CaseResult{
+			Instructions: nil,
+			Data:         nil,
+			Error: &CompileError{
+				SyntaxError{
+					line:   1,
+					column: 6,
+					msg:    "mismatched input 'fail' expecting {'[', IDENTIFIER, NUMBER, ASSET}",
+				},
+			},
+		},
+	})
 }
