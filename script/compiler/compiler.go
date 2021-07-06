@@ -70,7 +70,7 @@ func (p *parseVisitor) PushValue(val core.Value) error {
 
 		p.instructions = append(p.instructions, program.OP_PUSH8)
 		bytes = make([]byte, 8)
-		binary.LittleEndian.PutUint64(bytes, val.Number)
+		binary.LittleEndian.PutUint64(bytes, val.Amount)
 		p.instructions = append(p.instructions, bytes...)
 	default:
 		panic("unreachable")

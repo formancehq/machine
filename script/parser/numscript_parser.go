@@ -130,14 +130,14 @@ type IMonetaryContext interface {
 	// GetAsset returns the asset token.
 	GetAsset() antlr.Token
 
-	// GetNumber returns the number token.
-	GetNumber() antlr.Token
+	// GetAmount returns the amount token.
+	GetAmount() antlr.Token
 
 	// SetAsset sets the asset token.
 	SetAsset(antlr.Token)
 
-	// SetNumber sets the number token.
-	SetNumber(antlr.Token)
+	// SetAmount sets the amount token.
+	SetAmount(antlr.Token)
 
 	// IsMonetaryContext differentiates from other interfaces.
 	IsMonetaryContext()
@@ -147,7 +147,7 @@ type MonetaryContext struct {
 	*antlr.BaseParserRuleContext
 	parser antlr.Parser
 	asset  antlr.Token
-	number antlr.Token
+	amount antlr.Token
 }
 
 func NewEmptyMonetaryContext() *MonetaryContext {
@@ -174,11 +174,11 @@ func (s *MonetaryContext) GetParser() antlr.Parser { return s.parser }
 
 func (s *MonetaryContext) GetAsset() antlr.Token { return s.asset }
 
-func (s *MonetaryContext) GetNumber() antlr.Token { return s.number }
+func (s *MonetaryContext) GetAmount() antlr.Token { return s.amount }
 
 func (s *MonetaryContext) SetAsset(v antlr.Token) { s.asset = v }
 
-func (s *MonetaryContext) SetNumber(v antlr.Token) { s.number = v }
+func (s *MonetaryContext) SetAmount(v antlr.Token) { s.amount = v }
 
 func (s *MonetaryContext) LBRACK() antlr.TerminalNode {
 	return s.GetToken(NumScriptParserLBRACK, 0)
@@ -253,7 +253,7 @@ func (p *NumScriptParser) Monetary() (localctx IMonetaryContext) {
 
 		var _m = p.Match(NumScriptParserNUMBER)
 
-		localctx.(*MonetaryContext).number = _m
+		localctx.(*MonetaryContext).amount = _m
 	}
 	{
 		p.SetState(15)
