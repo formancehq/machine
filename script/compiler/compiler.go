@@ -188,7 +188,7 @@ func (p *parseVisitor) VisitFail(ctx *parser.FailContext) {
 }
 
 func (p *parseVisitor) VisitSend(ctx *parser.SendContext) error {
-	args, err := p.VisitArgs(ctx.GetArgs(), map[string]byte{
+	args, err := p.VisitArgs(ctx.GetArgs(), map[string]core.ValueType{
 		"source":      core.TYPE_ADDRESS,
 		"destination": core.TYPE_ADDRESS,
 		"monetary":    core.TYPE_MONETARY,
@@ -206,24 +206,24 @@ func (p *parseVisitor) VisitSend(ctx *parser.SendContext) error {
 	return nil
 }
 
-func (p *parseVisitor) VisitArgs(cs []parser.IArgumentContext, args map[string]byte) (map[string]core.Value, error) {
+func (p *parseVisitor) VisitArgs(cs []parser.IArgumentContext, args map[string]core.ValueType) (map[string]core.Value, error) {
 	res := make(map[string]core.Value)
 	for _, c := range cs {
 		name := c.GetName().GetText()
-		lit, err := p.VisitLit(c.GetLit())
+		val, err := p.VisitLit(c.GetLit())
 		if err != nil {
 			return nil, err
 		}
-		lit_ty := lit.GetType()
+		val_ty := val.GetType()
 		if _, ok := res[name]; ok {
 			return nil, fmt.Errorf("duplicate argument: %s", name)
 		}
-		if ty, ok := args[name]; ok && ty == lit_ty {
+		if ty, ok := args[name]; ok && ty == val_ty {
 			delete(args, name)
 		} else {
 			return nil, fmt.Errorf("argument is not valid")
 		}
-		res[name] = lit
+		res[name] = val
 	}
 	for name := range args {
 		return nil, fmt.Errorf("missing argument: %s", name)
