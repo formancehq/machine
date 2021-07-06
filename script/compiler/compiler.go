@@ -108,9 +108,12 @@ func (p *parseVisitor) VisitScript(c parser.IScriptContext) error {
 }
 
 func (p *parseVisitor) VisitPrint(ctx *parser.PrintContext) error {
-	_, err := p.VisitExpr(ctx.GetExpr())
+	ty, err := p.VisitExpr(ctx.GetExpr())
 	if err != nil {
 		return err
+	}
+	if ty != core.TYPE_NUMBER {
+		return errors.New("print can only print numbers")
 	}
 	p.instructions = append(p.instructions, program.OP_PRINT)
 	return nil
@@ -169,13 +172,13 @@ func (p *parseVisitor) VisitLit(c parser.ILiteralContext) (core.Value, error) {
 		return &number, nil
 	case *parser.LitMonetaryContext:
 		asset := c.Monetary().GetAsset().GetText()
-		number, err := strconv.ParseUint(c.Monetary().GetNumber().GetText(), 10, 64)
+		amount, err := strconv.ParseUint(c.Monetary().GetAmount().GetText(), 10, 64)
 		if err != nil {
 			return nil, err
 		}
 		monetary := core.Monetary{
 			Asset:  asset,
-			Number: number,
+			Amount: amount,
 		}
 		return &monetary, nil
 	default:

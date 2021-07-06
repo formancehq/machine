@@ -27,7 +27,7 @@ func (*Number) GetType() ValueType { return TYPE_NUMBER }
 
 type Monetary struct {
 	Asset  string
-	Number uint64
+	Amount uint64
 }
 
 func (*Monetary) GetType() ValueType { return TYPE_MONETARY }

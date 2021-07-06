@@ -19,7 +19,7 @@ ASSET: [A-Z/0-9]+;
 SEP: ';';
 WHITESPACE: [ \n\t]+ -> skip;
 
-monetary: LBRACK asset=ASSET number=NUMBER RBRACK;
+monetary: LBRACK asset=ASSET amount=NUMBER RBRACK;
 
 literal
   : IDENTIFIER # LitAddress
