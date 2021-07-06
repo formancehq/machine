@@ -2,29 +2,47 @@ grammar NumScript;
 
 NEWLINE: [\r\n]+;
 
-CALC: 'calc';
+PRINT: 'print';
 FAIL: 'fail';
-IDENTIFIER: [a-z]+;
-ASSET: [A-Z]+;
-NUMBER: [0-9]+;
+SEND: 'send';
 OP_ADD: '+';
 OP_SUB: '-';
+LPAREN: '(';
+RPAREN: ')';
+LBRACK: '[';
+RBRACK: ']';
+EQ: '=';
+NUMBER: [0-9]+;
+IDENTIFIER: [a-z_:0-9]+;
+ASSET: [A-Z/0-9]+;
 
 SEP: ';';
 WHITESPACE: [ \n\t]+ -> skip;
 
-expression
-  : expression op=(OP_ADD|OP_SUB) expression # AddSub
-  | NUMBER # Number
+monetary: LBRACK asset=ASSET amount=NUMBER RBRACK;
+
+literal
+  : IDENTIFIER # LitAddress
+  | ASSET # LitAsset
+  | NUMBER # LitNumber
+  | monetary # LitMonetary
   ;
 
+expression
+  : lhs=expression op=(OP_ADD|OP_SUB) rhs=expression # ExprAddSub
+  | lit=literal # ExprLiteral
+  ;
+
+argument: name=IDENTIFIER EQ lit=literal;
+
 statement
-  : CALC expr=expression # Calc
+  : PRINT expr=expression # Print
   | FAIL # Fail
+  | SEND LPAREN ((args+=argument ',')+ args+=argument?) RPAREN # Send
   ;
 
 script:
-  (statement NEWLINE)*
-  statement?
+  stmts+=statement
+  (NEWLINE stmts+=statement)*
   EOF
   ;

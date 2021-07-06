@@ -1,8 +1,10 @@
 package vm
 
 import (
+	"encoding/binary"
 	"fmt"
 
+	"github.com/numary/ledger/core"
 	"github.com/numary/machine/vm/program"
 )
 
@@ -11,65 +13,96 @@ const (
 	EXIT_FAIL
 )
 
-func StdOutPrinter(c chan byte) {
+func StdOutPrinter(c chan uint64) {
 	for v := range c {
-		fmt.Println(v)
+		fmt.Println("OUT:", v)
 	}
 }
 
-func NewMachine(p program.Program) *Machine {
-	out := make(chan byte)
+func NewMachine(p *program.Program) *Machine {
+	printc := make(chan uint64)
 
 	m := Machine{
-		Program: p,
-		outchan: out,
-		Printer: StdOutPrinter,
+		Program:    p,
+		print_chan: printc,
+		Printer:    StdOutPrinter,
 	}
 
 	return &m
 }
 
 type Machine struct {
-	P       uint
-	Program program.Program
-	Stack   []byte
-	Printer func(chan byte)
-	outchan chan byte
+	P          uint
+	Program    *program.Program
+	Constants  []string
+	Stack      []byte
+	Printer    func(chan uint64)
+	Postings   []core.Posting
+	print_chan chan uint64
+}
+
+func (m *Machine) popUint16() uint16 {
+	l := len(m.Stack)
+	bytes := m.Stack[l-2:]
+	m.Stack = m.Stack[:l-2]
+	return binary.LittleEndian.Uint16(bytes)
+}
+
+func (m *Machine) popUint64() uint64 {
+	l := len(m.Stack)
+	bytes := m.Stack[l-8:]
+	m.Stack = m.Stack[:l-8]
+	return binary.LittleEndian.Uint64(bytes)
+}
+
+func (m *Machine) pushUint64(v uint64) {
+	bytes := make([]byte, 8)
+	binary.LittleEndian.PutUint64(bytes, v)
+	m.Stack = append(m.Stack, bytes...)
 }
 
 func (m *Machine) Tick() (bool, byte) {
-	op := m.Program[m.P]
+	op := m.Program.Instructions[m.P]
 
 	switch op {
-	case program.OP_IPUSH:
-		m.P += 1
-		m.Stack = append(m.Stack, m.Program[m.P])
+	case program.OP_PUSH2:
+		m.Stack = append(m.Stack, m.Program.Instructions[m.P+1:m.P+3]...)
+		m.P += 2
+	case program.OP_PUSH8:
+		m.Stack = append(m.Stack, m.Program.Instructions[m.P+1:m.P+9]...)
+		m.P += 8
 	case program.OP_IADD:
-		l := len(m.Stack)
-		a := m.Stack[l-2]
-		b := m.Stack[l-1]
-		m.Stack = m.Stack[:l-2]
-		m.Stack = append(m.Stack, a+b)
+		b := m.popUint64()
+		a := m.popUint64()
+		m.pushUint64(a + b)
 	case program.OP_ISUB:
-		l := len(m.Stack)
-		a := m.Stack[l-2]
-		b := m.Stack[l-1]
-		m.Stack = m.Stack[:l-2]
-		m.Stack = append(m.Stack, a-b)
+		b := m.popUint64()
+		a := m.popUint64()
+		m.pushUint64(a - b)
 	case program.OP_PRINT:
-		l := len(m.Stack)
-		a := m.Stack[l-1]
-		m.Stack = m.Stack[:l-1]
-		m.outchan <- a
+		a := m.popUint64()
+		m.print_chan <- a
 	case program.OP_FAIL:
 		fmt.Println("program failed")
 		fmt.Println("stack: ", m.Stack)
 		return true, EXIT_FAIL
+	case program.OP_SEND:
+		dst := m.popUint16()
+		src := m.popUint16()
+		amount := m.popUint64()
+		asset := m.popUint16()
+		p := core.Posting{
+			Source:      m.Constants[src],
+			Destination: m.Constants[dst],
+			Asset:       m.Constants[asset],
+			Amount:      int64(amount),
+		}
+		m.Postings = append(m.Postings, p)
 	}
 
 	m.P += 1
 
-	if int(m.P) >= len(m.Program) {
+	if int(m.P) >= len(m.Program.Instructions) {
 		fmt.Println("end of program")
 		fmt.Println("stack: ", m.Stack)
 
@@ -79,20 +112,17 @@ func (m *Machine) Tick() (bool, byte) {
 	return false, 0
 }
 
-func (m *Machine) Execute() byte {
-	go m.Printer(m.outchan)
+func (m *Machine) Execute(vars map[string]string) byte {
+	m.Constants = m.Program.Constants
 
-	var exit_code byte
+	go m.Printer(m.print_chan)
+
+	defer close(m.print_chan)
 
 	for {
-		finished, code := m.Tick()
+		finished, exit_code := m.Tick()
 		if finished {
-			exit_code = code
-			break
+			return exit_code
 		}
 	}
-
-	close(m.outchan)
-
-	return exit_code
 }

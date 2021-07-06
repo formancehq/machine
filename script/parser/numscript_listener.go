@@ -8,32 +8,74 @@ import "github.com/antlr/antlr4/runtime/Go/antlr"
 type NumScriptListener interface {
 	antlr.ParseTreeListener
 
-	// EnterNumber is called when entering the Number production.
-	EnterNumber(c *NumberContext)
+	// EnterMonetary is called when entering the monetary production.
+	EnterMonetary(c *MonetaryContext)
 
-	// EnterAddSub is called when entering the AddSub production.
-	EnterAddSub(c *AddSubContext)
+	// EnterLitAddress is called when entering the LitAddress production.
+	EnterLitAddress(c *LitAddressContext)
 
-	// EnterCalc is called when entering the Calc production.
-	EnterCalc(c *CalcContext)
+	// EnterLitAsset is called when entering the LitAsset production.
+	EnterLitAsset(c *LitAssetContext)
+
+	// EnterLitNumber is called when entering the LitNumber production.
+	EnterLitNumber(c *LitNumberContext)
+
+	// EnterLitMonetary is called when entering the LitMonetary production.
+	EnterLitMonetary(c *LitMonetaryContext)
+
+	// EnterExprAddSub is called when entering the ExprAddSub production.
+	EnterExprAddSub(c *ExprAddSubContext)
+
+	// EnterExprLiteral is called when entering the ExprLiteral production.
+	EnterExprLiteral(c *ExprLiteralContext)
+
+	// EnterArgument is called when entering the argument production.
+	EnterArgument(c *ArgumentContext)
+
+	// EnterPrint is called when entering the Print production.
+	EnterPrint(c *PrintContext)
 
 	// EnterFail is called when entering the Fail production.
 	EnterFail(c *FailContext)
 
+	// EnterSend is called when entering the Send production.
+	EnterSend(c *SendContext)
+
 	// EnterScript is called when entering the script production.
 	EnterScript(c *ScriptContext)
 
-	// ExitNumber is called when exiting the Number production.
-	ExitNumber(c *NumberContext)
+	// ExitMonetary is called when exiting the monetary production.
+	ExitMonetary(c *MonetaryContext)
 
-	// ExitAddSub is called when exiting the AddSub production.
-	ExitAddSub(c *AddSubContext)
+	// ExitLitAddress is called when exiting the LitAddress production.
+	ExitLitAddress(c *LitAddressContext)
 
-	// ExitCalc is called when exiting the Calc production.
-	ExitCalc(c *CalcContext)
+	// ExitLitAsset is called when exiting the LitAsset production.
+	ExitLitAsset(c *LitAssetContext)
+
+	// ExitLitNumber is called when exiting the LitNumber production.
+	ExitLitNumber(c *LitNumberContext)
+
+	// ExitLitMonetary is called when exiting the LitMonetary production.
+	ExitLitMonetary(c *LitMonetaryContext)
+
+	// ExitExprAddSub is called when exiting the ExprAddSub production.
+	ExitExprAddSub(c *ExprAddSubContext)
+
+	// ExitExprLiteral is called when exiting the ExprLiteral production.
+	ExitExprLiteral(c *ExprLiteralContext)
+
+	// ExitArgument is called when exiting the argument production.
+	ExitArgument(c *ArgumentContext)
+
+	// ExitPrint is called when exiting the Print production.
+	ExitPrint(c *PrintContext)
 
 	// ExitFail is called when exiting the Fail production.
 	ExitFail(c *FailContext)
+
+	// ExitSend is called when exiting the Send production.
+	ExitSend(c *SendContext)
 
 	// ExitScript is called when exiting the script production.
 	ExitScript(c *ScriptContext)

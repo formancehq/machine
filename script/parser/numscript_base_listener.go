@@ -21,29 +21,71 @@ func (s *BaseNumScriptListener) EnterEveryRule(ctx antlr.ParserRuleContext) {}
 // ExitEveryRule is called when any rule is exited.
 func (s *BaseNumScriptListener) ExitEveryRule(ctx antlr.ParserRuleContext) {}
 
-// EnterNumber is called when production Number is entered.
-func (s *BaseNumScriptListener) EnterNumber(ctx *NumberContext) {}
+// EnterMonetary is called when production monetary is entered.
+func (s *BaseNumScriptListener) EnterMonetary(ctx *MonetaryContext) {}
 
-// ExitNumber is called when production Number is exited.
-func (s *BaseNumScriptListener) ExitNumber(ctx *NumberContext) {}
+// ExitMonetary is called when production monetary is exited.
+func (s *BaseNumScriptListener) ExitMonetary(ctx *MonetaryContext) {}
 
-// EnterAddSub is called when production AddSub is entered.
-func (s *BaseNumScriptListener) EnterAddSub(ctx *AddSubContext) {}
+// EnterLitAddress is called when production LitAddress is entered.
+func (s *BaseNumScriptListener) EnterLitAddress(ctx *LitAddressContext) {}
 
-// ExitAddSub is called when production AddSub is exited.
-func (s *BaseNumScriptListener) ExitAddSub(ctx *AddSubContext) {}
+// ExitLitAddress is called when production LitAddress is exited.
+func (s *BaseNumScriptListener) ExitLitAddress(ctx *LitAddressContext) {}
 
-// EnterCalc is called when production Calc is entered.
-func (s *BaseNumScriptListener) EnterCalc(ctx *CalcContext) {}
+// EnterLitAsset is called when production LitAsset is entered.
+func (s *BaseNumScriptListener) EnterLitAsset(ctx *LitAssetContext) {}
 
-// ExitCalc is called when production Calc is exited.
-func (s *BaseNumScriptListener) ExitCalc(ctx *CalcContext) {}
+// ExitLitAsset is called when production LitAsset is exited.
+func (s *BaseNumScriptListener) ExitLitAsset(ctx *LitAssetContext) {}
+
+// EnterLitNumber is called when production LitNumber is entered.
+func (s *BaseNumScriptListener) EnterLitNumber(ctx *LitNumberContext) {}
+
+// ExitLitNumber is called when production LitNumber is exited.
+func (s *BaseNumScriptListener) ExitLitNumber(ctx *LitNumberContext) {}
+
+// EnterLitMonetary is called when production LitMonetary is entered.
+func (s *BaseNumScriptListener) EnterLitMonetary(ctx *LitMonetaryContext) {}
+
+// ExitLitMonetary is called when production LitMonetary is exited.
+func (s *BaseNumScriptListener) ExitLitMonetary(ctx *LitMonetaryContext) {}
+
+// EnterExprAddSub is called when production ExprAddSub is entered.
+func (s *BaseNumScriptListener) EnterExprAddSub(ctx *ExprAddSubContext) {}
+
+// ExitExprAddSub is called when production ExprAddSub is exited.
+func (s *BaseNumScriptListener) ExitExprAddSub(ctx *ExprAddSubContext) {}
+
+// EnterExprLiteral is called when production ExprLiteral is entered.
+func (s *BaseNumScriptListener) EnterExprLiteral(ctx *ExprLiteralContext) {}
+
+// ExitExprLiteral is called when production ExprLiteral is exited.
+func (s *BaseNumScriptListener) ExitExprLiteral(ctx *ExprLiteralContext) {}
+
+// EnterArgument is called when production argument is entered.
+func (s *BaseNumScriptListener) EnterArgument(ctx *ArgumentContext) {}
+
+// ExitArgument is called when production argument is exited.
+func (s *BaseNumScriptListener) ExitArgument(ctx *ArgumentContext) {}
+
+// EnterPrint is called when production Print is entered.
+func (s *BaseNumScriptListener) EnterPrint(ctx *PrintContext) {}
+
+// ExitPrint is called when production Print is exited.
+func (s *BaseNumScriptListener) ExitPrint(ctx *PrintContext) {}
 
 // EnterFail is called when production Fail is entered.
 func (s *BaseNumScriptListener) EnterFail(ctx *FailContext) {}
 
 // ExitFail is called when production Fail is exited.
 func (s *BaseNumScriptListener) ExitFail(ctx *FailContext) {}
+
+// EnterSend is called when production Send is entered.
+func (s *BaseNumScriptListener) EnterSend(ctx *SendContext) {}
+
+// ExitSend is called when production Send is exited.
+func (s *BaseNumScriptListener) ExitSend(ctx *SendContext) {}
 
 // EnterScript is called when production script is entered.
 func (s *BaseNumScriptListener) EnterScript(ctx *ScriptContext) {}
