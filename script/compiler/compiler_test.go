@@ -120,11 +120,28 @@ func TestSyntaxError(t *testing.T) {
 		Expected: CaseResult{
 			Instructions: nil,
 			Data:         nil,
-			Error: &CompileError{
-				SyntaxError{
+			Error: &CompileErrorList{
+				CompileError{
 					line:   1,
 					column: 6,
 					msg:    "mismatched input 'fail' expecting {'[', IDENTIFIER, NUMBER, ASSET}",
+				},
+			},
+		},
+	})
+}
+
+func TestLogicError(t *testing.T) {
+	test(t, TestCase{
+		Case: "send(monetary=[EUR/2 200], source=200, destination=bob)",
+		Expected: CaseResult{
+			Instructions: nil,
+			Data:         nil,
+			Error: &CompileErrorList{
+				CompileError{
+					line:   1,
+					column: 55,
+					msg:    "argument is not valid",
 				},
 			},
 		},

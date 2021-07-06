@@ -231,14 +231,14 @@ func (p *parseVisitor) VisitArgs(cs []parser.IArgumentContext, args map[string]c
 	return res, nil
 }
 
-type SyntaxError struct {
+type CompileError struct {
 	line, column int
 	msg          string
 }
 
-type CompileError []SyntaxError
+type CompileErrorList []CompileError
 
-func (c *CompileError) Error() string {
+func (c *CompileErrorList) Error() string {
 	s := ""
 	for _, e := range *c {
 		s = fmt.Sprintf("%v\nerror:%v:%v   %v", s, e.line, e.column, e.msg)
@@ -248,11 +248,11 @@ func (c *CompileError) Error() string {
 
 type ErrorListener struct {
 	*antlr.DefaultErrorListener
-	Errors []SyntaxError
+	Errors CompileErrorList
 }
 
 func (l *ErrorListener) SyntaxError(recognizer antlr.Recognizer, offendingSymbol interface{}, line, column int, msg string, e antlr.RecognitionException) {
-	l.Errors = append(l.Errors, SyntaxError{
+	l.Errors = append(l.Errors, CompileError{
 		line:   line,
 		column: column,
 		msg:    msg,
@@ -260,7 +260,7 @@ func (l *ErrorListener) SyntaxError(recognizer antlr.Recognizer, offendingSymbol
 }
 
 func (l *ErrorListener) LogicError(token antlr.Token, err error) {
-	l.Errors = append(l.Errors, SyntaxError{
+	l.Errors = append(l.Errors, CompileError{
 		line:   token.GetLine(),
 		column: token.GetColumn(),
 		msg:    err.Error(),
@@ -285,7 +285,7 @@ func Compile(input string) (*program.Program, error) {
 	tree := p.Script()
 
 	if len(elistener.Errors) != 0 {
-		return nil, (*CompileError)(&elistener.Errors)
+		return nil, (*CompileErrorList)(&elistener.Errors)
 	}
 
 	visitor := parseVisitor{
@@ -297,7 +297,7 @@ func Compile(input string) (*program.Program, error) {
 	_ = visitor.VisitScript(tree)
 
 	if len(elistener.Errors) != 0 {
-		return nil, (*CompileError)(&elistener.Errors)
+		return nil, (*CompileErrorList)(&elistener.Errors)
 	}
 
 	return &program.Program{
