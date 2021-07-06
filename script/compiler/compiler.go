@@ -15,22 +15,22 @@ import (
 type parseVisitor struct {
 	elistener    *ErrorListener
 	instructions []byte
-	data         []string /* must not exceed 32768 elements */
+	constants    []string /* must not exceed 32768 elements */
 }
 
-// Allocates data if it hasn't already been,
+// Allocates constants if it hasn't already been,
 // and returns its resource address.
 func (p *parseVisitor) AllocateString(str string) (uint16, error) {
-	for i := 0; i < len(p.data); i++ {
-		if p.data[i] == str {
+	for i := 0; i < len(p.constants); i++ {
+		if p.constants[i] == str {
 			return uint16(i), nil
 		}
 	}
-	if len(p.data) >= 32768 {
+	if len(p.constants) >= 32768 {
 		return 0, errors.New("number of unique resource literals exceeded 32768")
 	}
-	p.data = append(p.data, str)
-	return uint16(len(p.data) - 1), nil
+	p.constants = append(p.constants, str)
+	return uint16(len(p.constants) - 1), nil
 }
 
 func (p *parseVisitor) PushValue(val core.Value) error {
@@ -291,7 +291,7 @@ func Compile(input string) (*program.Program, error) {
 	visitor := parseVisitor{
 		elistener:    elistener,
 		instructions: make([]byte, 0),
-		data:         make([]string, 0),
+		constants:    make([]string, 0),
 	}
 
 	_ = visitor.VisitScript(tree)
@@ -302,7 +302,7 @@ func Compile(input string) (*program.Program, error) {
 
 	return &program.Program{
 		Instructions: visitor.instructions,
-		Data:         visitor.data,
-		Vars:         make([]string, 0),
+		Constants:    visitor.constants,
+		Variables:    make([]string, 0),
 	}, nil
 }

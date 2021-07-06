@@ -113,7 +113,7 @@ func (m *Machine) Tick() (bool, byte) {
 }
 
 func (m *Machine) Execute(vars map[string]string) byte {
-	m.Constants = m.Program.Data
+	m.Constants = m.Program.Constants
 
 	go m.Printer(m.print_chan)
 

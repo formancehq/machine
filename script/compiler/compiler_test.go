@@ -11,7 +11,7 @@ import (
 
 type CaseResult struct {
 	Instructions []byte
-	Data         []string
+	Constants    []string
 	Error        error
 }
 
@@ -41,13 +41,13 @@ func test(t *testing.T, c TestCase) {
 		} else if !bytes.Equal(p.Instructions, c.Expected.Instructions) {
 			t.Error(fmt.Errorf("generated program is incorrect: %v", p.Instructions))
 			return
-		} else if len(p.Data) != len(c.Expected.Data) {
-			t.Error(fmt.Errorf("unexpected program data: %v", p.Data))
+		} else if len(p.Constants) != len(c.Expected.Constants) {
+			t.Error(fmt.Errorf("unexpected program data: %v", p.Constants))
 			return
 		} else {
-			for i := range c.Expected.Data {
-				if p.Data[i] != c.Expected.Data[i] {
-					t.Error(fmt.Errorf("unexpected program data: %v", p.Data))
+			for i := range c.Expected.Constants {
+				if p.Constants[i] != c.Expected.Constants[i] {
+					t.Error(fmt.Errorf("unexpected program data: %v", p.Constants))
 					return
 				}
 			}
@@ -63,8 +63,8 @@ func TestSimplePrint(t *testing.T) {
 				program.OP_PUSH8, 01, 00, 00, 00, 00, 00, 00, 00,
 				program.OP_PRINT,
 			},
-			Data:  []string{},
-			Error: nil,
+			Constants: []string{},
+			Error:     nil,
 		},
 	})
 }
@@ -81,8 +81,8 @@ func TestCompositeExpr(t *testing.T) {
 				program.OP_ISUB,
 				program.OP_PRINT,
 			},
-			Data:  []string{},
-			Error: nil,
+			Constants: []string{},
+			Error:     nil,
 		},
 	})
 }
@@ -92,7 +92,7 @@ func TestFail(t *testing.T) {
 		Case: "fail",
 		Expected: CaseResult{
 			Instructions: []byte{program.OP_FAIL},
-			Data:         []string{},
+			Constants:    []string{},
 			Error:        nil,
 		},
 	})
@@ -108,7 +108,7 @@ func TestSend(t *testing.T) {
 				program.OP_PUSH2, 01, 00,
 				program.OP_PUSH2, 02, 00,
 				program.OP_SEND,
-			}, Data: []string{"EUR/2", "alice", "bob"},
+			}, Constants: []string{"EUR/2", "alice", "bob"},
 			Error: nil,
 		},
 	})
@@ -119,7 +119,7 @@ func TestSyntaxError(t *testing.T) {
 		Case: "print fail",
 		Expected: CaseResult{
 			Instructions: nil,
-			Data:         nil,
+			Constants:    nil,
 			Error: &CompileErrorList{
 				CompileError{
 					line:   1,
@@ -136,7 +136,7 @@ func TestLogicError(t *testing.T) {
 		Case: "send(monetary=[EUR/2 200], source=200, destination=bob)",
 		Expected: CaseResult{
 			Instructions: nil,
-			Data:         nil,
+			Constants:    nil,
 			Error: &CompileErrorList{
 				CompileError{
 					line:   1,
