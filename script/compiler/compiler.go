@@ -27,7 +27,7 @@ func (p *parseVisitor) AllocateString(str string) (uint16, error) {
 		}
 	}
 	if len(p.constants) >= 32768 {
-		return 0, errors.New("number of unique resource literals exceeded 32768")
+		return 0, errors.New("number of unique constants exceeded 32768")
 	}
 	p.constants = append(p.constants, str)
 	return uint16(len(p.constants) - 1), nil
@@ -148,7 +148,10 @@ func (p *parseVisitor) VisitExpr(ctx parser.IExpressionContext) (core.ValueType,
 		if err != nil {
 			return 0, err
 		}
-		p.PushValue(val)
+		err = p.PushValue(val)
+		if err != nil {
+			return 0, err
+		}
 		return val.GetType(), nil
 	default:
 		panic("unreachable")
@@ -202,9 +205,18 @@ func (p *parseVisitor) VisitSend(ctx *parser.SendContext) error {
 	mon := args["monetary"]
 	src := args["source"]
 	dst := args["destination"]
-	p.PushValue(mon)
-	p.PushValue(src)
-	p.PushValue(dst)
+	err = p.PushValue(mon)
+	if err != nil {
+		return err
+	}
+	err = p.PushValue(src)
+	if err != nil {
+		return err
+	}
+	err = p.PushValue(dst)
+	if err != nil {
+		return err
+	}
 	p.instructions = append(p.instructions, program.OP_SEND)
 	return nil
 }

@@ -26,8 +26,8 @@ var serializedLexerAtn = []uint16{
 	16, 13, 16, 14, 16, 87, 3, 17, 3, 17, 3, 18, 6, 18, 93, 10, 18, 13, 18,
 	14, 18, 94, 3, 18, 3, 18, 2, 2, 19, 3, 3, 5, 4, 7, 5, 9, 6, 11, 7, 13,
 	8, 15, 9, 17, 10, 19, 11, 21, 12, 23, 13, 25, 14, 27, 15, 29, 16, 31, 17,
-	33, 18, 35, 19, 3, 2, 7, 4, 2, 12, 12, 15, 15, 5, 2, 60, 60, 97, 97, 99,
-	124, 3, 2, 50, 59, 4, 2, 49, 59, 67, 92, 4, 2, 11, 12, 34, 34, 2, 102,
+	33, 18, 35, 19, 3, 2, 7, 4, 2, 12, 12, 15, 15, 3, 2, 50, 59, 5, 2, 50,
+	60, 97, 97, 99, 124, 4, 2, 49, 59, 67, 92, 4, 2, 11, 12, 34, 34, 2, 102,
 	2, 3, 3, 2, 2, 2, 2, 5, 3, 2, 2, 2, 2, 7, 3, 2, 2, 2, 2, 9, 3, 2, 2, 2,
 	2, 11, 3, 2, 2, 2, 2, 13, 3, 2, 2, 2, 2, 15, 3, 2, 2, 2, 2, 17, 3, 2, 2,
 	2, 2, 19, 3, 2, 2, 2, 2, 21, 3, 2, 2, 2, 2, 23, 3, 2, 2, 2, 2, 25, 3, 2,
@@ -74,13 +74,13 @@ var lexerLiteralNames = []string{
 
 var lexerSymbolicNames = []string{
 	"", "", "NEWLINE", "PRINT", "FAIL", "SEND", "OP_ADD", "OP_SUB", "LPAREN",
-	"RPAREN", "LBRACK", "RBRACK", "EQ", "IDENTIFIER", "NUMBER", "ASSET", "SEP",
+	"RPAREN", "LBRACK", "RBRACK", "EQ", "NUMBER", "IDENTIFIER", "ASSET", "SEP",
 	"WHITESPACE",
 }
 
 var lexerRuleNames = []string{
 	"T__0", "NEWLINE", "PRINT", "FAIL", "SEND", "OP_ADD", "OP_SUB", "LPAREN",
-	"RPAREN", "LBRACK", "RBRACK", "EQ", "IDENTIFIER", "NUMBER", "ASSET", "SEP",
+	"RPAREN", "LBRACK", "RBRACK", "EQ", "NUMBER", "IDENTIFIER", "ASSET", "SEP",
 	"WHITESPACE",
 }
 
@@ -133,8 +133,8 @@ const (
 	NumScriptLexerLBRACK     = 10
 	NumScriptLexerRBRACK     = 11
 	NumScriptLexerEQ         = 12
-	NumScriptLexerIDENTIFIER = 13
-	NumScriptLexerNUMBER     = 14
+	NumScriptLexerNUMBER     = 13
+	NumScriptLexerIDENTIFIER = 14
 	NumScriptLexerASSET      = 15
 	NumScriptLexerSEP        = 16
 	NumScriptLexerWHITESPACE = 17

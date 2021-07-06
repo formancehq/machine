@@ -12,8 +12,8 @@ RPAREN: ')';
 LBRACK: '[';
 RBRACK: ']';
 EQ: '=';
-IDENTIFIER: [a-z_:]+;
 NUMBER: [0-9]+;
+IDENTIFIER: [a-z_:0-9]+;
 ASSET: [A-Z/0-9]+;
 
 SEP: ';';
