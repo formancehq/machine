@@ -167,11 +167,15 @@ func (m *Machine) Execute(vars map[string]core.Value) byte {
 	go m.Printer(m.print_chan)
 	defer close(m.print_chan)
 
+	if len(vars) != len(m.Program.Variables) {
+		return EXIT_FAIL
+	}
+
 	m.Constants = m.Program.Constants
-	m.Variables = []core.Value{}
-	for _, name := range m.Program.Variables {
-		if val, ok := vars[name]; ok {
-			m.Variables = append(m.Variables, val)
+	m.Variables = make([]core.Value, len(vars))
+	for name, info := range m.Program.Variables {
+		if val, ok := vars[name]; ok && val.GetType() == info.Ty {
+			m.Variables[info.Addr.ToIdx()] = val
 		} else {
 			return EXIT_FAIL
 		}

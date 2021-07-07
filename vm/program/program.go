@@ -10,7 +10,12 @@ import (
 type Program struct {
 	Constants    []core.Value
 	Instructions []byte
-	Variables    []string
+	Variables    map[string]VarInfo
+}
+
+type VarInfo struct {
+	Ty   core.Type
+	Addr Address
 }
 
 func (p Program) Print() {
@@ -47,8 +52,8 @@ func (p Program) Print() {
 	}
 
 	fmt.Println("VARIABLES")
-	for addr, name := range p.Variables {
-		fmt.Printf("%02d ", addr)
-		fmt.Printf("%s\n", name)
+	for name, info := range p.Variables {
+		fmt.Printf("%02d ", info.Addr.ToIdx())
+		fmt.Printf("%-4s\n", name)
 	}
 }

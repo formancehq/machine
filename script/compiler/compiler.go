@@ -16,12 +16,7 @@ type parseVisitor struct {
 	elistener    *ErrorListener
 	instructions []byte
 	constants    []core.Value /* must not exceed 32768 elements */
-	variables    map[string]VarInfo
-}
-
-type VarInfo struct {
-	ty   core.Type
-	addr program.Address
+	variables    map[string]program.VarInfo
 }
 
 // Allocates constants if it hasn't already been,
@@ -119,9 +114,9 @@ func (p *parseVisitor) VisitVars(c *parser.VarListDeclContext) error {
 			ty = core.TYPE_MONETARY
 		}
 		addr := program.NewVarAddress(uint16(len(p.variables)))
-		p.variables[name] = VarInfo{
-			ty:   ty,
-			addr: addr,
+		p.variables[name] = program.VarInfo{
+			Ty:   ty,
+			Addr: addr,
 		}
 	}
 	return nil
@@ -174,9 +169,9 @@ func (p *parseVisitor) VisitExpr(ctx parser.IExpressionContext) (core.Type, erro
 		name := ctx.GetVariable().GetText()[1:]
 		if info, ok := p.variables[name]; ok {
 			p.instructions = append(p.instructions, program.OP_APUSH)
-			bytes := info.addr.ToBytes()
+			bytes := info.Addr.ToBytes()
 			p.instructions = append(p.instructions, bytes...)
-			return info.ty, nil
+			return info.Ty, nil
 		} else {
 			return 0, fmt.Errorf("variable not declared : %v", name)
 		}
@@ -306,7 +301,7 @@ func Compile(input string) (*program.Program, error) {
 		elistener:    elistener,
 		instructions: make([]byte, 0),
 		constants:    make([]core.Value, 0),
-		variables:    make(map[string]VarInfo, 0),
+		variables:    make(map[string]program.VarInfo, 0),
 	}
 
 	_ = visitor.VisitScript(tree)
@@ -315,15 +310,9 @@ func Compile(input string) (*program.Program, error) {
 		return nil, (*CompileErrorList)(&elistener.Errors)
 	}
 
-	vars := []string{}
-
-	for name := range visitor.variables {
-		vars = append(vars, name)
-	}
-
 	return &program.Program{
 		Instructions: visitor.instructions,
 		Constants:    visitor.constants,
-		Variables:    vars,
+		Variables:    visitor.variables,
 	}, nil
 }
