@@ -41,7 +41,7 @@ func (p *parseVisitor) AllocateValue(v core.Value) (program.Address, error) {
 
 func (p *parseVisitor) PushValue(val core.Value) error {
 	switch val := val.(type) {
-	case *core.Account, *core.Asset, *core.Monetary:
+	case core.Account, core.Asset, core.Monetary:
 		p.instructions = append(p.instructions, program.OP_APUSH)
 		addr, err := p.AllocateValue(val)
 		if err != nil {
@@ -49,13 +49,13 @@ func (p *parseVisitor) PushValue(val core.Value) error {
 		}
 		bytes := addr.ToBytes()
 		p.instructions = append(p.instructions, bytes...)
-	case *core.Number:
+	case core.Number:
 		p.instructions = append(p.instructions, program.OP_IPUSH)
 		bytes := make([]byte, 8)
-		binary.LittleEndian.PutUint64(bytes, uint64(*val))
+		binary.LittleEndian.PutUint64(bytes, uint64(val))
 		p.instructions = append(p.instructions, bytes...)
 	default:
-		panic("unreachable")
+		panic("internal compiler error")
 	}
 	return nil
 }
@@ -69,7 +69,7 @@ func (p *parseVisitor) VisitScript(c parser.IScriptContext) error {
 			case *parser.VarListDeclContext:
 				p.VisitVars(c)
 			default:
-				panic("unreachable")
+				panic("internal compiler error")
 			}
 		}
 		for _, stmt := range c.GetStmts() {
@@ -128,12 +128,9 @@ func (p *parseVisitor) VisitVars(c *parser.VarListDeclContext) error {
 }
 
 func (p *parseVisitor) VisitPrint(ctx *parser.PrintContext) error {
-	ty, err := p.VisitExpr(ctx.GetExpr())
+	_, err := p.VisitExpr(ctx.GetExpr())
 	if err != nil {
 		return err
-	}
-	if ty != core.TYPE_NUMBER {
-		return errors.New("print can only print numbers")
 	}
 	p.instructions = append(p.instructions, program.OP_PRINT)
 	return nil
@@ -184,7 +181,7 @@ func (p *parseVisitor) VisitExpr(ctx parser.IExpressionContext) (core.Type, erro
 			return 0, fmt.Errorf("variable not declared : %v", name)
 		}
 	default:
-		panic("unreachable")
+		panic("internal compiler error")
 	}
 }
 
@@ -192,17 +189,17 @@ func (p *parseVisitor) VisitLit(c parser.ILiteralContext) (core.Value, error) {
 	switch c := c.(type) {
 	case *parser.LitAccountContext:
 		addr := core.Account(c.GetText()[1:])
-		return &addr, nil
+		return addr, nil
 	case *parser.LitAssetContext:
 		asset := core.Asset(c.GetText())
-		return &asset, nil
+		return asset, nil
 	case *parser.LitNumberContext:
 		n, err := strconv.ParseUint(c.GetText(), 10, 64)
 		if err != nil {
 			return nil, err
 		}
 		number := core.Number(n)
-		return &number, nil
+		return number, nil
 	case *parser.LitMonetaryContext:
 		asset := c.Monetary().GetAsset().GetText()
 		amount, err := strconv.ParseUint(c.Monetary().GetAmount().GetText(), 10, 64)
@@ -213,9 +210,9 @@ func (p *parseVisitor) VisitLit(c parser.ILiteralContext) (core.Value, error) {
 			Asset:  asset,
 			Amount: amount,
 		}
-		return &monetary, nil
+		return monetary, nil
 	default:
-		panic("unreachable")
+		panic("internal compiler error")
 	}
 }
 
