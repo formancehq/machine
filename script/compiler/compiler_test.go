@@ -101,18 +101,6 @@ func TestFail(t *testing.T) {
 	})
 }
 
-func TestConstant(t *testing.T) {
-	user := core.Account("user:001")
-	test(t, TestCase{
-		Case: "print @user:001",
-		Expected: CaseResult{
-			Instructions: []byte{program.OP_APUSH, 00, 00, program.OP_PRINT},
-			Constants:    []core.Value{user},
-			Error:        "",
-		},
-	})
-}
-
 func TestSend(t *testing.T) {
 	alice := core.Account("alice")
 	bob := core.Account("bob")
@@ -124,7 +112,7 @@ func TestSend(t *testing.T) {
 				program.OP_APUSH, 01, 00,
 				program.OP_APUSH, 02, 00,
 				program.OP_SEND,
-			}, Constants: []core.Value{core.Monetary{Asset: "EUR/2", Amount: 99}, alice, bob},
+			}, Constants: []core.Value{&core.Monetary{Asset: "EUR/2", Amount: 99}, &alice, &bob},
 			Error: "",
 		},
 	})
@@ -143,11 +131,11 @@ func TestSyntaxError(t *testing.T) {
 
 func TestLogicError(t *testing.T) {
 	test(t, TestCase{
-		Case: "send(sum=[EUR/2 200], source=200, destination=@bob)",
+		Case: "send(monetary=[EUR/2 200], source=200, destination=bob)",
 		Expected: CaseResult{
 			Instructions: nil,
 			Constants:    nil,
-			Error:        "wrong argument type",
+			Error:        "argument is not valid",
 		},
 	})
 }
