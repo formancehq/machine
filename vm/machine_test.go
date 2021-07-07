@@ -27,6 +27,7 @@ func test(t *testing.T, c TestCase) {
 
 	if err != nil {
 		t.Error(fmt.Errorf("compile error: %v", err))
+		return
 	}
 
 	printed := []core.Value{}
@@ -101,7 +102,7 @@ func TestPrint(t *testing.T) {
 
 func TestSend(t *testing.T) {
 	test(t, TestCase{
-		Code:      "send(sum=[EUR/2 100], source=@alice, destination=@bob)",
+		Code:      "send(value=[EUR/2 100], source=@alice, destination=@bob)",
 		Variables: map[string]core.Value{},
 		Expected: CaseResult{
 			Printed: []core.Value{},
@@ -124,7 +125,7 @@ func TestVariables(t *testing.T) {
 			account $rider
 			account $driver
 		}
-		send(sum=[EUR/2 999], source=$rider, destination=$driver)`,
+		send(value=[EUR/2 999], source=$rider, destination=$driver)`,
 		Variables: map[string]core.Value{
 			"rider":  core.Account("user:001"),
 			"driver": core.Account("user:002"),

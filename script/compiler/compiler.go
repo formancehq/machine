@@ -223,7 +223,7 @@ func (p *parseVisitor) VisitFail(ctx *parser.FailContext) {
 func (p *parseVisitor) VisitSend(ctx *parser.SendContext) error {
 	err := p.VisitArgs(ctx.GetArgs(), []arg{
 		{
-			name: "sum",
+			name: "value",
 			ty:   core.TYPE_MONETARY,
 		},
 		{

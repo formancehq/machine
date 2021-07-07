@@ -25,7 +25,7 @@ func main() {
 			account $rider
 			account $driver
 		}
-		send(sum=[EUR/2 999], source=$rider, destination=$driver)`)
+		send(value=[EUR/2 999], source=$rider, destination=$driver)`)
 
 	// fmt.Println(p)
 
