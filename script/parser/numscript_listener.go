@@ -11,8 +11,8 @@ type NumScriptListener interface {
 	// EnterMonetary is called when entering the monetary production.
 	EnterMonetary(c *MonetaryContext)
 
-	// EnterLitAccount is called when entering the LitAccount production.
-	EnterLitAccount(c *LitAccountContext)
+	// EnterLitAddress is called when entering the LitAddress production.
+	EnterLitAddress(c *LitAddressContext)
 
 	// EnterLitAsset is called when entering the LitAsset production.
 	EnterLitAsset(c *LitAssetContext)
@@ -29,9 +29,6 @@ type NumScriptListener interface {
 	// EnterExprLiteral is called when entering the ExprLiteral production.
 	EnterExprLiteral(c *ExprLiteralContext)
 
-	// EnterExprVariable is called when entering the ExprVariable production.
-	EnterExprVariable(c *ExprVariableContext)
-
 	// EnterArgument is called when entering the argument production.
 	EnterArgument(c *ArgumentContext)
 
@@ -44,23 +41,14 @@ type NumScriptListener interface {
 	// EnterSend is called when entering the Send production.
 	EnterSend(c *SendContext)
 
-	// EnterType_ is called when entering the type_ production.
-	EnterType_(c *Type_Context)
-
-	// EnterVarDecl is called when entering the varDecl production.
-	EnterVarDecl(c *VarDeclContext)
-
-	// EnterVarListDecl is called when entering the varListDecl production.
-	EnterVarListDecl(c *VarListDeclContext)
-
 	// EnterScript is called when entering the script production.
 	EnterScript(c *ScriptContext)
 
 	// ExitMonetary is called when exiting the monetary production.
 	ExitMonetary(c *MonetaryContext)
 
-	// ExitLitAccount is called when exiting the LitAccount production.
-	ExitLitAccount(c *LitAccountContext)
+	// ExitLitAddress is called when exiting the LitAddress production.
+	ExitLitAddress(c *LitAddressContext)
 
 	// ExitLitAsset is called when exiting the LitAsset production.
 	ExitLitAsset(c *LitAssetContext)
@@ -77,9 +65,6 @@ type NumScriptListener interface {
 	// ExitExprLiteral is called when exiting the ExprLiteral production.
 	ExitExprLiteral(c *ExprLiteralContext)
 
-	// ExitExprVariable is called when exiting the ExprVariable production.
-	ExitExprVariable(c *ExprVariableContext)
-
 	// ExitArgument is called when exiting the argument production.
 	ExitArgument(c *ArgumentContext)
 
@@ -91,15 +76,6 @@ type NumScriptListener interface {
 
 	// ExitSend is called when exiting the Send production.
 	ExitSend(c *SendContext)
-
-	// ExitType_ is called when exiting the type_ production.
-	ExitType_(c *Type_Context)
-
-	// ExitVarDecl is called when exiting the varDecl production.
-	ExitVarDecl(c *VarDeclContext)
-
-	// ExitVarListDecl is called when exiting the varListDecl production.
-	ExitVarListDecl(c *VarListDeclContext)
 
 	// ExitScript is called when exiting the script production.
 	ExitScript(c *ScriptContext)

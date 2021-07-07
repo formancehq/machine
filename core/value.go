@@ -1,47 +1,33 @@
 package core
 
-import "fmt"
-
-type Type = byte
+type ValueType = byte
 
 const (
-	TYPE_ACCOUNT = Type(iota + 1)
+	TYPE_ADDRESS = ValueType(iota + 1)
 	TYPE_ASSET
 	TYPE_NUMBER
 	TYPE_MONETARY
 )
 
 type Value interface {
-	GetType() Type
+	GetType() ValueType
 }
 
-type Account string
+type Address string
 
-func (*Account) GetType() Type { return TYPE_ACCOUNT }
-func (a Account) String() string {
-	return fmt.Sprintf("@%v", string(a))
-}
+func (*Address) GetType() ValueType { return TYPE_ADDRESS }
 
 type Asset string
 
-func (*Asset) GetType() Type { return TYPE_ASSET }
-func (a Asset) String() string {
-	return fmt.Sprintf("%v", string(a))
-}
+func (*Asset) GetType() ValueType { return TYPE_ASSET }
 
 type Number uint64
 
-func (*Number) GetType() Type { return TYPE_NUMBER }
-func (n Number) String() string {
-	return fmt.Sprintf("%v", uint64(n))
-}
+func (*Number) GetType() ValueType { return TYPE_NUMBER }
 
 type Monetary struct {
 	Asset  string
 	Amount uint64
 }
 
-func (*Monetary) GetType() Type { return TYPE_MONETARY }
-func (a Monetary) String() string {
-	return fmt.Sprintf("[%v %v]", a.Asset, a.Amount)
-}
+func (*Monetary) GetType() ValueType { return TYPE_MONETARY }

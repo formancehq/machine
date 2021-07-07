@@ -7,14 +7,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/numary/machine/core"
 	"github.com/numary/machine/vm/program"
 )
 
 type CaseResult struct {
 	Instructions []byte
-	Constants    []core.Value
-	Variables    []string
+	Constants    []string
 	Error        string
 }
 
@@ -63,10 +61,10 @@ func TestSimplePrint(t *testing.T) {
 		Case: "print 1",
 		Expected: CaseResult{
 			Instructions: []byte{
-				program.OP_IPUSH, 01, 00, 00, 00, 00, 00, 00, 00,
+				program.OP_PUSH8, 01, 00, 00, 00, 00, 00, 00, 00,
 				program.OP_PRINT,
 			},
-			Constants: []core.Value{},
+			Constants: []string{},
 			Error:     "",
 		},
 	})
@@ -77,14 +75,14 @@ func TestCompositeExpr(t *testing.T) {
 		Case: "print 29 + 15 - 2",
 		Expected: CaseResult{
 			Instructions: []byte{
-				program.OP_IPUSH, 29, 00, 00, 00, 00, 00, 00, 00,
-				program.OP_IPUSH, 15, 00, 00, 00, 00, 00, 00, 00,
+				program.OP_PUSH8, 29, 00, 00, 00, 00, 00, 00, 00,
+				program.OP_PUSH8, 15, 00, 00, 00, 00, 00, 00, 00,
 				program.OP_IADD,
-				program.OP_IPUSH, 02, 00, 00, 00, 00, 00, 00, 00,
+				program.OP_PUSH8, 02, 00, 00, 00, 00, 00, 00, 00,
 				program.OP_ISUB,
 				program.OP_PRINT,
 			},
-			Constants: []core.Value{},
+			Constants: []string{},
 			Error:     "",
 		},
 	})
@@ -95,24 +93,23 @@ func TestFail(t *testing.T) {
 		Case: "fail",
 		Expected: CaseResult{
 			Instructions: []byte{program.OP_FAIL},
-			Constants:    []core.Value{},
+			Constants:    []string{},
 			Error:        "",
 		},
 	})
 }
 
 func TestSend(t *testing.T) {
-	alice := core.Account("alice")
-	bob := core.Account("bob")
 	test(t, TestCase{
-		Case: "send(sum=[EUR/2 99], source=@alice, destination=@bob)",
+		Case: "send(monetary=[EUR/2 99], source=alice, destination=bob)",
 		Expected: CaseResult{
 			Instructions: []byte{
-				program.OP_APUSH, 00, 00,
-				program.OP_APUSH, 01, 00,
-				program.OP_APUSH, 02, 00,
+				program.OP_PUSH2, 00, 00,
+				program.OP_PUSH8, 99, 00, 00, 00, 00, 00, 00, 00,
+				program.OP_PUSH2, 01, 00,
+				program.OP_PUSH2, 02, 00,
 				program.OP_SEND,
-			}, Constants: []core.Value{&core.Monetary{Asset: "EUR/2", Amount: 99}, &alice, &bob},
+			}, Constants: []string{"EUR/2", "alice", "bob"},
 			Error: "",
 		},
 	})
