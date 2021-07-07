@@ -27,11 +27,11 @@ func (s *BaseNumScriptListener) EnterMonetary(ctx *MonetaryContext) {}
 // ExitMonetary is called when production monetary is exited.
 func (s *BaseNumScriptListener) ExitMonetary(ctx *MonetaryContext) {}
 
-// EnterLitAddress is called when production LitAddress is entered.
-func (s *BaseNumScriptListener) EnterLitAddress(ctx *LitAddressContext) {}
+// EnterLitAccount is called when production LitAccount is entered.
+func (s *BaseNumScriptListener) EnterLitAccount(ctx *LitAccountContext) {}
 
-// ExitLitAddress is called when production LitAddress is exited.
-func (s *BaseNumScriptListener) ExitLitAddress(ctx *LitAddressContext) {}
+// ExitLitAccount is called when production LitAccount is exited.
+func (s *BaseNumScriptListener) ExitLitAccount(ctx *LitAccountContext) {}
 
 // EnterLitAsset is called when production LitAsset is entered.
 func (s *BaseNumScriptListener) EnterLitAsset(ctx *LitAssetContext) {}
@@ -63,6 +63,12 @@ func (s *BaseNumScriptListener) EnterExprLiteral(ctx *ExprLiteralContext) {}
 // ExitExprLiteral is called when production ExprLiteral is exited.
 func (s *BaseNumScriptListener) ExitExprLiteral(ctx *ExprLiteralContext) {}
 
+// EnterExprVariable is called when production ExprVariable is entered.
+func (s *BaseNumScriptListener) EnterExprVariable(ctx *ExprVariableContext) {}
+
+// ExitExprVariable is called when production ExprVariable is exited.
+func (s *BaseNumScriptListener) ExitExprVariable(ctx *ExprVariableContext) {}
+
 // EnterArgument is called when production argument is entered.
 func (s *BaseNumScriptListener) EnterArgument(ctx *ArgumentContext) {}
 
@@ -86,6 +92,24 @@ func (s *BaseNumScriptListener) EnterSend(ctx *SendContext) {}
 
 // ExitSend is called when production Send is exited.
 func (s *BaseNumScriptListener) ExitSend(ctx *SendContext) {}
+
+// EnterType_ is called when production type_ is entered.
+func (s *BaseNumScriptListener) EnterType_(ctx *Type_Context) {}
+
+// ExitType_ is called when production type_ is exited.
+func (s *BaseNumScriptListener) ExitType_(ctx *Type_Context) {}
+
+// EnterVarDecl is called when production varDecl is entered.
+func (s *BaseNumScriptListener) EnterVarDecl(ctx *VarDeclContext) {}
+
+// ExitVarDecl is called when production varDecl is exited.
+func (s *BaseNumScriptListener) ExitVarDecl(ctx *VarDeclContext) {}
+
+// EnterVarListDecl is called when production varListDecl is entered.
+func (s *BaseNumScriptListener) EnterVarListDecl(ctx *VarListDeclContext) {}
+
+// ExitVarListDecl is called when production varListDecl is exited.
+func (s *BaseNumScriptListener) ExitVarListDecl(ctx *VarListDeclContext) {}
 
 // EnterScript is called when production script is entered.
 func (s *BaseNumScriptListener) EnterScript(ctx *ScriptContext) {}

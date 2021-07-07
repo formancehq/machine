@@ -7,12 +7,14 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/numary/machine/core"
 	"github.com/numary/machine/vm/program"
 )
 
 type CaseResult struct {
 	Instructions []byte
-	Constants    []string
+	Constants    []core.Value
+	Variables    []string
 	Error        string
 }
 
@@ -61,10 +63,10 @@ func TestSimplePrint(t *testing.T) {
 		Case: "print 1",
 		Expected: CaseResult{
 			Instructions: []byte{
-				program.OP_PUSH8, 01, 00, 00, 00, 00, 00, 00, 00,
+				program.OP_IPUSH, 01, 00, 00, 00, 00, 00, 00, 00,
 				program.OP_PRINT,
 			},
-			Constants: []string{},
+			Constants: []core.Value{},
 			Error:     "",
 		},
 	})
@@ -75,14 +77,14 @@ func TestCompositeExpr(t *testing.T) {
 		Case: "print 29 + 15 - 2",
 		Expected: CaseResult{
 			Instructions: []byte{
-				program.OP_PUSH8, 29, 00, 00, 00, 00, 00, 00, 00,
-				program.OP_PUSH8, 15, 00, 00, 00, 00, 00, 00, 00,
+				program.OP_IPUSH, 29, 00, 00, 00, 00, 00, 00, 00,
+				program.OP_IPUSH, 15, 00, 00, 00, 00, 00, 00, 00,
 				program.OP_IADD,
-				program.OP_PUSH8, 02, 00, 00, 00, 00, 00, 00, 00,
+				program.OP_IPUSH, 02, 00, 00, 00, 00, 00, 00, 00,
 				program.OP_ISUB,
 				program.OP_PRINT,
 			},
-			Constants: []string{},
+			Constants: []core.Value{},
 			Error:     "",
 		},
 	})
@@ -93,23 +95,36 @@ func TestFail(t *testing.T) {
 		Case: "fail",
 		Expected: CaseResult{
 			Instructions: []byte{program.OP_FAIL},
-			Constants:    []string{},
+			Constants:    []core.Value{},
+			Error:        "",
+		},
+	})
+}
+
+func TestConstant(t *testing.T) {
+	user := core.Account("user:001")
+	test(t, TestCase{
+		Case: "print @user:001",
+		Expected: CaseResult{
+			Instructions: []byte{program.OP_APUSH, 00, 00, program.OP_PRINT},
+			Constants:    []core.Value{user},
 			Error:        "",
 		},
 	})
 }
 
 func TestSend(t *testing.T) {
+	alice := core.Account("alice")
+	bob := core.Account("bob")
 	test(t, TestCase{
-		Case: "send(monetary=[EUR/2 99], source=alice, destination=bob)",
+		Case: "send(value=[EUR/2 99], source=@alice, destination=@bob)",
 		Expected: CaseResult{
 			Instructions: []byte{
-				program.OP_PUSH2, 00, 00,
-				program.OP_PUSH8, 99, 00, 00, 00, 00, 00, 00, 00,
-				program.OP_PUSH2, 01, 00,
-				program.OP_PUSH2, 02, 00,
+				program.OP_APUSH, 00, 00,
+				program.OP_APUSH, 01, 00,
+				program.OP_APUSH, 02, 00,
 				program.OP_SEND,
-			}, Constants: []string{"EUR/2", "alice", "bob"},
+			}, Constants: []core.Value{core.Monetary{Asset: "EUR/2", Amount: 99}, alice, bob},
 			Error: "",
 		},
 	})
@@ -128,11 +143,11 @@ func TestSyntaxError(t *testing.T) {
 
 func TestLogicError(t *testing.T) {
 	test(t, TestCase{
-		Case: "send(monetary=[EUR/2 200], source=200, destination=bob)",
+		Case: "send(value=[EUR/2 200], source=200, destination=@bob)",
 		Expected: CaseResult{
 			Instructions: nil,
 			Constants:    nil,
-			Error:        "argument is not valid",
+			Error:        "wrong argument type",
 		},
 	})
 }
