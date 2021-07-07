@@ -15,62 +15,44 @@ import (
 type parseVisitor struct {
 	elistener    *ErrorListener
 	instructions []byte
-	constants    []string /* must not exceed 32768 elements */
+	constants    []core.Value /* must not exceed 32768 elements */
+	variables    map[string]VarInfo
+}
+
+type VarInfo struct {
+	ty   core.Type
+	addr program.Address
 }
 
 // Allocates constants if it hasn't already been,
 // and returns its resource address.
-func (p *parseVisitor) AllocateString(str string) (uint16, error) {
+func (p *parseVisitor) AllocateValue(v core.Value) (program.Address, error) {
 	for i := 0; i < len(p.constants); i++ {
-		if p.constants[i] == str {
-			return uint16(i), nil
+		if p.constants[i] == v {
+			return program.Address(i), nil
 		}
 	}
 	if len(p.constants) >= 32768 {
 		return 0, errors.New("number of unique constants exceeded 32768")
 	}
-	p.constants = append(p.constants, str)
-	return uint16(len(p.constants) - 1), nil
+	p.constants = append(p.constants, v)
+	return program.Address(len(p.constants) - 1), nil
 }
 
 func (p *parseVisitor) PushValue(val core.Value) error {
 	switch val := val.(type) {
-	case *core.Address:
-		p.instructions = append(p.instructions, program.OP_PUSH2)
-		addr, err := p.AllocateString(string(*val))
+	case *core.Account, *core.Asset, *core.Monetary:
+		p.instructions = append(p.instructions, program.OP_APUSH)
+		addr, err := p.AllocateValue(val)
 		if err != nil {
 			return err
 		}
-		bytes := make([]byte, 2)
-		binary.LittleEndian.PutUint16(bytes, addr)
-		p.instructions = append(p.instructions, bytes...)
-	case *core.Asset:
-		p.instructions = append(p.instructions, program.OP_PUSH2)
-		addr, err := p.AllocateString(string(*val))
-		if err != nil {
-			return err
-		}
-		bytes := make([]byte, 2)
-		binary.LittleEndian.PutUint16(bytes, addr)
+		bytes := addr.ToBytes()
 		p.instructions = append(p.instructions, bytes...)
 	case *core.Number:
-		p.instructions = append(p.instructions, program.OP_PUSH8)
+		p.instructions = append(p.instructions, program.OP_IPUSH)
 		bytes := make([]byte, 8)
 		binary.LittleEndian.PutUint64(bytes, uint64(*val))
-		p.instructions = append(p.instructions, bytes...)
-	case *core.Monetary:
-		p.instructions = append(p.instructions, program.OP_PUSH2)
-		addr, err := p.AllocateString(val.Asset)
-		if err != nil {
-			return err
-		}
-		bytes := make([]byte, 2)
-		binary.LittleEndian.PutUint16(bytes, addr)
-		p.instructions = append(p.instructions, bytes...)
-
-		p.instructions = append(p.instructions, program.OP_PUSH8)
-		bytes = make([]byte, 8)
-		binary.LittleEndian.PutUint64(bytes, val.Amount)
 		p.instructions = append(p.instructions, bytes...)
 	default:
 		panic("unreachable")
@@ -81,6 +63,15 @@ func (p *parseVisitor) PushValue(val core.Value) error {
 func (p *parseVisitor) VisitScript(c parser.IScriptContext) error {
 	switch c := c.(type) {
 	case *parser.ScriptContext:
+		vars := c.GetVars()
+		if vars != nil {
+			switch c := vars.(type) {
+			case *parser.VarListDeclContext:
+				p.VisitVars(c)
+			default:
+				panic("unreachable")
+			}
+		}
 		for _, stmt := range c.GetStmts() {
 			switch c := stmt.(type) {
 			case *parser.PrintContext:
@@ -107,6 +98,35 @@ func (p *parseVisitor) VisitScript(c parser.IScriptContext) error {
 	return nil
 }
 
+func (p *parseVisitor) VisitVars(c *parser.VarListDeclContext) error {
+	if len(c.GetV()) > 32768 {
+		return fmt.Errorf("number of variables exceeded %v", 32768)
+	}
+	for _, v := range c.GetV() {
+		name := v.GetName().GetText()[1:]
+		if _, ok := p.variables[name]; ok {
+			return fmt.Errorf("duplicate variable: %v", name)
+		}
+		var ty core.Type
+		switch v.GetTy().GetText() {
+		case "account":
+			ty = core.TYPE_ACCOUNT
+		case "asset":
+			ty = core.TYPE_ASSET
+		case "number":
+			ty = core.TYPE_NUMBER
+		case "monetary":
+			ty = core.TYPE_MONETARY
+		}
+		addr := program.NewVarAddress(uint16(len(p.variables)))
+		p.variables[name] = VarInfo{
+			ty:   ty,
+			addr: addr,
+		}
+	}
+	return nil
+}
+
 func (p *parseVisitor) VisitPrint(ctx *parser.PrintContext) error {
 	ty, err := p.VisitExpr(ctx.GetExpr())
 	if err != nil {
@@ -119,7 +139,7 @@ func (p *parseVisitor) VisitPrint(ctx *parser.PrintContext) error {
 	return nil
 }
 
-func (p *parseVisitor) VisitExpr(ctx parser.IExpressionContext) (core.ValueType, error) {
+func (p *parseVisitor) VisitExpr(ctx parser.IExpressionContext) (core.Type, error) {
 	switch ctx := ctx.(type) {
 	case *parser.ExprAddSubContext:
 		ty, err := p.VisitExpr(ctx.GetLhs())
@@ -153,6 +173,16 @@ func (p *parseVisitor) VisitExpr(ctx parser.IExpressionContext) (core.ValueType,
 			return 0, err
 		}
 		return val.GetType(), nil
+	case *parser.ExprVariableContext:
+		name := ctx.GetVariable().GetText()[1:]
+		if info, ok := p.variables[name]; ok {
+			p.instructions = append(p.instructions, program.OP_APUSH)
+			bytes := info.addr.ToBytes()
+			p.instructions = append(p.instructions, bytes...)
+			return info.ty, nil
+		} else {
+			return 0, fmt.Errorf("variable not declared : %v", name)
+		}
 	default:
 		panic("unreachable")
 	}
@@ -160,8 +190,8 @@ func (p *parseVisitor) VisitExpr(ctx parser.IExpressionContext) (core.ValueType,
 
 func (p *parseVisitor) VisitLit(c parser.ILiteralContext) (core.Value, error) {
 	switch c := c.(type) {
-	case *parser.LitAddressContext:
-		addr := core.Address(c.GetText())
+	case *parser.LitAccountContext:
+		addr := core.Account(c.GetText()[1:])
 		return &addr, nil
 	case *parser.LitAssetContext:
 		asset := core.Asset(c.GetText())
@@ -194,26 +224,20 @@ func (p *parseVisitor) VisitFail(ctx *parser.FailContext) {
 }
 
 func (p *parseVisitor) VisitSend(ctx *parser.SendContext) error {
-	args, err := p.VisitArgs(ctx.GetArgs(), map[string]core.ValueType{
-		"source":      core.TYPE_ADDRESS,
-		"destination": core.TYPE_ADDRESS,
-		"monetary":    core.TYPE_MONETARY,
+	err := p.VisitArgs(ctx.GetArgs(), []arg{
+		{
+			name: "sum",
+			ty:   core.TYPE_MONETARY,
+		},
+		{
+			name: "source",
+			ty:   core.TYPE_ACCOUNT,
+		},
+		{
+			name: "destination",
+			ty:   core.TYPE_ACCOUNT,
+		},
 	})
-	if err != nil {
-		return err
-	}
-	mon := args["monetary"]
-	src := args["source"]
-	dst := args["destination"]
-	err = p.PushValue(mon)
-	if err != nil {
-		return err
-	}
-	err = p.PushValue(src)
-	if err != nil {
-		return err
-	}
-	err = p.PushValue(dst)
 	if err != nil {
 		return err
 	}
@@ -221,65 +245,43 @@ func (p *parseVisitor) VisitSend(ctx *parser.SendContext) error {
 	return nil
 }
 
-func (p *parseVisitor) VisitArgs(cs []parser.IArgumentContext, args map[string]core.ValueType) (map[string]core.Value, error) {
-	res := make(map[string]core.Value)
+type arg struct {
+	name string
+	ty   core.Type
+}
+
+// pushes them on the stack in the order given
+func (p *parseVisitor) VisitArgs(cs []parser.IArgumentContext, args []arg) error {
+	// put all parsed arguments in a map
+	arg_expr := make(map[string]parser.IExpressionContext)
 	for _, c := range cs {
 		name := c.GetName().GetText()
-		val, err := p.VisitLit(c.GetLit())
+		expr := c.GetVal()
+		if _, ok := arg_expr[name]; ok {
+			return fmt.Errorf("duplicate argument: %s", name)
+		}
+		arg_expr[name] = expr
+	}
+	// push arguments in right order
+	for _, arg := range args {
+		expr, ok := arg_expr[arg.name]
+		if !ok {
+			return fmt.Errorf("missing argument: %s", arg.name)
+		}
+		ty, err := p.VisitExpr(expr)
 		if err != nil {
-			return nil, err
+			return err
 		}
-		val_ty := val.GetType()
-		if _, ok := res[name]; ok {
-			return nil, fmt.Errorf("duplicate argument: %s", name)
+		if ty != arg.ty {
+			return fmt.Errorf("wrong argument type")
 		}
-		if ty, ok := args[name]; ok && ty == val_ty {
-			delete(args, name)
-		} else {
-			return nil, fmt.Errorf("argument is not valid")
-		}
-		res[name] = val
+		delete(arg_expr, arg.name)
 	}
-	for name := range args {
-		return nil, fmt.Errorf("missing argument: %s", name)
+	// check for excess arguments
+	for name := range arg_expr {
+		return fmt.Errorf("unrecognized argument: %s", name)
 	}
-	return res, nil
-}
-
-type CompileError struct {
-	line, column int
-	msg          string
-}
-
-type CompileErrorList []CompileError
-
-func (c *CompileErrorList) Error() string {
-	s := ""
-	for _, e := range *c {
-		s = fmt.Sprintf("%v\nerror:%v:%v   %v", s, e.line, e.column, e.msg)
-	}
-	return s
-}
-
-type ErrorListener struct {
-	*antlr.DefaultErrorListener
-	Errors CompileErrorList
-}
-
-func (l *ErrorListener) SyntaxError(recognizer antlr.Recognizer, offendingSymbol interface{}, line, column int, msg string, e antlr.RecognitionException) {
-	l.Errors = append(l.Errors, CompileError{
-		line:   line,
-		column: column,
-		msg:    msg,
-	})
-}
-
-func (l *ErrorListener) LogicError(token antlr.Token, err error) {
-	l.Errors = append(l.Errors, CompileError{
-		line:   token.GetLine(),
-		column: token.GetColumn(),
-		msg:    err.Error(),
-	})
+	return nil
 }
 
 func Compile(input string) (*program.Program, error) {
@@ -306,7 +308,8 @@ func Compile(input string) (*program.Program, error) {
 	visitor := parseVisitor{
 		elistener:    elistener,
 		instructions: make([]byte, 0),
-		constants:    make([]string, 0),
+		constants:    make([]core.Value, 0),
+		variables:    make(map[string]VarInfo, 0),
 	}
 
 	_ = visitor.VisitScript(tree)
@@ -315,9 +318,15 @@ func Compile(input string) (*program.Program, error) {
 		return nil, (*CompileErrorList)(&elistener.Errors)
 	}
 
+	vars := []string{}
+
+	for name := range visitor.variables {
+		vars = append(vars, name)
+	}
+
 	return &program.Program{
 		Instructions: visitor.instructions,
 		Constants:    visitor.constants,
-		Variables:    make([]string, 0),
+		Variables:    vars,
 	}, nil
 }
