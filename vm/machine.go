@@ -50,22 +50,22 @@ func (m *Machine) popValue() core.Value {
 	return x
 }
 
-func (m *Machine) popAccount() *core.Account {
+func (m *Machine) popAccount() core.Account {
 	l := len(m.Stack)
 	x := m.Stack[l-1]
 	m.Stack = m.Stack[:l-1]
-	if a, ok := x.(*core.Account); ok {
+	if a, ok := x.(core.Account); ok {
 		return a
 	} else {
 		panic("unexpected type on stack")
 	}
 }
 
-func (m *Machine) popAsset() *core.Asset {
+func (m *Machine) popAsset() core.Asset {
 	l := len(m.Stack)
 	x := m.Stack[l-1]
 	m.Stack = m.Stack[:l-1]
-	if a, ok := x.(*core.Asset); ok {
+	if a, ok := x.(core.Asset); ok {
 		return a
 	} else {
 		panic("unexpected type on stack")
@@ -76,18 +76,18 @@ func (m *Machine) popNumber() uint64 {
 	l := len(m.Stack)
 	x := m.Stack[l-1]
 	m.Stack = m.Stack[:l-1]
-	if n, ok := x.(*core.Number); ok {
-		return uint64(*n)
+	if n, ok := x.(core.Number); ok {
+		return uint64(n)
 	} else {
 		panic("unexpected type on stack")
 	}
 }
 
-func (m *Machine) popMonetary() *core.Monetary {
+func (m *Machine) popMonetary() core.Monetary {
 	l := len(m.Stack)
 	x := m.Stack[l-1]
 	m.Stack = m.Stack[:l-1]
-	if m, ok := x.(*core.Monetary); ok {
+	if m, ok := x.(core.Monetary); ok {
 		return m
 	} else {
 		panic("unexpected type on stack")
@@ -96,7 +96,7 @@ func (m *Machine) popMonetary() *core.Monetary {
 
 func (m *Machine) pushNumber(x uint64) {
 	num := core.Number(x)
-	m.Stack = append(m.Stack, &num)
+	m.Stack = append(m.Stack, num)
 }
 
 func (m *Machine) getResource(addr program.Address) core.Value {
@@ -112,8 +112,6 @@ func (m *Machine) getResource(addr program.Address) core.Value {
 func (m *Machine) Tick() (bool, byte) {
 	op := m.Program.Instructions[m.P]
 
-	fmt.Println(op)
-
 	switch op {
 	case program.OP_APUSH:
 		bytes := m.Program.Instructions[m.P+1 : m.P+3]
@@ -123,7 +121,7 @@ func (m *Machine) Tick() (bool, byte) {
 	case program.OP_IPUSH:
 		bytes := m.Program.Instructions[m.P+1 : m.P+9]
 		v := core.Number(binary.LittleEndian.Uint64(bytes))
-		m.Stack = append(m.Stack, &v)
+		m.Stack = append(m.Stack, v)
 		m.P += 8
 	case program.OP_IADD:
 		b := m.popNumber()
@@ -137,16 +135,16 @@ func (m *Machine) Tick() (bool, byte) {
 		a := m.popValue()
 		m.print_chan <- a
 	case program.OP_FAIL:
-		fmt.Println("program failed")
-		fmt.Println("stack: ", m.Stack)
+		// fmt.Println("program failed")
+		// fmt.Println("stack: ", m.Stack)
 		return true, EXIT_FAIL
 	case program.OP_SEND:
 		dst := m.popAccount()
 		src := m.popAccount()
 		mon := m.popMonetary()
 		p := ledger.Posting{
-			Source:      string(*src),
-			Destination: string(*dst),
+			Source:      string(src),
+			Destination: string(dst),
 			Asset:       string(mon.Asset),
 			Amount:      int64(mon.Amount),
 		}
@@ -155,11 +153,9 @@ func (m *Machine) Tick() (bool, byte) {
 
 	m.P += 1
 
-	fmt.Printf("stack: %v\n", m.Stack)
-
 	if int(m.P) >= len(m.Program.Instructions) {
-		fmt.Println("end of program")
-		fmt.Println("stack: ", m.Stack)
+		// fmt.Println("end of program")
+		// fmt.Println("stack: ", m.Stack)
 
 		return true, EXIT_OK
 	}
@@ -168,20 +164,18 @@ func (m *Machine) Tick() (bool, byte) {
 }
 
 func (m *Machine) Execute(vars map[string]core.Value) byte {
+	go m.Printer(m.print_chan)
+	defer close(m.print_chan)
+
 	m.Constants = m.Program.Constants
 	m.Variables = []core.Value{}
 	for _, name := range m.Program.Variables {
-		fmt.Printf("looking for var: %s", name)
 		if val, ok := vars[name]; ok {
 			m.Variables = append(m.Variables, val)
 		} else {
 			return EXIT_FAIL
 		}
 	}
-
-	go m.Printer(m.print_chan)
-
-	defer close(m.print_chan)
 
 	for {
 		finished, exit_code := m.Tick()
