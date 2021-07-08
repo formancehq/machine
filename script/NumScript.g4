@@ -26,7 +26,7 @@ ACCOUNT: '@' [a-z_]+ [a-z0-9_:]+;
 ASSET: [A-Z0-9/]+;
 
 SEP: ';';
-WHITESPACE: [ \t]+ -> skip;
+WHITESPACE: [ \t\r\n]+ -> skip;
 
 monetary: LBRACK asset=ASSET amount=NUMBER RBRACK;
 
@@ -55,7 +55,7 @@ type_: TY_ACCOUNT | TY_ASSET | TY_NUMBER | TY_MONETARY;
 
 varDecl: ty=type_ name=VARIABLE_NAME;
 
-varListDecl: VARS LBRACE NEWLINE (v+=varDecl NEWLINE)* RBRACE NEWLINE;
+varListDecl: VARS LBRACE v+=varDecl+ RBRACE;
 
 script:
   vars=varListDecl?

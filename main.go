@@ -9,22 +9,12 @@ import (
 )
 
 func main() {
-
-	// 	p, err := compiler.Compile(`vars {
-	// 		account $rider
-	// }
-	// print 29 + 15 - 2
-	// send(sum = [EUR 100], source = $rider, destination = @bank)
-	// fail`)
-
 	p, err := compiler.Compile(`vars {
 			account $rider
 			account $driver
 			monetary $value
 		}
 		send(value=$value, source=$rider, destination=$driver)`)
-
-	// fmt.Println(p)
 
 	if err != nil {
 		panic(err)
@@ -45,18 +35,10 @@ func main() {
 		}
 	}`), &vars)
 
-	fmt.Println("HELLO", vars)
-
 	exit_code, err := machine.ExecuteFromJSON(vars)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(exit_code)
+	fmt.Println("EXIT_CODE:", exit_code)
 	fmt.Println(machine.Postings)
-
-	// vars {
-	// 	account $rider
-	// 	account $driver
-	// }
-	// send(sum=[EUR/2 999], source=$rider, destination=$driver)
 }
