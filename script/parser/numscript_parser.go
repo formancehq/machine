@@ -27,46 +27,46 @@ var parserATN = []uint16{
 	14, 9, 77, 3, 9, 3, 9, 3, 10, 5, 10, 83, 10, 10, 3, 10, 3, 10, 3, 10, 7,
 	10, 88, 10, 10, 12, 10, 14, 10, 91, 11, 10, 3, 10, 5, 10, 94, 10, 10, 3,
 	10, 3, 10, 3, 10, 2, 3, 6, 11, 2, 4, 6, 8, 10, 12, 14, 16, 18, 2, 4, 3,
-	2, 9, 10, 3, 2, 18, 21, 2, 101, 2, 20, 3, 2, 2, 2, 4, 29, 3, 2, 2, 2, 6,
+	2, 8, 9, 3, 2, 17, 20, 2, 101, 2, 20, 3, 2, 2, 2, 4, 29, 3, 2, 2, 2, 6,
 	34, 3, 2, 2, 2, 8, 44, 3, 2, 2, 2, 10, 65, 3, 2, 2, 2, 12, 67, 3, 2, 2,
 	2, 14, 69, 3, 2, 2, 2, 16, 72, 3, 2, 2, 2, 18, 82, 3, 2, 2, 2, 20, 21,
-	7, 13, 2, 2, 21, 22, 7, 26, 2, 2, 22, 23, 7, 22, 2, 2, 23, 24, 7, 14, 2,
-	2, 24, 3, 3, 2, 2, 2, 25, 30, 7, 25, 2, 2, 26, 30, 7, 26, 2, 2, 27, 30,
-	7, 22, 2, 2, 28, 30, 5, 2, 2, 2, 29, 25, 3, 2, 2, 2, 29, 26, 3, 2, 2, 2,
+	7, 12, 2, 2, 21, 22, 7, 25, 2, 2, 22, 23, 7, 21, 2, 2, 23, 24, 7, 13, 2,
+	2, 24, 3, 3, 2, 2, 2, 25, 30, 7, 24, 2, 2, 26, 30, 7, 25, 2, 2, 27, 30,
+	7, 21, 2, 2, 28, 30, 5, 2, 2, 2, 29, 25, 3, 2, 2, 2, 29, 26, 3, 2, 2, 2,
 	29, 27, 3, 2, 2, 2, 29, 28, 3, 2, 2, 2, 30, 5, 3, 2, 2, 2, 31, 32, 8, 4,
-	1, 2, 32, 35, 5, 4, 3, 2, 33, 35, 7, 24, 2, 2, 34, 31, 3, 2, 2, 2, 34,
+	1, 2, 32, 35, 5, 4, 3, 2, 33, 35, 7, 23, 2, 2, 34, 31, 3, 2, 2, 2, 34,
 	33, 3, 2, 2, 2, 35, 41, 3, 2, 2, 2, 36, 37, 12, 5, 2, 2, 37, 38, 9, 2,
 	2, 2, 38, 40, 5, 6, 4, 6, 39, 36, 3, 2, 2, 2, 40, 43, 3, 2, 2, 2, 41, 39,
 	3, 2, 2, 2, 41, 42, 3, 2, 2, 2, 42, 7, 3, 2, 2, 2, 43, 41, 3, 2, 2, 2,
-	44, 45, 7, 23, 2, 2, 45, 46, 7, 17, 2, 2, 46, 47, 5, 6, 4, 2, 47, 9, 3,
-	2, 2, 2, 48, 49, 7, 6, 2, 2, 49, 66, 5, 6, 4, 2, 50, 66, 7, 7, 2, 2, 51,
-	52, 7, 8, 2, 2, 52, 56, 7, 11, 2, 2, 53, 54, 5, 8, 5, 2, 54, 55, 7, 3,
+	44, 45, 7, 22, 2, 2, 45, 46, 7, 16, 2, 2, 46, 47, 5, 6, 4, 2, 47, 9, 3,
+	2, 2, 2, 48, 49, 7, 5, 2, 2, 49, 66, 5, 6, 4, 2, 50, 66, 7, 6, 2, 2, 51,
+	52, 7, 7, 2, 2, 52, 56, 7, 10, 2, 2, 53, 54, 5, 8, 5, 2, 54, 55, 7, 3,
 	2, 2, 55, 57, 3, 2, 2, 2, 56, 53, 3, 2, 2, 2, 57, 58, 3, 2, 2, 2, 58, 56,
 	3, 2, 2, 2, 58, 59, 3, 2, 2, 2, 59, 61, 3, 2, 2, 2, 60, 62, 5, 8, 5, 2,
 	61, 60, 3, 2, 2, 2, 61, 62, 3, 2, 2, 2, 62, 63, 3, 2, 2, 2, 63, 64, 7,
-	12, 2, 2, 64, 66, 3, 2, 2, 2, 65, 48, 3, 2, 2, 2, 65, 50, 3, 2, 2, 2, 65,
+	11, 2, 2, 64, 66, 3, 2, 2, 2, 65, 48, 3, 2, 2, 2, 65, 50, 3, 2, 2, 2, 65,
 	51, 3, 2, 2, 2, 66, 11, 3, 2, 2, 2, 67, 68, 9, 3, 2, 2, 68, 13, 3, 2, 2,
-	2, 69, 70, 5, 12, 7, 2, 70, 71, 7, 24, 2, 2, 71, 15, 3, 2, 2, 2, 72, 73,
-	7, 5, 2, 2, 73, 75, 7, 15, 2, 2, 74, 76, 5, 14, 8, 2, 75, 74, 3, 2, 2,
+	2, 69, 70, 5, 12, 7, 2, 70, 71, 7, 23, 2, 2, 71, 15, 3, 2, 2, 2, 72, 73,
+	7, 4, 2, 2, 73, 75, 7, 14, 2, 2, 74, 76, 5, 14, 8, 2, 75, 74, 3, 2, 2,
 	2, 76, 77, 3, 2, 2, 2, 77, 75, 3, 2, 2, 2, 77, 78, 3, 2, 2, 2, 78, 79,
-	3, 2, 2, 2, 79, 80, 7, 16, 2, 2, 80, 17, 3, 2, 2, 2, 81, 83, 5, 16, 9,
+	3, 2, 2, 2, 79, 80, 7, 15, 2, 2, 80, 17, 3, 2, 2, 2, 81, 83, 5, 16, 9,
 	2, 82, 81, 3, 2, 2, 2, 82, 83, 3, 2, 2, 2, 83, 84, 3, 2, 2, 2, 84, 89,
-	5, 10, 6, 2, 85, 86, 7, 4, 2, 2, 86, 88, 5, 10, 6, 2, 87, 85, 3, 2, 2,
+	5, 10, 6, 2, 85, 86, 7, 28, 2, 2, 86, 88, 5, 10, 6, 2, 87, 85, 3, 2, 2,
 	2, 88, 91, 3, 2, 2, 2, 89, 87, 3, 2, 2, 2, 89, 90, 3, 2, 2, 2, 90, 93,
-	3, 2, 2, 2, 91, 89, 3, 2, 2, 2, 92, 94, 7, 4, 2, 2, 93, 92, 3, 2, 2, 2,
+	3, 2, 2, 2, 91, 89, 3, 2, 2, 2, 92, 94, 7, 28, 2, 2, 93, 92, 3, 2, 2, 2,
 	93, 94, 3, 2, 2, 2, 94, 95, 3, 2, 2, 2, 95, 96, 7, 2, 2, 3, 96, 19, 3,
 	2, 2, 2, 12, 29, 34, 41, 58, 61, 65, 77, 82, 89, 93,
 }
 var literalNames = []string{
-	"", "','", "", "'vars'", "'print'", "'fail'", "'send'", "'+'", "'-'", "'('",
+	"", "','", "'vars'", "'print'", "'fail'", "'send'", "'+'", "'-'", "'('",
 	"')'", "'['", "']'", "'{'", "'}'", "'='", "'account'", "'asset'", "'number'",
 	"'monetary'", "", "", "", "", "", "';'",
 }
 var symbolicNames = []string{
-	"", "", "NEWLINE", "VARS", "PRINT", "FAIL", "SEND", "OP_ADD", "OP_SUB",
-	"LPAREN", "RPAREN", "LBRACK", "RBRACK", "LBRACE", "RBRACE", "EQ", "TY_ACCOUNT",
-	"TY_ASSET", "TY_NUMBER", "TY_MONETARY", "NUMBER", "IDENTIFIER", "VARIABLE_NAME",
-	"ACCOUNT", "ASSET", "SEP", "WHITESPACE",
+	"", "", "VARS", "PRINT", "FAIL", "SEND", "OP_ADD", "OP_SUB", "LPAREN",
+	"RPAREN", "LBRACK", "RBRACK", "LBRACE", "RBRACE", "EQ", "TY_ACCOUNT", "TY_ASSET",
+	"TY_NUMBER", "TY_MONETARY", "NUMBER", "IDENTIFIER", "VARIABLE_NAME", "ACCOUNT",
+	"ASSET", "SEP", "WHITESPACE", "NEWLINE",
 }
 
 var ruleNames = []string{
@@ -107,31 +107,31 @@ func NewNumScriptParser(input antlr.TokenStream) *NumScriptParser {
 const (
 	NumScriptParserEOF           = antlr.TokenEOF
 	NumScriptParserT__0          = 1
-	NumScriptParserNEWLINE       = 2
-	NumScriptParserVARS          = 3
-	NumScriptParserPRINT         = 4
-	NumScriptParserFAIL          = 5
-	NumScriptParserSEND          = 6
-	NumScriptParserOP_ADD        = 7
-	NumScriptParserOP_SUB        = 8
-	NumScriptParserLPAREN        = 9
-	NumScriptParserRPAREN        = 10
-	NumScriptParserLBRACK        = 11
-	NumScriptParserRBRACK        = 12
-	NumScriptParserLBRACE        = 13
-	NumScriptParserRBRACE        = 14
-	NumScriptParserEQ            = 15
-	NumScriptParserTY_ACCOUNT    = 16
-	NumScriptParserTY_ASSET      = 17
-	NumScriptParserTY_NUMBER     = 18
-	NumScriptParserTY_MONETARY   = 19
-	NumScriptParserNUMBER        = 20
-	NumScriptParserIDENTIFIER    = 21
-	NumScriptParserVARIABLE_NAME = 22
-	NumScriptParserACCOUNT       = 23
-	NumScriptParserASSET         = 24
-	NumScriptParserSEP           = 25
-	NumScriptParserWHITESPACE    = 26
+	NumScriptParserVARS          = 2
+	NumScriptParserPRINT         = 3
+	NumScriptParserFAIL          = 4
+	NumScriptParserSEND          = 5
+	NumScriptParserOP_ADD        = 6
+	NumScriptParserOP_SUB        = 7
+	NumScriptParserLPAREN        = 8
+	NumScriptParserRPAREN        = 9
+	NumScriptParserLBRACK        = 10
+	NumScriptParserRBRACK        = 11
+	NumScriptParserLBRACE        = 12
+	NumScriptParserRBRACE        = 13
+	NumScriptParserEQ            = 14
+	NumScriptParserTY_ACCOUNT    = 15
+	NumScriptParserTY_ASSET      = 16
+	NumScriptParserTY_NUMBER     = 17
+	NumScriptParserTY_MONETARY   = 18
+	NumScriptParserNUMBER        = 19
+	NumScriptParserIDENTIFIER    = 20
+	NumScriptParserVARIABLE_NAME = 21
+	NumScriptParserACCOUNT       = 22
+	NumScriptParserASSET         = 23
+	NumScriptParserSEP           = 24
+	NumScriptParserWHITESPACE    = 25
+	NumScriptParserNEWLINE       = 26
 )
 
 // NumScriptParser rules.

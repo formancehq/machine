@@ -1,7 +1,4 @@
 grammar NumScript;
-
-NEWLINE: [\r\n]+;
-
 VARS: 'vars';
 PRINT: 'print';
 FAIL: 'fail';
