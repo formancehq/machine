@@ -2,6 +2,7 @@ package vm
 
 import (
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 
 	ledger "github.com/numary/ledger/core"
@@ -109,7 +110,7 @@ func (m *Machine) getResource(addr program.Address) core.Value {
 	}
 }
 
-func (m *Machine) Tick() (bool, byte) {
+func (m *Machine) tick() (bool, byte) {
 	op := m.Program.Instructions[m.P]
 
 	switch op {
@@ -156,31 +157,39 @@ func (m *Machine) Tick() (bool, byte) {
 	if int(m.P) >= len(m.Program.Instructions) {
 		// fmt.Println("end of program")
 		// fmt.Println("stack: ", m.Stack)
-
 		return true, EXIT_OK
 	}
 
 	return false, 0
 }
 
-func (m *Machine) Execute(vars map[string]core.Value) byte {
+func (m *Machine) execute(vars []core.Value) byte {
 	go m.Printer(m.print_chan)
 	defer close(m.print_chan)
 
 	m.Constants = m.Program.Constants
-	m.Variables = []core.Value{}
-	for _, name := range m.Program.Variables {
-		if val, ok := vars[name]; ok {
-			m.Variables = append(m.Variables, val)
-		} else {
-			return EXIT_FAIL
-		}
-	}
+	m.Variables = vars
 
 	for {
-		finished, exit_code := m.Tick()
+		finished, exit_code := m.tick()
 		if finished {
 			return exit_code
 		}
 	}
+}
+
+func (m *Machine) Execute(vars map[string]core.Value) (byte, error) {
+	v, err := m.Program.ParseVariables(vars)
+	if err != nil {
+		return 0, err
+	}
+	return m.execute(v), nil
+}
+
+func (m *Machine) ExecuteFromJSON(vars map[string]json.RawMessage) (byte, error) {
+	v, err := m.Program.ParseVariablesJSON(vars)
+	if err != nil {
+		return 0, err
+	}
+	return m.execute(v), nil
 }

@@ -16,48 +16,46 @@ var _ = reflect.Copy
 var _ = strconv.Itoa
 
 var parserATN = []uint16{
-	3, 24715, 42794, 33075, 47597, 16764, 15335, 30598, 22884, 3, 28, 103,
-	4, 2, 9, 2, 4, 3, 9, 3, 4, 4, 9, 4, 4, 5, 9, 5, 4, 6, 9, 6, 4, 7, 9, 7,
-	4, 8, 9, 8, 4, 9, 9, 9, 4, 10, 9, 10, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3,
-	3, 3, 3, 3, 3, 3, 3, 5, 3, 30, 10, 3, 3, 4, 3, 4, 3, 4, 5, 4, 35, 10, 4,
-	3, 4, 3, 4, 3, 4, 7, 4, 40, 10, 4, 12, 4, 14, 4, 43, 11, 4, 3, 5, 3, 5,
-	3, 5, 3, 5, 3, 6, 3, 6, 3, 6, 3, 6, 3, 6, 3, 6, 3, 6, 3, 6, 6, 6, 57, 10,
+	3, 24715, 42794, 33075, 47597, 16764, 15335, 30598, 22884, 3, 28, 98, 4,
+	2, 9, 2, 4, 3, 9, 3, 4, 4, 9, 4, 4, 5, 9, 5, 4, 6, 9, 6, 4, 7, 9, 7, 4,
+	8, 9, 8, 4, 9, 9, 9, 4, 10, 9, 10, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 3,
+	3, 3, 3, 3, 3, 3, 5, 3, 30, 10, 3, 3, 4, 3, 4, 3, 4, 5, 4, 35, 10, 4, 3,
+	4, 3, 4, 3, 4, 7, 4, 40, 10, 4, 12, 4, 14, 4, 43, 11, 4, 3, 5, 3, 5, 3,
+	5, 3, 5, 3, 6, 3, 6, 3, 6, 3, 6, 3, 6, 3, 6, 3, 6, 3, 6, 6, 6, 57, 10,
 	6, 13, 6, 14, 6, 58, 3, 6, 5, 6, 62, 10, 6, 3, 6, 3, 6, 5, 6, 66, 10, 6,
-	3, 7, 3, 7, 3, 8, 3, 8, 3, 8, 3, 9, 3, 9, 3, 9, 3, 9, 3, 9, 3, 9, 7, 9,
-	79, 10, 9, 12, 9, 14, 9, 82, 11, 9, 3, 9, 3, 9, 3, 9, 3, 10, 5, 10, 88,
-	10, 10, 3, 10, 3, 10, 3, 10, 7, 10, 93, 10, 10, 12, 10, 14, 10, 96, 11,
-	10, 3, 10, 5, 10, 99, 10, 10, 3, 10, 3, 10, 3, 10, 2, 3, 6, 11, 2, 4, 6,
-	8, 10, 12, 14, 16, 18, 2, 4, 3, 2, 9, 10, 3, 2, 18, 21, 2, 106, 2, 20,
-	3, 2, 2, 2, 4, 29, 3, 2, 2, 2, 6, 34, 3, 2, 2, 2, 8, 44, 3, 2, 2, 2, 10,
-	65, 3, 2, 2, 2, 12, 67, 3, 2, 2, 2, 14, 69, 3, 2, 2, 2, 16, 72, 3, 2, 2,
-	2, 18, 87, 3, 2, 2, 2, 20, 21, 7, 13, 2, 2, 21, 22, 7, 26, 2, 2, 22, 23,
-	7, 22, 2, 2, 23, 24, 7, 14, 2, 2, 24, 3, 3, 2, 2, 2, 25, 30, 7, 25, 2,
-	2, 26, 30, 7, 26, 2, 2, 27, 30, 7, 22, 2, 2, 28, 30, 5, 2, 2, 2, 29, 25,
-	3, 2, 2, 2, 29, 26, 3, 2, 2, 2, 29, 27, 3, 2, 2, 2, 29, 28, 3, 2, 2, 2,
-	30, 5, 3, 2, 2, 2, 31, 32, 8, 4, 1, 2, 32, 35, 5, 4, 3, 2, 33, 35, 7, 24,
-	2, 2, 34, 31, 3, 2, 2, 2, 34, 33, 3, 2, 2, 2, 35, 41, 3, 2, 2, 2, 36, 37,
-	12, 5, 2, 2, 37, 38, 9, 2, 2, 2, 38, 40, 5, 6, 4, 6, 39, 36, 3, 2, 2, 2,
-	40, 43, 3, 2, 2, 2, 41, 39, 3, 2, 2, 2, 41, 42, 3, 2, 2, 2, 42, 7, 3, 2,
-	2, 2, 43, 41, 3, 2, 2, 2, 44, 45, 7, 23, 2, 2, 45, 46, 7, 17, 2, 2, 46,
-	47, 5, 6, 4, 2, 47, 9, 3, 2, 2, 2, 48, 49, 7, 6, 2, 2, 49, 66, 5, 6, 4,
-	2, 50, 66, 7, 7, 2, 2, 51, 52, 7, 8, 2, 2, 52, 56, 7, 11, 2, 2, 53, 54,
-	5, 8, 5, 2, 54, 55, 7, 3, 2, 2, 55, 57, 3, 2, 2, 2, 56, 53, 3, 2, 2, 2,
-	57, 58, 3, 2, 2, 2, 58, 56, 3, 2, 2, 2, 58, 59, 3, 2, 2, 2, 59, 61, 3,
-	2, 2, 2, 60, 62, 5, 8, 5, 2, 61, 60, 3, 2, 2, 2, 61, 62, 3, 2, 2, 2, 62,
-	63, 3, 2, 2, 2, 63, 64, 7, 12, 2, 2, 64, 66, 3, 2, 2, 2, 65, 48, 3, 2,
-	2, 2, 65, 50, 3, 2, 2, 2, 65, 51, 3, 2, 2, 2, 66, 11, 3, 2, 2, 2, 67, 68,
-	9, 3, 2, 2, 68, 13, 3, 2, 2, 2, 69, 70, 5, 12, 7, 2, 70, 71, 7, 24, 2,
-	2, 71, 15, 3, 2, 2, 2, 72, 73, 7, 5, 2, 2, 73, 74, 7, 15, 2, 2, 74, 80,
-	7, 4, 2, 2, 75, 76, 5, 14, 8, 2, 76, 77, 7, 4, 2, 2, 77, 79, 3, 2, 2, 2,
-	78, 75, 3, 2, 2, 2, 79, 82, 3, 2, 2, 2, 80, 78, 3, 2, 2, 2, 80, 81, 3,
-	2, 2, 2, 81, 83, 3, 2, 2, 2, 82, 80, 3, 2, 2, 2, 83, 84, 7, 16, 2, 2, 84,
-	85, 7, 4, 2, 2, 85, 17, 3, 2, 2, 2, 86, 88, 5, 16, 9, 2, 87, 86, 3, 2,
-	2, 2, 87, 88, 3, 2, 2, 2, 88, 89, 3, 2, 2, 2, 89, 94, 5, 10, 6, 2, 90,
-	91, 7, 4, 2, 2, 91, 93, 5, 10, 6, 2, 92, 90, 3, 2, 2, 2, 93, 96, 3, 2,
-	2, 2, 94, 92, 3, 2, 2, 2, 94, 95, 3, 2, 2, 2, 95, 98, 3, 2, 2, 2, 96, 94,
-	3, 2, 2, 2, 97, 99, 7, 4, 2, 2, 98, 97, 3, 2, 2, 2, 98, 99, 3, 2, 2, 2,
-	99, 100, 3, 2, 2, 2, 100, 101, 7, 2, 2, 3, 101, 19, 3, 2, 2, 2, 12, 29,
-	34, 41, 58, 61, 65, 80, 87, 94, 98,
+	3, 7, 3, 7, 3, 8, 3, 8, 3, 8, 3, 9, 3, 9, 3, 9, 6, 9, 76, 10, 9, 13, 9,
+	14, 9, 77, 3, 9, 3, 9, 3, 10, 5, 10, 83, 10, 10, 3, 10, 3, 10, 3, 10, 7,
+	10, 88, 10, 10, 12, 10, 14, 10, 91, 11, 10, 3, 10, 5, 10, 94, 10, 10, 3,
+	10, 3, 10, 3, 10, 2, 3, 6, 11, 2, 4, 6, 8, 10, 12, 14, 16, 18, 2, 4, 3,
+	2, 9, 10, 3, 2, 18, 21, 2, 101, 2, 20, 3, 2, 2, 2, 4, 29, 3, 2, 2, 2, 6,
+	34, 3, 2, 2, 2, 8, 44, 3, 2, 2, 2, 10, 65, 3, 2, 2, 2, 12, 67, 3, 2, 2,
+	2, 14, 69, 3, 2, 2, 2, 16, 72, 3, 2, 2, 2, 18, 82, 3, 2, 2, 2, 20, 21,
+	7, 13, 2, 2, 21, 22, 7, 26, 2, 2, 22, 23, 7, 22, 2, 2, 23, 24, 7, 14, 2,
+	2, 24, 3, 3, 2, 2, 2, 25, 30, 7, 25, 2, 2, 26, 30, 7, 26, 2, 2, 27, 30,
+	7, 22, 2, 2, 28, 30, 5, 2, 2, 2, 29, 25, 3, 2, 2, 2, 29, 26, 3, 2, 2, 2,
+	29, 27, 3, 2, 2, 2, 29, 28, 3, 2, 2, 2, 30, 5, 3, 2, 2, 2, 31, 32, 8, 4,
+	1, 2, 32, 35, 5, 4, 3, 2, 33, 35, 7, 24, 2, 2, 34, 31, 3, 2, 2, 2, 34,
+	33, 3, 2, 2, 2, 35, 41, 3, 2, 2, 2, 36, 37, 12, 5, 2, 2, 37, 38, 9, 2,
+	2, 2, 38, 40, 5, 6, 4, 6, 39, 36, 3, 2, 2, 2, 40, 43, 3, 2, 2, 2, 41, 39,
+	3, 2, 2, 2, 41, 42, 3, 2, 2, 2, 42, 7, 3, 2, 2, 2, 43, 41, 3, 2, 2, 2,
+	44, 45, 7, 23, 2, 2, 45, 46, 7, 17, 2, 2, 46, 47, 5, 6, 4, 2, 47, 9, 3,
+	2, 2, 2, 48, 49, 7, 6, 2, 2, 49, 66, 5, 6, 4, 2, 50, 66, 7, 7, 2, 2, 51,
+	52, 7, 8, 2, 2, 52, 56, 7, 11, 2, 2, 53, 54, 5, 8, 5, 2, 54, 55, 7, 3,
+	2, 2, 55, 57, 3, 2, 2, 2, 56, 53, 3, 2, 2, 2, 57, 58, 3, 2, 2, 2, 58, 56,
+	3, 2, 2, 2, 58, 59, 3, 2, 2, 2, 59, 61, 3, 2, 2, 2, 60, 62, 5, 8, 5, 2,
+	61, 60, 3, 2, 2, 2, 61, 62, 3, 2, 2, 2, 62, 63, 3, 2, 2, 2, 63, 64, 7,
+	12, 2, 2, 64, 66, 3, 2, 2, 2, 65, 48, 3, 2, 2, 2, 65, 50, 3, 2, 2, 2, 65,
+	51, 3, 2, 2, 2, 66, 11, 3, 2, 2, 2, 67, 68, 9, 3, 2, 2, 68, 13, 3, 2, 2,
+	2, 69, 70, 5, 12, 7, 2, 70, 71, 7, 24, 2, 2, 71, 15, 3, 2, 2, 2, 72, 73,
+	7, 5, 2, 2, 73, 75, 7, 15, 2, 2, 74, 76, 5, 14, 8, 2, 75, 74, 3, 2, 2,
+	2, 76, 77, 3, 2, 2, 2, 77, 75, 3, 2, 2, 2, 77, 78, 3, 2, 2, 2, 78, 79,
+	3, 2, 2, 2, 79, 80, 7, 16, 2, 2, 80, 17, 3, 2, 2, 2, 81, 83, 5, 16, 9,
+	2, 82, 81, 3, 2, 2, 2, 82, 83, 3, 2, 2, 2, 83, 84, 3, 2, 2, 2, 84, 89,
+	5, 10, 6, 2, 85, 86, 7, 4, 2, 2, 86, 88, 5, 10, 6, 2, 87, 85, 3, 2, 2,
+	2, 88, 91, 3, 2, 2, 2, 89, 87, 3, 2, 2, 2, 89, 90, 3, 2, 2, 2, 90, 93,
+	3, 2, 2, 2, 91, 89, 3, 2, 2, 2, 92, 94, 7, 4, 2, 2, 93, 92, 3, 2, 2, 2,
+	93, 94, 3, 2, 2, 2, 94, 95, 3, 2, 2, 2, 95, 96, 7, 2, 2, 3, 96, 19, 3,
+	2, 2, 2, 12, 29, 34, 41, 58, 61, 65, 77, 82, 89, 93,
 }
 var literalNames = []string{
 	"", "','", "", "'vars'", "'print'", "'fail'", "'send'", "'+'", "'-'", "'('",
@@ -1655,14 +1653,6 @@ func (s *VarListDeclContext) LBRACE() antlr.TerminalNode {
 	return s.GetToken(NumScriptParserLBRACE, 0)
 }
 
-func (s *VarListDeclContext) AllNEWLINE() []antlr.TerminalNode {
-	return s.GetTokens(NumScriptParserNEWLINE)
-}
-
-func (s *VarListDeclContext) NEWLINE(i int) antlr.TerminalNode {
-	return s.GetToken(NumScriptParserNEWLINE, i)
-}
-
 func (s *VarListDeclContext) RBRACE() antlr.TerminalNode {
 	return s.GetToken(NumScriptParserRBRACE, 0)
 }
@@ -1740,39 +1730,27 @@ func (p *NumScriptParser) VarListDecl() (localctx IVarListDeclContext) {
 		p.SetState(71)
 		p.Match(NumScriptParserLBRACE)
 	}
-	{
-		p.SetState(72)
-		p.Match(NumScriptParserNEWLINE)
-	}
-	p.SetState(78)
+	p.SetState(73)
 	p.GetErrorHandler().Sync(p)
 	_la = p.GetTokenStream().LA(1)
 
-	for ((_la)&-(0x1f+1)) == 0 && ((1<<uint(_la))&((1<<NumScriptParserTY_ACCOUNT)|(1<<NumScriptParserTY_ASSET)|(1<<NumScriptParserTY_NUMBER)|(1<<NumScriptParserTY_MONETARY))) != 0 {
+	for ok := true; ok; ok = (((_la)&-(0x1f+1)) == 0 && ((1<<uint(_la))&((1<<NumScriptParserTY_ACCOUNT)|(1<<NumScriptParserTY_ASSET)|(1<<NumScriptParserTY_NUMBER)|(1<<NumScriptParserTY_MONETARY))) != 0) {
 		{
-			p.SetState(73)
+			p.SetState(72)
 
 			var _x = p.VarDecl()
 
 			localctx.(*VarListDeclContext)._varDecl = _x
 		}
 		localctx.(*VarListDeclContext).v = append(localctx.(*VarListDeclContext).v, localctx.(*VarListDeclContext)._varDecl)
-		{
-			p.SetState(74)
-			p.Match(NumScriptParserNEWLINE)
-		}
 
-		p.SetState(80)
+		p.SetState(75)
 		p.GetErrorHandler().Sync(p)
 		_la = p.GetTokenStream().LA(1)
 	}
 	{
-		p.SetState(81)
+		p.SetState(77)
 		p.Match(NumScriptParserRBRACE)
-	}
-	{
-		p.SetState(82)
-		p.Match(NumScriptParserNEWLINE)
 	}
 
 	return localctx
@@ -1938,13 +1916,13 @@ func (p *NumScriptParser) Script() (localctx IScriptContext) {
 	var _alt int
 
 	p.EnterOuterAlt(localctx, 1)
-	p.SetState(85)
+	p.SetState(80)
 	p.GetErrorHandler().Sync(p)
 	_la = p.GetTokenStream().LA(1)
 
 	if _la == NumScriptParserVARS {
 		{
-			p.SetState(84)
+			p.SetState(79)
 
 			var _x = p.VarListDecl()
 
@@ -1953,25 +1931,25 @@ func (p *NumScriptParser) Script() (localctx IScriptContext) {
 
 	}
 	{
-		p.SetState(87)
+		p.SetState(82)
 
 		var _x = p.Statement()
 
 		localctx.(*ScriptContext)._statement = _x
 	}
 	localctx.(*ScriptContext).stmts = append(localctx.(*ScriptContext).stmts, localctx.(*ScriptContext)._statement)
-	p.SetState(92)
+	p.SetState(87)
 	p.GetErrorHandler().Sync(p)
 	_alt = p.GetInterpreter().AdaptivePredict(p.GetTokenStream(), 8, p.GetParserRuleContext())
 
 	for _alt != 2 && _alt != antlr.ATNInvalidAltNumber {
 		if _alt == 1 {
 			{
-				p.SetState(88)
+				p.SetState(83)
 				p.Match(NumScriptParserNEWLINE)
 			}
 			{
-				p.SetState(89)
+				p.SetState(84)
 
 				var _x = p.Statement()
 
@@ -1980,23 +1958,23 @@ func (p *NumScriptParser) Script() (localctx IScriptContext) {
 			localctx.(*ScriptContext).stmts = append(localctx.(*ScriptContext).stmts, localctx.(*ScriptContext)._statement)
 
 		}
-		p.SetState(94)
+		p.SetState(89)
 		p.GetErrorHandler().Sync(p)
 		_alt = p.GetInterpreter().AdaptivePredict(p.GetTokenStream(), 8, p.GetParserRuleContext())
 	}
-	p.SetState(96)
+	p.SetState(91)
 	p.GetErrorHandler().Sync(p)
 	_la = p.GetTokenStream().LA(1)
 
 	if _la == NumScriptParserNEWLINE {
 		{
-			p.SetState(95)
+			p.SetState(90)
 			p.Match(NumScriptParserNEWLINE)
 		}
 
 	}
 	{
-		p.SetState(98)
+		p.SetState(93)
 		p.Match(NumScriptParserEOF)
 	}
 

@@ -12,14 +12,14 @@ func NewVarAddress(x uint16) Address {
 	return Address((1 << 15) + x)
 }
 
-func NewAddressFromBytes(x uint16) Address {
-	return Address((1 << 15) + x)
-}
-
 func (a Address) ToBytes() []byte {
 	bytes := make([]byte, 2)
 	binary.LittleEndian.PutUint16(bytes, uint16(a))
 	return bytes
+}
+
+func (a Address) ToIdx() int {
+	return int(a) & 0x7FFF
 }
 
 const (

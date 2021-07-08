@@ -2,6 +2,7 @@ package program
 
 import (
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 
 	"github.com/numary/machine/core"
@@ -10,7 +11,12 @@ import (
 type Program struct {
 	Constants    []core.Value
 	Instructions []byte
-	Variables    []string
+	Variables    map[string]VarInfo
+}
+
+type VarInfo struct {
+	Ty   core.Type
+	Addr Address
 }
 
 func (p Program) Print() {
@@ -47,8 +53,69 @@ func (p Program) Print() {
 	}
 
 	fmt.Println("VARIABLES")
-	for addr, name := range p.Variables {
-		fmt.Printf("%02d ", addr)
-		fmt.Printf("%s\n", name)
+	for name, info := range p.Variables {
+		fmt.Printf("%02d ", info.Addr.ToIdx())
+		fmt.Printf("%-4s\n", name)
 	}
+}
+
+func (p *Program) ParseVariables(vars map[string]core.Value) ([]core.Value, error) {
+	variables := make([]core.Value, len(p.Variables))
+	if len(vars) != len(p.Variables) {
+		return nil, fmt.Errorf(
+			"mismatching number of variables: %v != %v",
+			len(vars),
+			len(p.Variables))
+	}
+	for name, info := range p.Variables {
+		if val, ok := vars[name]; ok && val.GetType() == info.Ty {
+			variables[info.Addr.ToIdx()] = val
+		} else {
+			return nil, fmt.Errorf("missing variables: %v", name)
+		}
+	}
+	return variables, nil
+}
+
+func (p *Program) ParseVariablesJSON(vars map[string]json.RawMessage) ([]core.Value, error) {
+	variables := make([]core.Value, len(p.Variables))
+	for name, info := range p.Variables {
+		if val, ok := vars[name]; ok {
+			var value core.Value
+			switch info.Ty {
+			case core.TYPE_ACCOUNT:
+				var account core.Account
+				err := json.Unmarshal(val, &account)
+				if err != nil {
+					return nil, err
+				}
+				value = account
+			case core.TYPE_ASSET:
+				var asset core.Asset
+				err := json.Unmarshal(val, &asset)
+				if err != nil {
+					return nil, err
+				}
+				value = asset
+			case core.TYPE_NUMBER:
+				var number core.Number
+				err := json.Unmarshal(val, &number)
+				if err != nil {
+					return nil, err
+				}
+				value = number
+			case core.TYPE_MONETARY:
+				var monetary core.Monetary
+				err := json.Unmarshal(val, &monetary)
+				if err != nil {
+					return nil, err
+				}
+				value = monetary
+			}
+			variables[info.Addr.ToIdx()] = value
+		} else {
+			return nil, fmt.Errorf("missing variable %v", name)
+		}
+	}
+	return variables, nil
 }
