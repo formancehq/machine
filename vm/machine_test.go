@@ -1,6 +1,7 @@
 package vm
 
 import (
+	"encoding/json"
 	"fmt"
 	"sync"
 	"testing"
@@ -14,6 +15,7 @@ type CaseResult struct {
 	Printed  []core.Value
 	Postings []ledger.Posting
 	ExitCode byte
+	Error    error
 }
 
 type TestCase struct {
@@ -22,8 +24,31 @@ type TestCase struct {
 	Expected  CaseResult
 }
 
-func test(t *testing.T, c TestCase) {
-	p, err := compiler.Compile(c.Code)
+type TestCaseJSON struct {
+	Code      string
+	Variables map[string]core.Value
+	Expected  CaseResult
+}
+
+func test(t *testing.T, code string, variables map[string]core.Value, expected CaseResult) {
+	testimpl(t, code, expected, func(m *Machine) (byte, error) {
+		return m.Execute(variables)
+	})
+}
+
+func testJSON(t *testing.T, code string, variables string, expected CaseResult) {
+	testimpl(t, code, expected, func(m *Machine) (byte, error) {
+		var v map[string]json.RawMessage
+		err := json.Unmarshal([]byte(variables), &v)
+		if err != nil {
+			panic("test case was invalid")
+		}
+		return m.ExecuteFromJSON(v)
+	})
+}
+
+func testimpl(t *testing.T, code string, expected CaseResult, exec func(*Machine) (byte, error)) {
+	p, err := compiler.Compile(code)
 
 	if err != nil {
 		t.Error(fmt.Errorf("compile error: %v", err))
@@ -42,33 +67,37 @@ func test(t *testing.T, c TestCase) {
 		}
 		wg.Done()
 	}
-	exit_code := machine.Execute(c.Variables)
+	exit_code, err := exec(machine)
+
+	if err != expected.Error {
+		t.Error(fmt.Errorf("unexpected execution error: %v", err))
+	}
 
 	wg.Wait()
 
-	if exit_code != c.Expected.ExitCode {
+	if exit_code != expected.ExitCode {
 		t.Error(fmt.Errorf("unexpected exit code: %v", exit_code))
 		return
 	}
 
-	if len(machine.Postings) != len(c.Expected.Postings) {
+	if len(machine.Postings) != len(expected.Postings) {
 		t.Error(fmt.Errorf("unexpected postings output: %v", machine.Postings))
 		return
 	} else {
 		for i := range machine.Postings {
-			if machine.Postings[i] != c.Expected.Postings[i] {
+			if machine.Postings[i] != expected.Postings[i] {
 				t.Error(fmt.Errorf("unexpected postings output: %v", machine.Postings[i]))
 				return
 			}
 		}
 	}
 
-	if len(printed) != len(c.Expected.Printed) {
+	if len(printed) != len(expected.Printed) {
 		t.Error(fmt.Errorf("unexpected print output: %v", printed))
 		return
 	} else {
 		for i := range printed {
-			if printed[i] != c.Expected.Printed[i] {
+			if printed[i] != expected.Printed[i] {
 				t.Error(fmt.Errorf("unexpected print output: %v", printed[i]))
 				return
 			}
@@ -77,34 +106,34 @@ func test(t *testing.T, c TestCase) {
 }
 
 func TestFail(t *testing.T) {
-	test(t, TestCase{
-		Code:      "fail",
-		Variables: map[string]core.Value{},
-		Expected: CaseResult{
+	test(t,
+		"fail",
+		map[string]core.Value{},
+		CaseResult{
 			Printed:  []core.Value{},
 			Postings: []ledger.Posting{},
 			ExitCode: EXIT_FAIL,
 		},
-	})
+	)
 }
 
 func TestPrint(t *testing.T) {
-	test(t, TestCase{
-		Code:      "print 29 + 15 - 2",
-		Variables: map[string]core.Value{},
-		Expected: CaseResult{
+	test(t,
+		"print 29 + 15 - 2",
+		map[string]core.Value{},
+		CaseResult{
 			Printed:  []core.Value{core.Number(42)},
 			Postings: []ledger.Posting{},
 			ExitCode: EXIT_OK,
 		},
-	})
+	)
 }
 
 func TestSend(t *testing.T) {
-	test(t, TestCase{
-		Code:      "send(value=[EUR/2 100], source=@alice, destination=@bob)",
-		Variables: map[string]core.Value{},
-		Expected: CaseResult{
+	test(t,
+		"send(value=[EUR/2 100], source=@alice, destination=@bob)",
+		map[string]core.Value{},
+		CaseResult{
 			Printed: []core.Value{},
 			Postings: []ledger.Posting{
 				{
@@ -116,21 +145,21 @@ func TestSend(t *testing.T) {
 			},
 			ExitCode: EXIT_OK,
 		},
-	})
+	)
 }
 
 func TestVariables(t *testing.T) {
-	test(t, TestCase{
-		Code: `vars {
+	test(t,
+		`vars {
 			account $rider
 			account $driver
 		}
 		send(value=[EUR/2 999], source=$rider, destination=$driver)`,
-		Variables: map[string]core.Value{
+		map[string]core.Value{
 			"rider":  core.Account("user:001"),
 			"driver": core.Account("user:002"),
 		},
-		Expected: CaseResult{
+		CaseResult{
 			Printed: []core.Value{},
 			Postings: []ledger.Posting{
 				{
@@ -142,5 +171,31 @@ func TestVariables(t *testing.T) {
 			},
 			ExitCode: EXIT_OK,
 		},
-	})
+	)
+}
+
+func TestVariablesJSON(t *testing.T) {
+	testJSON(t,
+		`vars {
+			account $rider
+			account $driver
+		}
+		send(value=[EUR/2 999], source=$rider, destination=$driver)`,
+		`{
+			"rider": "user:001",
+			"driver": "user:002"
+		}`,
+		CaseResult{
+			Printed: []core.Value{},
+			Postings: []ledger.Posting{
+				{
+					Asset:       "EUR/2",
+					Amount:      999,
+					Source:      "user:001",
+					Destination: "user:002",
+				},
+			},
+			ExitCode: EXIT_OK,
+		},
+	)
 }

@@ -37,8 +37,8 @@ func (n Number) String() string {
 }
 
 type Monetary struct {
-	Asset  string
-	Amount uint64
+	Asset  string `json:"asset"`
+	Amount uint64 `json:"amount"`
 }
 
 func (Monetary) GetType() Type { return TYPE_MONETARY }
