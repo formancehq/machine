@@ -1,6 +1,7 @@
 grammar NumScript;
 
-NEWLINE: [\r\n]+;
+NEWLINE: [\r\n];
+WHITESPACE: [ \t]+ -> skip;
 
 VARS: 'vars';
 PRINT: 'print';
@@ -25,9 +26,6 @@ VARIABLE_NAME: '$' [a-z_]+ [a-z0-9_]+;
 ACCOUNT: '@' [a-z_]+ [a-z0-9_:]+;
 ASSET: [A-Z0-9/]+;
 
-SEP: ';';
-WHITESPACE: [ \t\r\n]+ -> skip;
-
 monetary: LBRACK asset=ASSET amount=NUMBER RBRACK;
 
 literal
@@ -48,19 +46,19 @@ argument: name=IDENTIFIER EQ val=expression;
 statement
   : PRINT expr=expression # Print
   | FAIL # Fail
-  | SEND LPAREN ((args+=argument ',')+ args+=argument?) RPAREN # Send
+  | SEND LPAREN NEWLINE* ((args+=argument ',' NEWLINE*)+ args+=argument? NEWLINE*) RPAREN # Send
   ;
 
 type_: TY_ACCOUNT | TY_ASSET | TY_NUMBER | TY_MONETARY;
 
 varDecl: ty=type_ name=VARIABLE_NAME;
 
-varListDecl: VARS LBRACE v+=varDecl+ RBRACE;
+varListDecl: VARS LBRACE NEWLINE+ (v+=varDecl NEWLINE+)+ RBRACE NEWLINE+;
 
 script:
   vars=varListDecl?
   stmts+=statement
-  (NEWLINE stmts+=statement)*
-  NEWLINE?
+  (NEWLINE+ stmts+=statement)*
+  NEWLINE*
   EOF
   ;

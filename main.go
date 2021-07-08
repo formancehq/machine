@@ -10,11 +10,16 @@ import (
 
 func main() {
 	p, err := compiler.Compile(`vars {
-			account $rider
-			account $driver
-			monetary $value
-		}
-		send(value=$value, source=$rider, destination=$driver)`)
+	account $rider
+	account $driver
+	monetary $value
+}
+
+send(
+	value = $value,
+	source = $rider,
+	destination = $driver,
+)`)
 
 	if err != nil {
 		panic(err)
