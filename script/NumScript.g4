@@ -7,6 +7,9 @@ VARS: 'vars';
 PRINT: 'print';
 FAIL: 'fail';
 SEND: 'send';
+SOURCE: 'source';
+DESTINATION: 'destination';
+ALLOCATE: 'allocate';
 OP_ADD: '+';
 OP_SUB: '-';
 LPAREN: '(';
@@ -21,10 +24,12 @@ TY_ASSET: 'asset';
 TY_NUMBER: 'number';
 TY_MONETARY: 'monetary';
 NUMBER: [0-9]+;
+RATIO: [0-9]+'/'[0-9]+;
+PERCENT: '%';
 IDENTIFIER: [a-z0-9_:]+;
 VARIABLE_NAME: '$' [a-z_]+ [a-z0-9_]+;
 ACCOUNT: '@' [a-z_]+ [a-z0-9_:]+;
-ASSET: [A-Z0-9/]+;
+ASSET: [A-Z/0-9]+;
 
 monetary: LBRACK asset=ASSET amount=NUMBER RBRACK;
 
@@ -43,10 +48,21 @@ expression
 
 argument: name=IDENTIFIER EQ val=expression;
 
+frac
+  : r=RATIO # Ratio
+  | p=NUMBER PERCENT # Percentage
+  ;
+
+allocationPart: fr=frac 'to' dest=expression;
+
+allocation: LBRACE NEWLINE (parts+=allocationPart NEWLINE)+ RBRACE;
+
 statement
   : PRINT expr=expression # Print
   | FAIL # Fail
-  | SEND LPAREN NEWLINE* ((args+=argument ',' NEWLINE*)+ args+=argument? NEWLINE*) RPAREN # Send
+  | SEND mon=expression LPAREN NEWLINE
+      ( SOURCE '=' src=expression NEWLINE DESTINATION '=' dest=allocation
+      | DESTINATION '=' dest=allocation NEWLINE SOURCE '=' src=expression) NEWLINE RPAREN # Send
   ;
 
 type_: TY_ACCOUNT | TY_ASSET | TY_NUMBER | TY_MONETARY;

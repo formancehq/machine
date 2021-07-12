@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"math/big"
 
 	ledger "github.com/numary/ledger/core"
 	"github.com/numary/machine/core"
@@ -136,27 +137,57 @@ func (m *Machine) tick() (bool, byte) {
 		a := m.popValue()
 		m.print_chan <- a
 	case program.OP_FAIL:
-		// fmt.Println("program failed")
-		// fmt.Println("stack: ", m.Stack)
 		return true, EXIT_FAIL
 	case program.OP_SEND:
-		dst := m.popAccount()
+		ndest := m.popNumber()
+
+		type allocation struct {
+			ratio *big.Rat
+			dest  string
+		}
+		allocs := []allocation{}
+		for i := uint64(0); i < ndest; i++ {
+			acc := string(m.popAccount())
+			b := int64(m.popNumber())
+			a := int64(m.popNumber())
+			allocs = append(allocs, allocation{
+				ratio: big.NewRat(a, b),
+				dest:  acc,
+			})
+		}
 		src := m.popAccount()
 		mon := m.popMonetary()
-		p := ledger.Posting{
-			Source:      string(src),
-			Destination: string(dst),
-			Asset:       string(mon.Asset),
-			Amount:      int64(mon.Amount),
+		posting_amounts := []int64{}
+		// for every allocation, compute the floored amount and the total
+		total := int64(0)
+		for _, alloc := range allocs {
+			var res big.Int
+			res.Mul(alloc.ratio.Num(), big.NewInt(int64(mon.Amount)))
+			res.Div(&res, alloc.ratio.Denom())
+			posting_amounts = append(posting_amounts, res.Int64())
+			total += res.Int64()
 		}
-		m.Postings = append(m.Postings, p)
+		// generate postings
+		for i := int64(ndest - 1); i >= 0; i-- {
+			// if the total is less than the target amount, add 1 unit to amounts until it isn't
+			amt := posting_amounts[i]
+			dest := allocs[i].dest
+			if total < int64(mon.Amount) {
+				amt += 1
+				total += 1
+			}
+			m.Postings = append(m.Postings, ledger.Posting{
+				Source:      string(src),
+				Destination: string(dest),
+				Asset:       string(mon.Asset),
+				Amount:      int64(amt),
+			})
+		}
 	}
 
 	m.P += 1
 
 	if int(m.P) >= len(m.Program.Instructions) {
-		// fmt.Println("end of program")
-		// fmt.Println("stack: ", m.Stack)
 		return true, EXIT_OK
 	}
 

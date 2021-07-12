@@ -4,7 +4,9 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"math/big"
 	"strconv"
+	"strings"
 
 	"github.com/antlr/antlr4/runtime/Go/antlr"
 	"github.com/numary/machine/core"
@@ -21,7 +23,7 @@ type parseVisitor struct {
 
 // Allocates constants if it hasn't already been,
 // and returns its resource address.
-func (p *parseVisitor) AllocateValue(v core.Value) (program.Address, error) {
+func (p *parseVisitor) AllocateConstant(v core.Value) (program.Address, error) {
 	for i := 0; i < len(p.constants); i++ {
 		if p.constants[i] == v {
 			return program.Address(i), nil
@@ -38,7 +40,7 @@ func (p *parseVisitor) PushValue(val core.Value) error {
 	switch val := val.(type) {
 	case core.Account, core.Asset, core.Monetary:
 		p.instructions = append(p.instructions, program.OP_APUSH)
-		addr, err := p.AllocateValue(val)
+		addr, err := p.AllocateConstant(val)
 		if err != nil {
 			return err
 		}
@@ -76,7 +78,7 @@ func (p *parseVisitor) VisitScript(c parser.IScriptContext) error {
 					return err
 				}
 			case *parser.FailContext:
-				p.VisitFail(c)
+				p.instructions = append(p.instructions, program.OP_FAIL)
 			case *parser.SendContext:
 				err := p.VisitSend(c)
 				if err != nil {
@@ -211,28 +213,87 @@ func (p *parseVisitor) VisitLit(c parser.ILiteralContext) (core.Value, error) {
 	}
 }
 
-func (p *parseVisitor) VisitFail(ctx *parser.FailContext) {
-	p.instructions = append(p.instructions, program.OP_FAIL)
+func (p *parseVisitor) VisitFrac(c parser.IFracContext) (*big.Rat, error) {
+	switch c := c.(type) {
+	case *parser.RatioContext:
+		v := strings.Split(c.GetR().GetText(), "/")
+		ns := v[0]
+		ds := v[1]
+		n, err := strconv.ParseInt(ns, 10, 64)
+		if err != nil {
+			return nil, err
+		}
+		if n <= 0 {
+			return nil, errors.New("numerator must be greater than zero")
+		}
+		d, err := strconv.ParseInt(ds, 10, 64)
+		if err != nil {
+			return nil, err
+		}
+		if d <= 0 {
+			return nil, errors.New("denominator must be greater than zero")
+		}
+		return big.NewRat(int64(n), int64(d)), nil
+	case *parser.PercentageContext:
+		n, err := strconv.ParseInt(c.GetP().GetText(), 10, 64)
+		if err != nil {
+			return nil, err
+		}
+		if n <= 0 || n >= 100 {
+			return nil, errors.New("percentage must be greater than zero and less than 100")
+		}
+		return big.NewRat(n, 100), nil
+	default:
+		panic("internal compiler error")
+	}
 }
 
-func (p *parseVisitor) VisitSend(ctx *parser.SendContext) error {
-	err := p.VisitArgs(ctx.GetArgs(), []arg{
-		{
-			name: "value",
-			ty:   core.TYPE_MONETARY,
-		},
-		{
-			name: "source",
-			ty:   core.TYPE_ACCOUNT,
-		},
-		{
-			name: "destination",
-			ty:   core.TYPE_ACCOUNT,
-		},
-	})
+func (p *parseVisitor) VisitAllocation(c parser.IAllocationContext) error {
+	total := big.NewRat(0, 1)
+	for _, v := range c.GetParts() {
+		rfrac := v.GetFr()
+		frac, err := p.VisitFrac(rfrac)
+		if err != nil {
+			return err
+		}
+		total.Add(frac, total)
+		p.PushValue(core.Number(frac.Num().Uint64()))
+		p.PushValue(core.Number(frac.Denom().Uint64()))
+
+		ty, err := p.VisitExpr(v.GetDest())
+		if ty != core.TYPE_ACCOUNT {
+			return errors.New("expected account as destination of allocation line")
+		}
+	}
+	if total.Cmp(big.NewRat(1, 1)) != 0 {
+		return errors.New("sum of fractions did not equal 100%")
+	}
+	length := len(c.GetParts())
+	p.PushValue(core.Number(length))
+	return nil
+}
+
+func (p *parseVisitor) VisitSend(c *parser.SendContext) error {
+	ty, err := p.VisitExpr(c.GetMon())
 	if err != nil {
 		return err
 	}
+	if ty != core.TYPE_MONETARY {
+		return errors.New("wrong type for monetary value")
+	}
+
+	ty, err = p.VisitExpr(c.GetSrc())
+	if err != nil {
+		return err
+	}
+	if ty != core.TYPE_ACCOUNT {
+		return errors.New("wrong type for source")
+	}
+	err = p.VisitAllocation(c.GetDest())
+	if err != nil {
+		return err
+	}
+
 	p.instructions = append(p.instructions, program.OP_SEND)
 	return nil
 }
@@ -240,40 +301,6 @@ func (p *parseVisitor) VisitSend(ctx *parser.SendContext) error {
 type arg struct {
 	name string
 	ty   core.Type
-}
-
-// pushes them on the stack in the order given
-func (p *parseVisitor) VisitArgs(cs []parser.IArgumentContext, args []arg) error {
-	// put all parsed arguments in a map
-	arg_expr := make(map[string]parser.IExpressionContext)
-	for _, c := range cs {
-		name := c.GetName().GetText()
-		expr := c.GetVal()
-		if _, ok := arg_expr[name]; ok {
-			return fmt.Errorf("duplicate argument: %s", name)
-		}
-		arg_expr[name] = expr
-	}
-	// push arguments in right order
-	for _, arg := range args {
-		expr, ok := arg_expr[arg.name]
-		if !ok {
-			return fmt.Errorf("missing argument: %s", arg.name)
-		}
-		ty, err := p.VisitExpr(expr)
-		if err != nil {
-			return err
-		}
-		if ty != arg.ty {
-			return fmt.Errorf("wrong argument type")
-		}
-		delete(arg_expr, arg.name)
-	}
-	// check for excess arguments
-	for name := range arg_expr {
-		return fmt.Errorf("unrecognized argument: %s", name)
-	}
-	return nil
 }
 
 func Compile(input string) (*program.Program, error) {

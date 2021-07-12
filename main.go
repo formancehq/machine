@@ -15,10 +15,13 @@ func main() {
 	monetary $value
 }
 
-send(
-	value = $value,
-	source = $rider,
-	destination = $driver,
+send $value (
+	source = $rider
+	destination = {
+		80% to $driver
+		8% to @bank
+		12% to @bank2
+	}
 )`)
 
 	if err != nil {
@@ -36,7 +39,7 @@ send(
 		"driver": "user:002",
 		"value": {
 			"asset":  "GEM",
-			"amount": 32
+			"amount": 15
 		}
 	}`), &vars)
 

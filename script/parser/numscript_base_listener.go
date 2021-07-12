@@ -75,6 +75,30 @@ func (s *BaseNumScriptListener) EnterArgument(ctx *ArgumentContext) {}
 // ExitArgument is called when production argument is exited.
 func (s *BaseNumScriptListener) ExitArgument(ctx *ArgumentContext) {}
 
+// EnterRatio is called when production Ratio is entered.
+func (s *BaseNumScriptListener) EnterRatio(ctx *RatioContext) {}
+
+// ExitRatio is called when production Ratio is exited.
+func (s *BaseNumScriptListener) ExitRatio(ctx *RatioContext) {}
+
+// EnterPercentage is called when production Percentage is entered.
+func (s *BaseNumScriptListener) EnterPercentage(ctx *PercentageContext) {}
+
+// ExitPercentage is called when production Percentage is exited.
+func (s *BaseNumScriptListener) ExitPercentage(ctx *PercentageContext) {}
+
+// EnterAllocationPart is called when production allocationPart is entered.
+func (s *BaseNumScriptListener) EnterAllocationPart(ctx *AllocationPartContext) {}
+
+// ExitAllocationPart is called when production allocationPart is exited.
+func (s *BaseNumScriptListener) ExitAllocationPart(ctx *AllocationPartContext) {}
+
+// EnterAllocation is called when production allocation is entered.
+func (s *BaseNumScriptListener) EnterAllocation(ctx *AllocationContext) {}
+
+// ExitAllocation is called when production allocation is exited.
+func (s *BaseNumScriptListener) ExitAllocation(ctx *AllocationContext) {}
+
 // EnterPrint is called when production Print is entered.
 func (s *BaseNumScriptListener) EnterPrint(ctx *PrintContext) {}
 

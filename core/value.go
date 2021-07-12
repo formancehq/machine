@@ -1,6 +1,8 @@
 package core
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type Type = byte
 
@@ -45,3 +47,19 @@ func (Monetary) GetType() Type { return TYPE_MONETARY }
 func (a Monetary) String() string {
 	return fmt.Sprintf("[%v %v]", a.Asset, a.Amount)
 }
+
+// type Allocation []AllocPart
+
+// func (Allocation) GetType() Type { return TYPE_MONETARY }
+// func (a Allocation) String() string {
+// 	out := "{\n"
+// 	for _, p := range a {
+// 		out += fmt.Sprintf("	%v to %v\n", p.part, p.dest)
+// 	}
+// 	return out + "}"
+// }
+
+// type AllocPart struct {
+// 	part big.Rat
+// 	dest Address
+// }
