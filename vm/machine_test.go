@@ -131,7 +131,10 @@ func TestPrint(t *testing.T) {
 
 func TestSend(t *testing.T) {
 	test(t,
-		"send(value=[EUR/2 100], source=@alice, destination=@bob)",
+		`send [EUR/2 100] (
+			source=@alice
+			destination=@bob
+		)`,
 		map[string]core.Value{},
 		CaseResult{
 			Printed: []core.Value{},
@@ -154,7 +157,10 @@ func TestVariables(t *testing.T) {
 			account $rider
 			account $driver
 		}
-		send(value=[EUR/2 999], source=$rider, destination=$driver)`,
+		send [EUR/2 999] (
+			source=$rider
+			destination=$driver
+		)`,
 		map[string]core.Value{
 			"rider":  core.Account("user:001"),
 			"driver": core.Account("user:002"),
@@ -180,7 +186,10 @@ func TestVariablesJSON(t *testing.T) {
 			account $rider
 			account $driver
 		}
-		send(value=[EUR/2 999], source=$rider, destination=$driver)`,
+		send [EUR/2 999] (
+			source=$rider
+			destination=$driver
+		)`,
 		`{
 			"rider": "user:001",
 			"driver": "user:002"
@@ -193,6 +202,51 @@ func TestVariablesJSON(t *testing.T) {
 					Amount:      999,
 					Source:      "user:001",
 					Destination: "user:002",
+				},
+			},
+			ExitCode: EXIT_OK,
+		},
+	)
+}
+
+func TestAllocation(t *testing.T) {
+	testJSON(t,
+		`vars {
+	account $rider
+	account $driver
+}
+send [GEM 15] (
+	source = $rider
+	destination = {
+		80% to $driver
+		8% to @a
+		12% to @b
+	}
+)`,
+		`{
+			"rider": "user:001",
+			"driver": "user:002"
+		}`,
+		CaseResult{
+			Printed: []core.Value{},
+			Postings: []ledger.Posting{
+				{
+					Asset:       "GEM",
+					Amount:      13,
+					Source:      "user:001",
+					Destination: "user:002",
+				},
+				{
+					Asset:       "GEM",
+					Amount:      1,
+					Source:      "user:001",
+					Destination: "a",
+				},
+				{
+					Asset:       "GEM",
+					Amount:      1,
+					Source:      "user:001",
+					Destination: "b",
 				},
 			},
 			ExitCode: EXIT_OK,

@@ -8,26 +8,6 @@ import (
 	"github.com/numary/machine/core"
 )
 
-type Address uint16
-
-func NewDataAddress(x uint16) Address {
-	return Address(x)
-}
-
-func NewVarAddress(x uint16) Address {
-	return Address((1 << 15) + x)
-}
-
-func (a Address) ToBytes() []byte {
-	bytes := make([]byte, 2)
-	binary.LittleEndian.PutUint16(bytes, uint16(a))
-	return bytes
-}
-
-func (a Address) ToIdx() int {
-	return int(a) & 0x7FFF
-}
-
 type Program struct {
 	Constants    []core.Value
 	Instructions []byte
@@ -36,7 +16,7 @@ type Program struct {
 
 type VarInfo struct {
 	Ty   core.Type
-	Addr Address
+	Addr core.Address
 }
 
 func (p Program) Print() {
@@ -46,7 +26,12 @@ func (p Program) Print() {
 		switch p.Instructions[i] {
 		case OP_APUSH:
 			fmt.Print("OP_APUSH\n")
-			fmt.Printf("%02d-%02d   #%d\n", i+1, i+3, binary.LittleEndian.Uint16(p.Instructions[i+1:i+3]))
+			address := binary.LittleEndian.Uint16(p.Instructions[i+1 : i+3])
+			if address >= 32768 {
+				fmt.Printf("%02d-%02d   #VAR(%d)\n", i+1, i+3, address-32768)
+			} else {
+				fmt.Printf("%02d-%02d   #CONST(%d)\n", i+1, i+3, address)
+			}
 			i += 2
 		case OP_IPUSH:
 			fmt.Print("OP_IPUSH\n")
@@ -62,6 +47,8 @@ func (p Program) Print() {
 			fmt.Print("OP_FAIL\n")
 		case OP_SEND:
 			fmt.Print("OP_SEND\n")
+		case OP_MAKEALLOC:
+			fmt.Print("OP_MAKEALLOC\n")
 		}
 	}
 

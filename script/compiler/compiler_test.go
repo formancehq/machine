@@ -117,7 +117,10 @@ func TestSend(t *testing.T) {
 	alice := core.Account("alice")
 	bob := core.Account("bob")
 	test(t, TestCase{
-		Case: "send(value=[EUR/2 99], source=@alice, destination=@bob)",
+		Case: `send [EUR/2 99] (
+	source = @alice
+	destination = @bob
+)`,
 		Expected: CaseResult{
 			Instructions: []byte{
 				program.OP_APUSH, 00, 00,
@@ -143,11 +146,14 @@ func TestSyntaxError(t *testing.T) {
 
 func TestLogicError(t *testing.T) {
 	test(t, TestCase{
-		Case: "send(value=[EUR/2 200], source=200, destination=@bob)",
+		Case: `send [EUR/2 200] (
+			source = 200
+			destination = @bob
+		)`,
 		Expected: CaseResult{
 			Instructions: nil,
 			Constants:    nil,
-			Error:        "wrong argument type",
+			Error:        "wrong type",
 		},
 	})
 }

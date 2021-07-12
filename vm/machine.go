@@ -45,63 +45,7 @@ type Machine struct {
 	print_chan chan core.Value
 }
 
-func (m *Machine) popValue() core.Value {
-	l := len(m.Stack)
-	x := m.Stack[l-1]
-	m.Stack = m.Stack[:l-1]
-	return x
-}
-
-func (m *Machine) popAccount() core.Account {
-	l := len(m.Stack)
-	x := m.Stack[l-1]
-	m.Stack = m.Stack[:l-1]
-	if a, ok := x.(core.Account); ok {
-		return a
-	} else {
-		panic("unexpected type on stack")
-	}
-}
-
-func (m *Machine) popAsset() core.Asset {
-	l := len(m.Stack)
-	x := m.Stack[l-1]
-	m.Stack = m.Stack[:l-1]
-	if a, ok := x.(core.Asset); ok {
-		return a
-	} else {
-		panic("unexpected type on stack")
-	}
-}
-
-func (m *Machine) popNumber() uint64 {
-	l := len(m.Stack)
-	x := m.Stack[l-1]
-	m.Stack = m.Stack[:l-1]
-	if n, ok := x.(core.Number); ok {
-		return uint64(n)
-	} else {
-		panic("unexpected type on stack")
-	}
-}
-
-func (m *Machine) popMonetary() core.Monetary {
-	l := len(m.Stack)
-	x := m.Stack[l-1]
-	m.Stack = m.Stack[:l-1]
-	if m, ok := x.(core.Monetary); ok {
-		return m
-	} else {
-		panic("unexpected type on stack")
-	}
-}
-
-func (m *Machine) pushNumber(x uint64) {
-	num := core.Number(x)
-	m.Stack = append(m.Stack, num)
-}
-
-func (m *Machine) getResource(addr program.Address) core.Value {
+func (m *Machine) getResource(addr core.Address) core.Value {
 	a := uint16(addr)
 	if a < (1 << 15) {
 		return m.Constants[a]
@@ -117,7 +61,7 @@ func (m *Machine) tick() (bool, byte) {
 	switch op {
 	case program.OP_APUSH:
 		bytes := m.Program.Instructions[m.P+1 : m.P+3]
-		v := m.getResource(program.Address(binary.LittleEndian.Uint16(bytes)))
+		v := m.getResource(core.Address(binary.LittleEndian.Uint16(bytes)))
 		m.Stack = append(m.Stack, v)
 		m.P += 2
 	case program.OP_IPUSH:
@@ -128,59 +72,66 @@ func (m *Machine) tick() (bool, byte) {
 	case program.OP_IADD:
 		b := m.popNumber()
 		a := m.popNumber()
-		m.pushNumber(a + b)
+		m.pushValue(core.Number(a + b))
 	case program.OP_ISUB:
 		b := m.popNumber()
 		a := m.popNumber()
-		m.pushNumber(a - b)
+		m.pushValue(core.Number(a - b))
 	case program.OP_PRINT:
 		a := m.popValue()
 		m.print_chan <- a
 	case program.OP_FAIL:
 		return true, EXIT_FAIL
-	case program.OP_SEND:
+	case program.OP_MAKEALLOC:
 		ndest := m.popNumber()
-
-		type allocation struct {
-			ratio *big.Rat
-			dest  string
-		}
-		allocs := []allocation{}
-		for i := uint64(0); i < ndest; i++ {
-			acc := string(m.popAccount())
+		alloc := make([]core.AllocPart, ndest)
+		for i := int(ndest - 1); i >= 0; i-- {
+			acc := m.popAccount()
 			b := int64(m.popNumber())
 			a := int64(m.popNumber())
-			allocs = append(allocs, allocation{
-				ratio: big.NewRat(a, b),
-				dest:  acc,
-			})
+			alloc[i] = core.AllocPart{
+				Ratio: big.NewRat(a, b),
+				Dest:  acc,
+			}
 		}
+		m.pushValue(core.Allocation(alloc))
+	case program.OP_SEND:
+		dest := m.popValue()
 		src := m.popAccount()
 		mon := m.popMonetary()
-		posting_amounts := []int64{}
-		// for every allocation, compute the floored amount and the total
-		total := int64(0)
-		for _, alloc := range allocs {
-			var res big.Int
-			res.Mul(alloc.ratio.Num(), big.NewInt(int64(mon.Amount)))
-			res.Div(&res, alloc.ratio.Denom())
-			posting_amounts = append(posting_amounts, res.Int64())
-			total += res.Int64()
-		}
-		// generate postings
-		for i := int64(ndest - 1); i >= 0; i-- {
-			// if the total is less than the target amount, add 1 unit to amounts until it isn't
-			amt := posting_amounts[i]
-			dest := allocs[i].dest
-			if total < int64(mon.Amount) {
-				amt += 1
-				total += 1
+		if allocs, ok := dest.(core.Allocation); ok {
+			posting_amounts := []int64{}
+			// for every allocation, compute the floored amount and the total
+			total := int64(0)
+			for _, alloc := range allocs {
+				var res big.Int
+				res.Mul(alloc.Ratio.Num(), big.NewInt(int64(mon.Amount)))
+				res.Div(&res, alloc.Ratio.Denom())
+				posting_amounts = append(posting_amounts, res.Int64())
+				total += res.Int64()
 			}
+			// generate postings
+			for i := 0; i < len(allocs); i++ {
+				// if the total is less than the target amount, add 1 unit to amounts until it isn't
+				amt := posting_amounts[i]
+				dest := allocs[i].Dest
+				if total < int64(mon.Amount) {
+					amt += 1
+					total += 1
+				}
+				m.Postings = append(m.Postings, ledger.Posting{
+					Source:      string(src),
+					Destination: string(dest),
+					Asset:       string(mon.Asset),
+					Amount:      int64(amt),
+				})
+			}
+		} else if dest, ok := dest.(core.Account); ok {
 			m.Postings = append(m.Postings, ledger.Posting{
 				Source:      string(src),
 				Destination: string(dest),
 				Asset:       string(mon.Asset),
-				Amount:      int64(amt),
+				Amount:      int64(mon.Amount),
 			})
 		}
 	}

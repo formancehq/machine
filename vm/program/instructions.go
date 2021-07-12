@@ -8,5 +8,5 @@ const (
 	OP_PRINT
 	OP_FAIL
 	OP_SEND
-	OP_ALLOC
+	OP_MAKEALLOC
 )
