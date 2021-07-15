@@ -39,18 +39,6 @@ func (s *BaseNumScriptListener) EnterPercentage(ctx *PercentageContext) {}
 // ExitPercentage is called when production Percentage is exited.
 func (s *BaseNumScriptListener) ExitPercentage(ctx *PercentageContext) {}
 
-// EnterAllocationPart is called when production allocationPart is entered.
-func (s *BaseNumScriptListener) EnterAllocationPart(ctx *AllocationPartContext) {}
-
-// ExitAllocationPart is called when production allocationPart is exited.
-func (s *BaseNumScriptListener) ExitAllocationPart(ctx *AllocationPartContext) {}
-
-// EnterAllocation is called when production allocation is entered.
-func (s *BaseNumScriptListener) EnterAllocation(ctx *AllocationContext) {}
-
-// ExitAllocation is called when production allocation is exited.
-func (s *BaseNumScriptListener) ExitAllocation(ctx *AllocationContext) {}
-
 // EnterLitAccount is called when production LitAccount is entered.
 func (s *BaseNumScriptListener) EnterLitAccount(ctx *LitAccountContext) {}
 
@@ -75,12 +63,6 @@ func (s *BaseNumScriptListener) EnterLitMonetary(ctx *LitMonetaryContext) {}
 // ExitLitMonetary is called when production LitMonetary is exited.
 func (s *BaseNumScriptListener) ExitLitMonetary(ctx *LitMonetaryContext) {}
 
-// EnterLitAllocation is called when production LitAllocation is entered.
-func (s *BaseNumScriptListener) EnterLitAllocation(ctx *LitAllocationContext) {}
-
-// ExitLitAllocation is called when production LitAllocation is exited.
-func (s *BaseNumScriptListener) ExitLitAllocation(ctx *LitAllocationContext) {}
-
 // EnterExprAddSub is called when production ExprAddSub is entered.
 func (s *BaseNumScriptListener) EnterExprAddSub(ctx *ExprAddSubContext) {}
 
@@ -104,6 +86,18 @@ func (s *BaseNumScriptListener) EnterArgument(ctx *ArgumentContext) {}
 
 // ExitArgument is called when production argument is exited.
 func (s *BaseNumScriptListener) ExitArgument(ctx *ArgumentContext) {}
+
+// EnterAllocationPart is called when production allocationPart is entered.
+func (s *BaseNumScriptListener) EnterAllocationPart(ctx *AllocationPartContext) {}
+
+// ExitAllocationPart is called when production allocationPart is exited.
+func (s *BaseNumScriptListener) ExitAllocationPart(ctx *AllocationPartContext) {}
+
+// EnterAllocation is called when production allocation is entered.
+func (s *BaseNumScriptListener) EnterAllocation(ctx *AllocationContext) {}
+
+// ExitAllocation is called when production allocation is exited.
+func (s *BaseNumScriptListener) ExitAllocation(ctx *AllocationContext) {}
 
 // EnterPrint is called when production Print is entered.
 func (s *BaseNumScriptListener) EnterPrint(ctx *PrintContext) {}

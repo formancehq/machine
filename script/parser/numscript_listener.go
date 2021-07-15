@@ -17,12 +17,6 @@ type NumScriptListener interface {
 	// EnterPercentage is called when entering the Percentage production.
 	EnterPercentage(c *PercentageContext)
 
-	// EnterAllocationPart is called when entering the allocationPart production.
-	EnterAllocationPart(c *AllocationPartContext)
-
-	// EnterAllocation is called when entering the allocation production.
-	EnterAllocation(c *AllocationContext)
-
 	// EnterLitAccount is called when entering the LitAccount production.
 	EnterLitAccount(c *LitAccountContext)
 
@@ -35,9 +29,6 @@ type NumScriptListener interface {
 	// EnterLitMonetary is called when entering the LitMonetary production.
 	EnterLitMonetary(c *LitMonetaryContext)
 
-	// EnterLitAllocation is called when entering the LitAllocation production.
-	EnterLitAllocation(c *LitAllocationContext)
-
 	// EnterExprAddSub is called when entering the ExprAddSub production.
 	EnterExprAddSub(c *ExprAddSubContext)
 
@@ -49,6 +40,12 @@ type NumScriptListener interface {
 
 	// EnterArgument is called when entering the argument production.
 	EnterArgument(c *ArgumentContext)
+
+	// EnterAllocationPart is called when entering the allocationPart production.
+	EnterAllocationPart(c *AllocationPartContext)
+
+	// EnterAllocation is called when entering the allocation production.
+	EnterAllocation(c *AllocationContext)
 
 	// EnterPrint is called when entering the Print production.
 	EnterPrint(c *PrintContext)
@@ -80,12 +77,6 @@ type NumScriptListener interface {
 	// ExitPercentage is called when exiting the Percentage production.
 	ExitPercentage(c *PercentageContext)
 
-	// ExitAllocationPart is called when exiting the allocationPart production.
-	ExitAllocationPart(c *AllocationPartContext)
-
-	// ExitAllocation is called when exiting the allocation production.
-	ExitAllocation(c *AllocationContext)
-
 	// ExitLitAccount is called when exiting the LitAccount production.
 	ExitLitAccount(c *LitAccountContext)
 
@@ -98,9 +89,6 @@ type NumScriptListener interface {
 	// ExitLitMonetary is called when exiting the LitMonetary production.
 	ExitLitMonetary(c *LitMonetaryContext)
 
-	// ExitLitAllocation is called when exiting the LitAllocation production.
-	ExitLitAllocation(c *LitAllocationContext)
-
 	// ExitExprAddSub is called when exiting the ExprAddSub production.
 	ExitExprAddSub(c *ExprAddSubContext)
 
@@ -112,6 +100,12 @@ type NumScriptListener interface {
 
 	// ExitArgument is called when exiting the argument production.
 	ExitArgument(c *ArgumentContext)
+
+	// ExitAllocationPart is called when exiting the allocationPart production.
+	ExitAllocationPart(c *AllocationPartContext)
+
+	// ExitAllocation is called when exiting the allocation production.
+	ExitAllocation(c *AllocationContext)
 
 	// ExitPrint is called when exiting the Print production.
 	ExitPrint(c *PrintContext)

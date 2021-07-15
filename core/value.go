@@ -5,14 +5,14 @@ import (
 	"math/big"
 )
 
-type Type = byte
+type Type byte
 
 const (
 	TYPE_ACCOUNT = Type(iota + 1)
 	TYPE_ASSET
 	TYPE_NUMBER
 	TYPE_MONETARY
-	TYPE_ALLOCATION
+	TYPE_ALLOTMENT
 )
 
 type Value interface {
@@ -50,18 +50,13 @@ func (a Monetary) String() string {
 	return fmt.Sprintf("[%v %v]", a.Asset, a.Amount)
 }
 
-type Allocation []AllocPart
+type Allotment []big.Rat
 
-func (Allocation) GetType() Type { return TYPE_ALLOCATION }
-func (a Allocation) String() string {
+func (Allotment) GetType() Type { return TYPE_ALLOTMENT }
+func (a Allotment) String() string {
 	out := "{\n"
-	for _, p := range a {
-		out += fmt.Sprintf("	%v to %v\n", p.Ratio, p.Dest)
+	for _, ratio := range a {
+		out += fmt.Sprintf("	%v\n", ratio)
 	}
 	return out + "}"
-}
-
-type AllocPart struct {
-	Ratio *big.Rat
-	Dest  Account
 }

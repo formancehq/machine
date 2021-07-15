@@ -12,6 +12,7 @@ type Program struct {
 	Constants    []core.Value
 	Instructions []byte
 	Variables    map[string]VarInfo
+	Accounts     map[string][]string
 }
 
 type VarInfo struct {
@@ -47,8 +48,10 @@ func (p Program) Print() {
 			fmt.Print("OP_FAIL\n")
 		case OP_SEND:
 			fmt.Print("OP_SEND\n")
-		case OP_MAKEALLOC:
-			fmt.Print("OP_MAKEALLOC\n")
+		case OP_ALLOC:
+			fmt.Print("OP_ALLOC\n")
+		default:
+			fmt.Print("Unknown opcode")
 		}
 	}
 

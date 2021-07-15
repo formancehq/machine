@@ -41,8 +41,8 @@ func (m *Machine) popMonetary() core.Monetary {
 	}
 }
 
-func (m *Machine) popAllocation() core.Allocation {
-	if m, ok := m.popValue().(core.Allocation); ok {
+func (m *Machine) popAllotment() core.Allotment {
+	if m, ok := m.popValue().(core.Allotment); ok {
 		return m
 	} else {
 		panic("unexpected type on stack")

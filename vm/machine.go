@@ -42,6 +42,7 @@ type Machine struct {
 	Stack      []core.Value
 	Printer    func(chan core.Value)
 	Postings   []ledger.Posting
+	Balances   map[string]map[string]uint64
 	print_chan chan core.Value
 }
 
@@ -82,51 +83,91 @@ func (m *Machine) tick() (bool, byte) {
 		m.print_chan <- a
 	case program.OP_FAIL:
 		return true, EXIT_FAIL
-	case program.OP_MAKEALLOC:
-		ndest := m.popNumber()
-		alloc := make([]core.AllocPart, ndest)
-		for i := int(ndest - 1); i >= 0; i-- {
-			acc := m.popAccount()
-			b := int64(m.popNumber())
-			a := int64(m.popNumber())
-			alloc[i] = core.AllocPart{
-				Ratio: big.NewRat(a, b),
-				Dest:  acc,
-			}
-		}
-		m.pushValue(core.Allocation(alloc))
-	case program.OP_SEND:
-		dest := m.popValue()
-		src := m.popAccount()
+	case program.OP_SOURCE:
 		mon := m.popMonetary()
-		if allocs, ok := dest.(core.Allocation); ok {
-			posting_amounts := []int64{}
-			// for every allocation, compute the floored amount and the total
-			total := int64(0)
-			for _, alloc := range allocs {
-				var res big.Int
-				res.Mul(alloc.Ratio.Num(), big.NewInt(int64(mon.Amount)))
-				res.Div(&res, alloc.Ratio.Denom())
-				posting_amounts = append(posting_amounts, res.Int64())
-				total += res.Int64()
+		n := m.popNumber()
+		sources := []core.Account{}
+		for i := uint64(0); i < n; i++ {
+			sources = append(sources, m.popAccount())
+		}
+		asset := mon.Asset
+		target := mon.Amount
+
+		var n_actual_src uint64
+		for _, src := range sources {
+			src_funds := m.Balances[string(src)][asset]
+			var amt_to_withdraw uint64
+			if src_funds > target {
+				amt_to_withdraw = target
+			} else {
+				amt_to_withdraw = src_funds
 			}
-			// generate postings
-			for i := 0; i < len(allocs); i++ {
-				// if the total is less than the target amount, add 1 unit to amounts until it isn't
-				amt := posting_amounts[i]
-				dest := allocs[i].Dest
-				if total < int64(mon.Amount) {
-					amt += 1
-					total += 1
+			m.Balances[string(src)][asset] -= amt_to_withdraw
+			target -= amt_to_withdraw
+			m.pushValue(src)
+			m.pushValue(core.Monetary{
+				Asset:  asset,
+				Amount: amt_to_withdraw,
+			})
+			n_actual_src++
+		}
+		m.pushValue(core.Number(n_actual_src))
+	case program.OP_ALLOC:
+		allotment := m.popAllotment()
+		n := m.popNumber()
+		source_accounts := make([]core.Account, n)
+		source_amounts := make([]uint64, n)
+		total_src := uint64(0)
+		var asset *string
+		// extract accounts from stack while checking the assets correspond
+		for i := uint64(0); i < n; i++ {
+			source_accounts[i] = m.popAccount()
+			mon := m.popMonetary()
+			source_amounts[i] = mon.Amount
+			// check that the assets correspond
+			if asset == nil {
+				asset = &mon.Asset
+			} else if *asset != mon.Asset {
+				return true, EXIT_FAIL
+			}
+			total_src += mon.Amount
+		}
+		parts := []uint64{}
+		total_allocated := uint64(0)
+		// for every part in the allotment, calculate the floored value
+		for _, part := range allotment {
+			var res big.Int
+			res.Mul(part.Num(), new(big.Int).SetUint64(total_src))
+			res.Div(&res, part.Denom())
+			parts = append(parts, res.Uint64())
+			total_allocated += res.Uint64()
+		}
+		// for every part in the floored values, fetch them from the sources
+		for _, part := range parts {
+			// if the total allocated is less than the target amount, add 1 unit until it isn't
+			if total_allocated < uint64(total_src) {
+				part += 1
+				total_allocated += 1
+			}
+			n := 0 // number of sources needed to fill this part
+			for i, acc := range source_accounts {
+				amt := source_amounts[i] // amount to withdraw from the account
+				if source_amounts[i] > part {
+					amt = part
 				}
-				m.Postings = append(m.Postings, ledger.Posting{
-					Source:      string(src),
-					Destination: string(dest),
-					Asset:       string(mon.Asset),
-					Amount:      int64(amt),
-				})
+				part -= amt
+				m.pushValue(core.Monetary{Asset: *asset, Amount: amt})
+				m.pushValue(acc)
+				n += 1
 			}
-		} else if dest, ok := dest.(core.Account); ok {
+			m.pushValue(core.Number(n))
+		}
+	case program.OP_SEND:
+		dest := m.popAccount()
+		n := m.popNumber()
+		for i := uint64(0); i < n; i++ {
+			src := m.popAccount()
+			mon := m.popMonetary()
 			m.Postings = append(m.Postings, ledger.Posting{
 				Source:      string(src),
 				Destination: string(dest),

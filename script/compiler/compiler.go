@@ -38,7 +38,7 @@ func (p *parseVisitor) AllocateConstant(v core.Value) (core.Address, error) {
 
 func (p *parseVisitor) PushValue(val core.Value) error {
 	switch val := val.(type) {
-	case core.Account, core.Asset, core.Monetary:
+	case core.Account, core.Asset, core.Monetary, core.Allotment:
 		p.instructions = append(p.instructions, program.OP_APUSH)
 		addr, err := p.AllocateConstant(val)
 		if err != nil {
@@ -182,8 +182,8 @@ func (p *parseVisitor) VisitExpr(ctx parser.IExpressionContext) (core.Type, erro
 func (p *parseVisitor) VisitLit(c parser.ILiteralContext) (core.Type, error) {
 	switch c := c.(type) {
 	case *parser.LitAccountContext:
-		addr := core.Account(c.GetText()[1:])
-		err := p.PushValue(addr)
+		account := core.Account(c.GetText()[1:])
+		err := p.PushValue(account)
 		if err != nil {
 			return 0, err
 		}
@@ -218,32 +218,40 @@ func (p *parseVisitor) VisitLit(c parser.ILiteralContext) (core.Type, error) {
 			return 0, err
 		}
 		return core.TYPE_MONETARY, nil
-	case *parser.LitAllocationContext:
-		total := big.NewRat(0, 1)
-		for _, v := range c.Allocation().GetParts() {
-			rfrac := v.GetFr()
-			frac, err := p.VisitFrac(rfrac)
-			if err != nil {
-				return 0, err
-			}
-			total.Add(frac, total)
-			p.PushValue(core.Number(frac.Num().Uint64()))
-			p.PushValue(core.Number(frac.Denom().Uint64()))
-			ty, err := p.VisitExpr(v.GetDest())
-			if ty != core.TYPE_ACCOUNT {
-				return 0, errors.New("expected account as destination of allocation line")
-			}
-		}
-		if total.Cmp(big.NewRat(1, 1)) != 0 {
-			return 0, errors.New("sum of fractions did not equal 100%")
-		}
-		length := len(c.Allocation().GetParts())
-		p.PushValue(core.Number(length))
-		p.instructions = append(p.instructions, program.OP_MAKEALLOC)
-		return core.TYPE_ALLOCATION, nil
 	default:
 		panic("internal compiler error")
 	}
+}
+
+func (p *parseVisitor) VisitAllocation(c parser.IAllocationContext) error {
+	total := big.NewRat(0, 1)
+	// allocate
+	allotment := []big.Rat{}
+	for _, v := range c.GetParts() {
+		frac, err := p.VisitFrac(v.GetFr())
+		if err != nil {
+			return err
+		}
+		total.Add(frac, total)
+		allotment = append(allotment, *frac)
+	}
+	if total.Cmp(big.NewRat(1, 1)) != 0 {
+		return errors.New("sum of fractions did not equal 100%")
+	}
+	p.PushValue(core.Allotment(allotment))
+	p.instructions = append(p.instructions, program.OP_ALLOC)
+	// distribute to destination accounts
+	for _, v := range c.GetParts() {
+		ty, err := p.VisitExpr(v.GetDest())
+		if err != nil {
+			return nil
+		}
+		if ty != core.TYPE_ACCOUNT {
+			return errors.New("expected account as destination of allocation line")
+		}
+		p.instructions = append(p.instructions, program.OP_SEND)
+	}
+	return nil
 }
 
 func (p *parseVisitor) VisitFrac(c parser.IFracContext) (*big.Rat, error) {
@@ -297,14 +305,11 @@ func (p *parseVisitor) VisitSend(c *parser.SendContext) error {
 	if ty != core.TYPE_ACCOUNT {
 		return errors.New("wrong type for source")
 	}
-	ty, err = p.VisitExpr(c.GetDest())
+	p.PushValue(core.Number(1))
+	err = p.VisitAllocation(c.GetDest())
 	if err != nil {
 		return err
 	}
-	if ty != core.TYPE_ALLOCATION && ty != core.TYPE_ACCOUNT {
-		return errors.New("wrong type for destination")
-	}
-	p.instructions = append(p.instructions, program.OP_SEND)
 	return nil
 }
 

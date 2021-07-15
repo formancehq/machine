@@ -19,7 +19,7 @@ send $value (
 	source = $rider
 	destination = {
 		80% to $driver
-		8% to @bank
+		2/25 to @bank
 		12% to @bank2
 	}
 )`)

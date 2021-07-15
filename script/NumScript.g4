@@ -38,16 +38,11 @@ frac
   | p=NUMBER PERCENT # Percentage
   ;
 
-allocationPart: fr=frac 'to' dest=expression;
-
-allocation: LBRACE NEWLINE (parts+=allocationPart NEWLINE)+ RBRACE;
-
 literal
   : ACCOUNT # LitAccount
   | ASSET # LitAsset
   | NUMBER # LitNumber
   | monetary # LitMonetary
-  | allocation # LitAllocation
   ;
 
 expression
@@ -58,12 +53,16 @@ expression
 
 argument: name=IDENTIFIER EQ val=expression;
 
+allocationPart: fr=frac 'to' dest=expression;
+
+allocation: LBRACE NEWLINE (parts+=allocationPart NEWLINE)+ RBRACE;
+
 statement
   : PRINT expr=expression # Print
   | FAIL # Fail
   | SEND mon=expression LPAREN NEWLINE
-      ( SOURCE '=' src=expression NEWLINE DESTINATION '=' dest=expression
-      | DESTINATION '=' dest=expression NEWLINE SOURCE '=' src=expression) NEWLINE RPAREN # Send
+      ( SOURCE '=' src=expression NEWLINE DESTINATION '=' dest=allocation
+      | DESTINATION '=' dest=allocation NEWLINE SOURCE '=' src=expression) NEWLINE RPAREN # Send
   ;
 
 type_: TY_ACCOUNT | TY_ASSET | TY_NUMBER | TY_MONETARY;
