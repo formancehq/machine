@@ -30,20 +30,20 @@ type TestCaseJSON struct {
 	Expected  CaseResult
 }
 
-func test(t *testing.T, code string, variables map[string]core.Value, expected CaseResult) {
+func test(t *testing.T, code string, variables map[string]core.Value, balances map[string]map[string]uint64, expected CaseResult) {
 	testimpl(t, code, expected, func(m *Machine) (byte, error) {
-		return m.Execute(variables)
+		return m.Execute(variables, balances)
 	})
 }
 
-func testJSON(t *testing.T, code string, variables string, expected CaseResult) {
+func testJSON(t *testing.T, code string, variables string, balances map[string]map[string]uint64, expected CaseResult) {
 	testimpl(t, code, expected, func(m *Machine) (byte, error) {
 		var v map[string]json.RawMessage
 		err := json.Unmarshal([]byte(variables), &v)
 		if err != nil {
-			panic("test case was invalid")
+			return 0, err
 		}
-		return m.ExecuteFromJSON(v)
+		return m.ExecuteFromJSON(v, balances)
 	})
 }
 
@@ -71,6 +71,7 @@ func testimpl(t *testing.T, code string, expected CaseResult, exec func(*Machine
 
 	if err != expected.Error {
 		t.Error(fmt.Errorf("unexpected execution error: %v", err))
+		return
 	}
 
 	wg.Wait()
@@ -109,6 +110,7 @@ func TestFail(t *testing.T) {
 	test(t,
 		"fail",
 		map[string]core.Value{},
+		map[string]map[string]uint64{},
 		CaseResult{
 			Printed:  []core.Value{},
 			Postings: []ledger.Posting{},
@@ -121,6 +123,7 @@ func TestPrint(t *testing.T) {
 	test(t,
 		"print 29 + 15 - 2",
 		map[string]core.Value{},
+		map[string]map[string]uint64{},
 		CaseResult{
 			Printed:  []core.Value{core.Number(42)},
 			Postings: []ledger.Posting{},
@@ -136,6 +139,11 @@ func TestSend(t *testing.T) {
 			destination=@bob
 		)`,
 		map[string]core.Value{},
+		map[string]map[string]uint64{
+			"alice": {
+				"EUR/2": 100,
+			},
+		},
 		CaseResult{
 			Printed: []core.Value{},
 			Postings: []ledger.Posting{
@@ -162,8 +170,13 @@ func TestVariables(t *testing.T) {
 			destination=$driver
 		)`,
 		map[string]core.Value{
-			"rider":  core.Account("user:001"),
-			"driver": core.Account("user:002"),
+			"rider":  core.Account("users:001"),
+			"driver": core.Account("users:002"),
+		},
+		map[string]map[string]uint64{
+			"users:001": {
+				"EUR/2": 1000,
+			},
 		},
 		CaseResult{
 			Printed: []core.Value{},
@@ -171,8 +184,8 @@ func TestVariables(t *testing.T) {
 				{
 					Asset:       "EUR/2",
 					Amount:      999,
-					Source:      "user:001",
-					Destination: "user:002",
+					Source:      "users:001",
+					Destination: "users:002",
 				},
 			},
 			ExitCode: EXIT_OK,
@@ -191,17 +204,70 @@ func TestVariablesJSON(t *testing.T) {
 			destination=$driver
 		)`,
 		`{
-			"rider": "user:001",
-			"driver": "user:002"
+			"rider": "users:001",
+			"driver": "users:002"
 		}`,
+		map[string]map[string]uint64{
+			"users:001": {
+				"EUR/2": 1000,
+			},
+		},
 		CaseResult{
 			Printed: []core.Value{},
 			Postings: []ledger.Posting{
 				{
 					Asset:       "EUR/2",
 					Amount:      999,
-					Source:      "user:001",
-					Destination: "user:002",
+					Source:      "users:001",
+					Destination: "users:002",
+				},
+			},
+			ExitCode: EXIT_OK,
+		},
+	)
+}
+
+func TestSource(t *testing.T) {
+	testJSON(t,
+		`vars {
+	account $balance
+	account $payment
+	account $seller
+}
+send [GEM 15] (
+	source = {
+		$balance
+		$payment
+	}
+	destination = $seller
+)`,
+		`{
+			"balance": "users:001",
+			"payment": "payments:001",
+			"seller": "users:002"
+		}`,
+		map[string]map[string]uint64{
+			"users:001": {
+				"GEM": 3,
+			},
+			"payments:001": {
+				"GEM": 12,
+			},
+		},
+		CaseResult{
+			Printed: []core.Value{},
+			Postings: []ledger.Posting{
+				{
+					Asset:       "GEM",
+					Amount:      12,
+					Source:      "payments:001",
+					Destination: "users:002",
+				},
+				{
+					Asset:       "GEM",
+					Amount:      3,
+					Source:      "users:001",
+					Destination: "users:002",
 				},
 			},
 			ExitCode: EXIT_OK,
@@ -224,32 +290,72 @@ send [GEM 15] (
 	}
 )`,
 		`{
-			"rider": "user:001",
-			"driver": "user:002"
+			"rider": "users:001",
+			"driver": "users:002"
 		}`,
+		map[string]map[string]uint64{
+			"users:001": {
+				"GEM": 15,
+			},
+		},
 		CaseResult{
 			Printed: []core.Value{},
 			Postings: []ledger.Posting{
 				{
 					Asset:       "GEM",
 					Amount:      1,
-					Source:      "user:001",
+					Source:      "users:001",
 					Destination: "b",
 				},
 				{
 					Asset:       "GEM",
 					Amount:      1,
-					Source:      "user:001",
+					Source:      "users:001",
 					Destination: "a",
 				},
 				{
 					Asset:       "GEM",
 					Amount:      13,
-					Source:      "user:001",
-					Destination: "user:002",
+					Source:      "users:001",
+					Destination: "users:002",
 				},
 			},
 			ExitCode: EXIT_OK,
+		},
+	)
+}
+
+func TestInsufficient(t *testing.T) {
+	testJSON(t,
+		`vars {
+	account $balance
+	account $payment
+	account $seller
+}
+send [GEM 16] (
+	source = {
+		$balance
+		$payment
+	}
+	destination = $seller
+)`,
+		`{
+			"balance": "users:001",
+			"payment": "payments:001",
+			"seller": "users:002"
+		}`,
+		map[string]map[string]uint64{
+			"users:001": {
+				"GEM": 3,
+			},
+			"payments:001": {
+				"GEM": 12,
+			},
+		},
+		CaseResult{
+			Printed:  []core.Value{},
+			Postings: []ledger.Posting{},
+			ExitCode: EXIT_FAIL,
 		},
 	)
 }

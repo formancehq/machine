@@ -235,8 +235,10 @@ func (p *parseVisitor) VisitSource(c parser.ISourceContext) error {
 		}
 		p.PushValue(core.Number(1))
 	case *parser.SrcBlockContext:
-		for _, v := range c.SourceBlock().GetSources() {
-			ty, err := p.VisitExpr(v)
+		sources := c.SourceBlock().GetSources()
+		n := len(sources)
+		for i := n - 1; i >= 0; i-- {
+			ty, err := p.VisitExpr(sources[i])
 			if err != nil {
 				return err
 			}

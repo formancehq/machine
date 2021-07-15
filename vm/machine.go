@@ -56,6 +56,33 @@ func (m *Machine) getResource(addr core.Address) core.Value {
 	}
 }
 
+func (m *Machine) withdraw(account string, asset string, amount uint64) bool {
+	withdraw_ok := false
+	if acc_balance, ok := m.Balances[account]; ok {
+		if balance, ok := acc_balance[asset]; ok {
+			if balance >= amount {
+				acc_balance[asset] -= amount
+				withdraw_ok = true
+			}
+		}
+	}
+	return withdraw_ok
+}
+
+func (m *Machine) credit(account string, asset string, amount uint64) {
+	if acc_balance, ok := m.Balances[account]; ok {
+		if _, ok := acc_balance[asset]; ok {
+			acc_balance[asset] += amount
+		} else {
+			acc_balance[asset] = amount
+		}
+	} else {
+		m.Balances[account] = map[string]uint64{
+			asset: amount,
+		}
+	}
+}
+
 func (m *Machine) tick() (bool, byte) {
 	op := m.Program.Instructions[m.P]
 
@@ -95,15 +122,13 @@ func (m *Machine) tick() (bool, byte) {
 
 		var n_actual_src uint64
 		for _, src := range sources {
-			// src_funds := m.Balances[string(src)][asset]
-			src_funds := uint64(10000)
+			src_funds := m.Balances[string(src)][asset]
 			var amt_to_withdraw uint64
 			if src_funds > target {
 				amt_to_withdraw = target
 			} else {
 				amt_to_withdraw = src_funds
 			}
-			// m.Balances[string(src)][asset] -= amt_to_withdraw
 			target -= amt_to_withdraw
 			m.pushValue(core.Monetary{
 				Asset:  asset,
@@ -114,6 +139,9 @@ func (m *Machine) tick() (bool, byte) {
 			if target == 0 {
 				break
 			}
+		}
+		if target != 0 {
+			return true, EXIT_FAIL
 		}
 		m.pushValue(core.Number(n_actual_src))
 	case program.OP_ALLOC:
@@ -170,8 +198,13 @@ func (m *Machine) tick() (bool, byte) {
 		dest := m.popAccount()
 		n := m.popNumber()
 		for i := uint64(0); i < n; i++ {
-			src := m.popAccount()
+			src := string(m.popAccount())
 			mon := m.popMonetary()
+			// verify and withdraw funds
+			if ok := m.withdraw(src, mon.Asset, mon.Amount); !ok {
+				return true, EXIT_FAIL
+			}
+			m.credit(string(dest), mon.Asset, mon.Amount)
 			m.Postings = append(m.Postings, ledger.Posting{
 				Source:      string(src),
 				Destination: string(dest),
@@ -183,8 +216,6 @@ func (m *Machine) tick() (bool, byte) {
 
 	m.P += 1
 
-	fmt.Println(m.Stack)
-
 	if int(m.P) >= len(m.Program.Instructions) {
 		return true, EXIT_OK
 	}
@@ -192,10 +223,11 @@ func (m *Machine) tick() (bool, byte) {
 	return false, 0
 }
 
-func (m *Machine) execute(vars []core.Value) byte {
+func (m *Machine) execute(vars []core.Value, balances map[string]map[string]uint64) byte {
 	go m.Printer(m.print_chan)
 	defer close(m.print_chan)
 
+	m.Balances = balances
 	m.Constants = m.Program.Constants
 	m.Variables = vars
 
@@ -207,18 +239,18 @@ func (m *Machine) execute(vars []core.Value) byte {
 	}
 }
 
-func (m *Machine) Execute(vars map[string]core.Value) (byte, error) {
+func (m *Machine) Execute(vars map[string]core.Value, balances map[string]map[string]uint64) (byte, error) {
 	v, err := m.Program.ParseVariables(vars)
 	if err != nil {
 		return 0, err
 	}
-	return m.execute(v), nil
+	return m.execute(v, balances), nil
 }
 
-func (m *Machine) ExecuteFromJSON(vars map[string]json.RawMessage) (byte, error) {
+func (m *Machine) ExecuteFromJSON(vars map[string]json.RawMessage, balances map[string]map[string]uint64) (byte, error) {
 	v, err := m.Program.ParseVariablesJSON(vars)
 	if err != nil {
 		return 0, err
 	}
-	return m.execute(v), nil
+	return m.execute(v, balances), nil
 }
