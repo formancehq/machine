@@ -125,6 +125,7 @@ func TestSend(t *testing.T) {
 			Instructions: []byte{
 				program.OP_APUSH, 00, 00,
 				program.OP_APUSH, 01, 00,
+				program.OP_IPUSH, 01, 00, 00, 00, 00, 00, 00, 00,
 				program.OP_APUSH, 02, 00,
 				program.OP_SEND,
 			}, Constants: []core.Value{core.Monetary{Asset: "EUR/2", Amount: 99}, alice, bob},

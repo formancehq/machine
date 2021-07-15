@@ -232,9 +232,9 @@ send [GEM 15] (
 			Postings: []ledger.Posting{
 				{
 					Asset:       "GEM",
-					Amount:      13,
+					Amount:      1,
 					Source:      "user:001",
-					Destination: "user:002",
+					Destination: "b",
 				},
 				{
 					Asset:       "GEM",
@@ -244,9 +244,9 @@ send [GEM 15] (
 				},
 				{
 					Asset:       "GEM",
-					Amount:      1,
+					Amount:      13,
 					Source:      "user:001",
-					Destination: "b",
+					Destination: "user:002",
 				},
 			},
 			ExitCode: EXIT_OK,

@@ -44,8 +44,14 @@ type NumScriptListener interface {
 	// EnterAllocationPart is called when entering the allocationPart production.
 	EnterAllocationPart(c *AllocationPartContext)
 
-	// EnterAllocation is called when entering the allocation production.
-	EnterAllocation(c *AllocationContext)
+	// EnterAllocationBlock is called when entering the allocationBlock production.
+	EnterAllocationBlock(c *AllocationBlockContext)
+
+	// EnterAllocBlock is called when entering the AllocBlock production.
+	EnterAllocBlock(c *AllocBlockContext)
+
+	// EnterAllocAccount is called when entering the AllocAccount production.
+	EnterAllocAccount(c *AllocAccountContext)
 
 	// EnterPrint is called when entering the Print production.
 	EnterPrint(c *PrintContext)
@@ -104,8 +110,14 @@ type NumScriptListener interface {
 	// ExitAllocationPart is called when exiting the allocationPart production.
 	ExitAllocationPart(c *AllocationPartContext)
 
-	// ExitAllocation is called when exiting the allocation production.
-	ExitAllocation(c *AllocationContext)
+	// ExitAllocationBlock is called when exiting the allocationBlock production.
+	ExitAllocationBlock(c *AllocationBlockContext)
+
+	// ExitAllocBlock is called when exiting the AllocBlock production.
+	ExitAllocBlock(c *AllocBlockContext)
+
+	// ExitAllocAccount is called when exiting the AllocAccount production.
+	ExitAllocAccount(c *AllocAccountContext)
 
 	// ExitPrint is called when exiting the Print production.
 	ExitPrint(c *PrintContext)

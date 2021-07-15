@@ -56,7 +56,7 @@ func (Allotment) GetType() Type { return TYPE_ALLOTMENT }
 func (a Allotment) String() string {
 	out := "{\n"
 	for _, ratio := range a {
-		out += fmt.Sprintf("	%v\n", ratio)
+		out += fmt.Sprintf("	%v\n", &ratio)
 	}
 	return out + "}"
 }

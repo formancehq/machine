@@ -93,11 +93,23 @@ func (s *BaseNumScriptListener) EnterAllocationPart(ctx *AllocationPartContext) 
 // ExitAllocationPart is called when production allocationPart is exited.
 func (s *BaseNumScriptListener) ExitAllocationPart(ctx *AllocationPartContext) {}
 
-// EnterAllocation is called when production allocation is entered.
-func (s *BaseNumScriptListener) EnterAllocation(ctx *AllocationContext) {}
+// EnterAllocationBlock is called when production allocationBlock is entered.
+func (s *BaseNumScriptListener) EnterAllocationBlock(ctx *AllocationBlockContext) {}
 
-// ExitAllocation is called when production allocation is exited.
-func (s *BaseNumScriptListener) ExitAllocation(ctx *AllocationContext) {}
+// ExitAllocationBlock is called when production allocationBlock is exited.
+func (s *BaseNumScriptListener) ExitAllocationBlock(ctx *AllocationBlockContext) {}
+
+// EnterAllocBlock is called when production AllocBlock is entered.
+func (s *BaseNumScriptListener) EnterAllocBlock(ctx *AllocBlockContext) {}
+
+// ExitAllocBlock is called when production AllocBlock is exited.
+func (s *BaseNumScriptListener) ExitAllocBlock(ctx *AllocBlockContext) {}
+
+// EnterAllocAccount is called when production AllocAccount is entered.
+func (s *BaseNumScriptListener) EnterAllocAccount(ctx *AllocAccountContext) {}
+
+// ExitAllocAccount is called when production AllocAccount is exited.
+func (s *BaseNumScriptListener) ExitAllocAccount(ctx *AllocAccountContext) {}
 
 // EnterPrint is called when production Print is entered.
 func (s *BaseNumScriptListener) EnterPrint(ctx *PrintContext) {}

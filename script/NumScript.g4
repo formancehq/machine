@@ -55,7 +55,12 @@ argument: name=IDENTIFIER EQ val=expression;
 
 allocationPart: fr=frac 'to' dest=expression;
 
-allocation: LBRACE NEWLINE (parts+=allocationPart NEWLINE)+ RBRACE;
+allocationBlock: LBRACE NEWLINE (parts+=allocationPart NEWLINE)+ RBRACE;
+
+allocation
+  : allocationBlock # AllocBlock
+  | expression # AllocAccount
+  ;
 
 statement
   : PRINT expr=expression # Print

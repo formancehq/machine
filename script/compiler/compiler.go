@@ -224,32 +224,45 @@ func (p *parseVisitor) VisitLit(c parser.ILiteralContext) (core.Type, error) {
 }
 
 func (p *parseVisitor) VisitAllocation(c parser.IAllocationContext) error {
-	total := big.NewRat(0, 1)
-	// allocate
-	allotment := []big.Rat{}
-	for _, v := range c.GetParts() {
-		frac, err := p.VisitFrac(v.GetFr())
+	switch c := c.(type) {
+	case *parser.AllocAccountContext:
+		ty, err := p.VisitExpr(c.Expression())
 		if err != nil {
 			return err
 		}
-		total.Add(frac, total)
-		allotment = append(allotment, *frac)
-	}
-	if total.Cmp(big.NewRat(1, 1)) != 0 {
-		return errors.New("sum of fractions did not equal 100%")
-	}
-	p.PushValue(core.Allotment(allotment))
-	p.instructions = append(p.instructions, program.OP_ALLOC)
-	// distribute to destination accounts
-	for _, v := range c.GetParts() {
-		ty, err := p.VisitExpr(v.GetDest())
-		if err != nil {
-			return nil
-		}
 		if ty != core.TYPE_ACCOUNT {
-			return errors.New("expected account as destination of allocation line")
+			return errors.New("expected account or allocation as destination")
 		}
 		p.instructions = append(p.instructions, program.OP_SEND)
+	case *parser.AllocBlockContext:
+		total := big.NewRat(0, 1)
+		// allocate
+		allotment := []big.Rat{}
+		parts := c.AllocationBlock().GetParts()
+		for _, v := range parts {
+			frac, err := p.VisitFrac(v.GetFr())
+			if err != nil {
+				return err
+			}
+			total.Add(frac, total)
+			allotment = append(allotment, *frac)
+		}
+		if total.Cmp(big.NewRat(1, 1)) != 0 {
+			return errors.New("sum of fractions did not equal 100%")
+		}
+		p.PushValue(core.Allotment(allotment))
+		p.instructions = append(p.instructions, program.OP_ALLOC)
+		// distribute to destination accounts
+		for i := len(parts) - 1; i >= 0; i-- {
+			ty, err := p.VisitExpr(parts[i].GetDest())
+			if err != nil {
+				return nil
+			}
+			if ty != core.TYPE_ACCOUNT {
+				return errors.New("expected account as destination of allocation line")
+			}
+			p.instructions = append(p.instructions, program.OP_SEND)
+		}
 	}
 	return nil
 }
