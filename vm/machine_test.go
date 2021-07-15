@@ -3,6 +3,7 @@ package vm
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 	"sync"
 	"testing"
 
@@ -15,7 +16,7 @@ type CaseResult struct {
 	Printed  []core.Value
 	Postings []ledger.Posting
 	ExitCode byte
-	Error    error
+	Error    string
 }
 
 type TestCase struct {
@@ -69,8 +70,16 @@ func testimpl(t *testing.T, code string, expected CaseResult, exec func(*Machine
 	}
 	exit_code, err := exec(machine)
 
-	if err != expected.Error {
-		t.Error(fmt.Errorf("unexpected execution error: %v", err))
+	if err != nil && expected.Error != "" {
+		if !strings.Contains(err.Error(), expected.Error) {
+			t.Error(fmt.Errorf("unexpected execution error: %v", err))
+			return
+		}
+	} else if err != nil {
+		t.Error(fmt.Errorf("did not expect an execution error: %v", err))
+		return
+	} else if expected.Error != "" {
+		t.Error(fmt.Errorf("expected an execution error"))
 		return
 	}
 
@@ -325,7 +334,7 @@ send [GEM 15] (
 	)
 }
 
-func TestInsufficient(t *testing.T) {
+func TestInsufficientFunds(t *testing.T) {
 	testJSON(t,
 		`vars {
 	account $balance
@@ -356,6 +365,30 @@ send [GEM 16] (
 			Printed:  []core.Value{},
 			Postings: []ledger.Posting{},
 			ExitCode: EXIT_FAIL,
+		},
+	)
+}
+
+func TestMissingBalance(t *testing.T) {
+	testJSON(t,
+		`send [GEM 15] (
+			source = @a
+			destination = @a
+		)`,
+		`{}`,
+		map[string]map[string]uint64{
+			"users:001": {
+				"GEM": 3,
+			},
+			"payments:001": {
+				"USD/2": 564,
+			},
+		},
+		CaseResult{
+			Printed:  []core.Value{},
+			Postings: []ledger.Posting{},
+			ExitCode: 0,
+			Error:    "missing balance",
 		},
 	)
 }

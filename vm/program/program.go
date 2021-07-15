@@ -9,10 +9,10 @@ import (
 )
 
 type Program struct {
-	Constants    []core.Value
-	Instructions []byte
-	Variables    map[string]VarInfo
-	Accounts     map[string][]string
+	Constants      []core.Value
+	Instructions   []byte
+	Variables      map[string]VarInfo
+	NeededBalances map[core.Address]map[core.Address]struct{}
 }
 
 type VarInfo struct {

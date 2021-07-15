@@ -42,6 +42,9 @@ func main() {
 		"users:001": {
 			"GEM": 15,
 		},
+		"payments:001": {
+			"GEM": 0,
+		},
 	})
 	if err != nil {
 		panic(err)

@@ -3,6 +3,7 @@ package vm
 import (
 	"encoding/binary"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math/big"
 
@@ -223,20 +224,52 @@ func (m *Machine) tick() (bool, byte) {
 	return false, 0
 }
 
-func (m *Machine) execute(vars []core.Value, balances map[string]map[string]uint64) byte {
+func (m *Machine) execute(vars []core.Value, balances map[string]map[string]uint64) (byte, error) {
 	go m.Printer(m.print_chan)
 	defer close(m.print_chan)
 
-	m.Balances = balances
 	m.Constants = m.Program.Constants
 	m.Variables = vars
+	if err := m.SetBalances(balances); err != nil {
+		return 0, err
+	}
 
 	for {
 		finished, exit_code := m.tick()
 		if finished {
-			return exit_code
+			return exit_code, nil
 		}
 	}
+}
+
+func (m *Machine) SetBalances(balances map[string]map[string]uint64) error {
+	fmt.Println(m.Program)
+
+	// for every account that we need balances of, check if it's there
+	for addr, needed_assets := range m.Program.NeededBalances {
+		account := m.getResource(addr)
+		if account, ok := account.(core.Account); ok {
+			if b, ok := balances[string(account)]; ok {
+				// for every asset that we need balances of on that account
+				for addr := range needed_assets {
+					mon := m.getResource(addr)
+					if mon, ok := mon.(core.Monetary); ok {
+						if _, ok := b[string(mon.Asset)]; !ok {
+							return fmt.Errorf("missing %v balance of %v", mon.Asset, account)
+						}
+					} else {
+						return errors.New("incorrect program")
+					}
+				}
+			} else {
+				return fmt.Errorf("missing balances of %v", account)
+			}
+		} else {
+			return errors.New("incorrect program")
+		}
+	}
+	m.Balances = balances
+	return nil
 }
 
 func (m *Machine) Execute(vars map[string]core.Value, balances map[string]map[string]uint64) (byte, error) {
@@ -244,7 +277,7 @@ func (m *Machine) Execute(vars map[string]core.Value, balances map[string]map[st
 	if err != nil {
 		return 0, err
 	}
-	return m.execute(v, balances), nil
+	return m.execute(v, balances)
 }
 
 func (m *Machine) ExecuteFromJSON(vars map[string]json.RawMessage, balances map[string]map[string]uint64) (byte, error) {
@@ -252,5 +285,5 @@ func (m *Machine) ExecuteFromJSON(vars map[string]json.RawMessage, balances map[
 	if err != nil {
 		return 0, err
 	}
-	return m.execute(v, balances), nil
+	return m.execute(v, balances)
 }
