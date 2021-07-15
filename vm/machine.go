@@ -59,6 +59,9 @@ func (m *Machine) getResource(addr core.Address) core.Value {
 }
 
 func (m *Machine) withdraw(account string, asset string, amount uint64) bool {
+	if account == "world" {
+		return true
+	}
 	withdraw_ok := false
 	if acc_balance, ok := m.Balances[account]; ok {
 		if balance, ok := acc_balance[asset]; ok {
