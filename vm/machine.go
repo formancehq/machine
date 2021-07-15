@@ -28,6 +28,7 @@ func NewMachine(p *program.Program) *Machine {
 
 	m := Machine{
 		Program:    p,
+		Constants:  p.Constants,
 		print_chan: printc,
 		Printer:    StdOutPrinter,
 	}
@@ -38,12 +39,12 @@ func NewMachine(p *program.Program) *Machine {
 type Machine struct {
 	P          uint
 	Program    *program.Program
-	Constants  []core.Value // Constants and Variables constitute the resources
-	Variables  []core.Value
+	Constants  []core.Value // Constants and Variables
+	Variables  []core.Value // constitute the resources
 	Stack      []core.Value
+	Postings   []ledger.Posting             // accumulates postings throughout execution
+	Balances   map[string]map[string]uint64 // keeps tracks of balances througout execution
 	Printer    func(chan core.Value)
-	Postings   []ledger.Posting
-	Balances   map[string]map[string]uint64
 	print_chan chan core.Value
 }
 
@@ -224,14 +225,14 @@ func (m *Machine) tick() (bool, byte) {
 	return false, 0
 }
 
-func (m *Machine) execute(vars []core.Value, balances map[string]map[string]uint64) (byte, error) {
+func (m *Machine) Execute() (byte, error) {
 	go m.Printer(m.print_chan)
 	defer close(m.print_chan)
 
-	m.Constants = m.Program.Constants
-	m.Variables = vars
-	if err := m.SetBalances(balances); err != nil {
-		return 0, err
+	if m.Variables == nil {
+		return 0, errors.New("variables haven't been initialized")
+	} else if m.Balances == nil {
+		return 0, errors.New("balances haven't been initialized")
 	}
 
 	for {
@@ -242,9 +243,28 @@ func (m *Machine) execute(vars []core.Value, balances map[string]map[string]uint
 	}
 }
 
-func (m *Machine) SetBalances(balances map[string]map[string]uint64) error {
-	fmt.Println(m.Program)
+func (m *Machine) GetNeededBalances() (map[string]map[string]struct{}, error) {
+	needed := map[string]map[string]struct{}{}
+	for addr, needed_assets := range m.Program.NeededBalances {
+		account := m.getResource(addr)
+		if account, ok := account.(core.Account); ok {
+			needed[string(account)] = map[string]struct{}{}
+			for addr := range needed_assets {
+				mon := m.getResource(addr)
+				if mon, ok := mon.(core.Monetary); ok {
+					needed[string(account)][string(mon.Asset)] = struct{}{}
+				} else {
+					return nil, errors.New("incorrect program")
+				}
+			}
+		} else {
+			return nil, errors.New("incorrect program")
+		}
+	}
+	return needed, nil
+}
 
+func (m *Machine) SetBalances(balances map[string]map[string]uint64) error {
 	// for every account that we need balances of, check if it's there
 	for addr, needed_assets := range m.Program.NeededBalances {
 		account := m.getResource(addr)
@@ -272,18 +292,20 @@ func (m *Machine) SetBalances(balances map[string]map[string]uint64) error {
 	return nil
 }
 
-func (m *Machine) Execute(vars map[string]core.Value, balances map[string]map[string]uint64) (byte, error) {
+func (m *Machine) SetVars(vars map[string]core.Value) error {
 	v, err := m.Program.ParseVariables(vars)
 	if err != nil {
-		return 0, err
+		return err
 	}
-	return m.execute(v, balances)
+	m.Variables = v
+	return nil
 }
 
-func (m *Machine) ExecuteFromJSON(vars map[string]json.RawMessage, balances map[string]map[string]uint64) (byte, error) {
+func (m *Machine) SetVarsFromJSON(vars map[string]json.RawMessage) error {
 	v, err := m.Program.ParseVariablesJSON(vars)
 	if err != nil {
-		return 0, err
+		return err
 	}
-	return m.execute(v, balances)
+	m.Variables = v
+	return nil
 }

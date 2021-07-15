@@ -7,6 +7,7 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	ledger "github.com/numary/ledger/core"
 	"github.com/numary/machine/core"
 	"github.com/numary/machine/script/compiler"
@@ -33,7 +34,15 @@ type TestCaseJSON struct {
 
 func test(t *testing.T, code string, variables map[string]core.Value, balances map[string]map[string]uint64, expected CaseResult) {
 	testimpl(t, code, expected, func(m *Machine) (byte, error) {
-		return m.Execute(variables, balances)
+		err := m.SetVars(variables)
+		if err != nil {
+			return 0, err
+		}
+		err = m.SetBalances(balances)
+		if err != nil {
+			return 0, err
+		}
+		return m.Execute()
 	})
 }
 
@@ -44,7 +53,15 @@ func testJSON(t *testing.T, code string, variables string, balances map[string]m
 		if err != nil {
 			return 0, err
 		}
-		return m.ExecuteFromJSON(v, balances)
+		err = m.SetVarsFromJSON(v)
+		if err != nil {
+			return 0, err
+		}
+		err = m.SetBalances(balances)
+		if err != nil {
+			return 0, err
+		}
+		return m.Execute()
 	})
 }
 
@@ -74,6 +91,8 @@ func testimpl(t *testing.T, code string, expected CaseResult, exec func(*Machine
 		if !strings.Contains(err.Error(), expected.Error) {
 			t.Error(fmt.Errorf("unexpected execution error: %v", err))
 			return
+		} else {
+			return
 		}
 	} else if err != nil {
 		t.Error(fmt.Errorf("did not expect an execution error: %v", err))
@@ -82,8 +101,6 @@ func testimpl(t *testing.T, code string, expected CaseResult, exec func(*Machine
 		t.Error(fmt.Errorf("expected an execution error"))
 		return
 	}
-
-	wg.Wait()
 
 	if exit_code != expected.ExitCode {
 		t.Error(fmt.Errorf("unexpected exit code: %v", exit_code))
@@ -101,6 +118,8 @@ func testimpl(t *testing.T, code string, expected CaseResult, exec func(*Machine
 			}
 		}
 	}
+
+	wg.Wait()
 
 	if len(printed) != len(expected.Printed) {
 		t.Error(fmt.Errorf("unexpected print output: %v", printed))
@@ -391,4 +410,49 @@ func TestMissingBalance(t *testing.T) {
 			Error:    "missing balance",
 		},
 	)
+}
+
+func TestGetNeededBalances(t *testing.T) {
+	p, err := compiler.Compile(`vars {
+		account $a
+	}
+	send [GEM 15] (
+		source = {
+			$a
+			@b
+		}
+		destination = @c
+	)`)
+
+	if err != nil {
+		t.Errorf("did not expect error on Compile, got: %v", err)
+		return
+	}
+
+	m := NewMachine(p)
+
+	err = m.SetVars(map[string]core.Value{
+		"a": core.Account("a"),
+	})
+	if err != nil {
+		t.Errorf("did not expect error on SetVars, got: %v", err)
+		return
+	}
+
+	expected := map[string]map[string]struct{}{
+		"a": {
+			"GEM": {},
+		},
+		"b": {
+			"GEM": {},
+		},
+	}
+	actual, err := m.GetNeededBalances()
+	if err != nil {
+		t.Errorf("did not expect error on GetNeededBalances, got: %v", err)
+		return
+	}
+	if !cmp.Equal(actual, expected) {
+		t.Errorf("unexpected needed balances: %v", actual)
+	}
 }
