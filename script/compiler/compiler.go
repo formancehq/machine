@@ -223,6 +223,33 @@ func (p *parseVisitor) VisitLit(c parser.ILiteralContext) (core.Type, error) {
 	}
 }
 
+func (p *parseVisitor) VisitSource(c parser.ISourceContext) error {
+	switch c := c.(type) {
+	case *parser.SrcAccountContext:
+		ty, err := p.VisitExpr(c.Expression())
+		if err != nil {
+			return err
+		}
+		if ty != core.TYPE_ACCOUNT {
+			return errors.New("expected account or allocation as destination")
+		}
+		p.PushValue(core.Number(1))
+	case *parser.SrcBlockContext:
+		for _, v := range c.SourceBlock().GetSources() {
+			ty, err := p.VisitExpr(v)
+			if err != nil {
+				return err
+			}
+			if ty != core.TYPE_ACCOUNT {
+				return errors.New("expected only accounts in sources")
+			}
+		}
+		p.PushValue(core.Number(len(c.SourceBlock().GetSources())))
+		p.instructions = append(p.instructions, program.OP_SOURCE)
+	}
+	return nil
+}
+
 func (p *parseVisitor) VisitAllocation(c parser.IAllocationContext) error {
 	switch c := c.(type) {
 	case *parser.AllocAccountContext:
@@ -311,14 +338,11 @@ func (p *parseVisitor) VisitSend(c *parser.SendContext) error {
 		return errors.New("wrong type for monetary value")
 	}
 
-	ty, err = p.VisitExpr(c.GetSrc())
+	err = p.VisitSource(c.GetSrc())
 	if err != nil {
 		return err
 	}
-	if ty != core.TYPE_ACCOUNT {
-		return errors.New("wrong type for source")
-	}
-	p.PushValue(core.Number(1))
+
 	err = p.VisitAllocation(c.GetDest())
 	if err != nil {
 		return err

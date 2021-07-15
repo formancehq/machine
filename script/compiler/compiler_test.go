@@ -154,7 +154,7 @@ func TestLogicError(t *testing.T) {
 		Expected: CaseResult{
 			Instructions: nil,
 			Constants:    nil,
-			Error:        "wrong type",
+			Error:        "expected",
 		},
 	})
 }

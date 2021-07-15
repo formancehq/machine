@@ -84,32 +84,36 @@ func (m *Machine) tick() (bool, byte) {
 	case program.OP_FAIL:
 		return true, EXIT_FAIL
 	case program.OP_SOURCE:
-		mon := m.popMonetary()
 		n := m.popNumber()
 		sources := []core.Account{}
 		for i := uint64(0); i < n; i++ {
 			sources = append(sources, m.popAccount())
 		}
+		mon := m.popMonetary()
 		asset := mon.Asset
 		target := mon.Amount
 
 		var n_actual_src uint64
 		for _, src := range sources {
-			src_funds := m.Balances[string(src)][asset]
+			// src_funds := m.Balances[string(src)][asset]
+			src_funds := uint64(10000)
 			var amt_to_withdraw uint64
 			if src_funds > target {
 				amt_to_withdraw = target
 			} else {
 				amt_to_withdraw = src_funds
 			}
-			m.Balances[string(src)][asset] -= amt_to_withdraw
+			// m.Balances[string(src)][asset] -= amt_to_withdraw
 			target -= amt_to_withdraw
-			m.pushValue(src)
 			m.pushValue(core.Monetary{
 				Asset:  asset,
 				Amount: amt_to_withdraw,
 			})
+			m.pushValue(src)
 			n_actual_src++
+			if target == 0 {
+				break
+			}
 		}
 		m.pushValue(core.Number(n_actual_src))
 	case program.OP_ALLOC:
@@ -178,6 +182,8 @@ func (m *Machine) tick() (bool, byte) {
 	}
 
 	m.P += 1
+
+	fmt.Println(m.Stack)
 
 	if int(m.P) >= len(m.Program.Instructions) {
 		return true, EXIT_OK

@@ -62,12 +62,19 @@ allocation
   | expression # AllocAccount
   ;
 
+sourceBlock: LBRACE NEWLINE (sources+=expression NEWLINE)+ RBRACE;
+
+source
+  : sourceBlock # SrcBlock
+  | expression # SrcAccount
+  ;
+
 statement
   : PRINT expr=expression # Print
   | FAIL # Fail
   | SEND mon=expression LPAREN NEWLINE
-      ( SOURCE '=' src=expression NEWLINE DESTINATION '=' dest=allocation
-      | DESTINATION '=' dest=allocation NEWLINE SOURCE '=' src=expression) NEWLINE RPAREN # Send
+      ( SOURCE '=' src=source NEWLINE DESTINATION '=' dest=allocation
+      | DESTINATION '=' dest=allocation NEWLINE SOURCE '=' src=source) NEWLINE RPAREN # Send
   ;
 
 type_: TY_ACCOUNT | TY_ASSET | TY_NUMBER | TY_MONETARY;

@@ -53,6 +53,15 @@ type NumScriptListener interface {
 	// EnterAllocAccount is called when entering the AllocAccount production.
 	EnterAllocAccount(c *AllocAccountContext)
 
+	// EnterSourceBlock is called when entering the sourceBlock production.
+	EnterSourceBlock(c *SourceBlockContext)
+
+	// EnterSrcBlock is called when entering the SrcBlock production.
+	EnterSrcBlock(c *SrcBlockContext)
+
+	// EnterSrcAccount is called when entering the SrcAccount production.
+	EnterSrcAccount(c *SrcAccountContext)
+
 	// EnterPrint is called when entering the Print production.
 	EnterPrint(c *PrintContext)
 
@@ -118,6 +127,15 @@ type NumScriptListener interface {
 
 	// ExitAllocAccount is called when exiting the AllocAccount production.
 	ExitAllocAccount(c *AllocAccountContext)
+
+	// ExitSourceBlock is called when exiting the sourceBlock production.
+	ExitSourceBlock(c *SourceBlockContext)
+
+	// ExitSrcBlock is called when exiting the SrcBlock production.
+	ExitSrcBlock(c *SrcBlockContext)
+
+	// ExitSrcAccount is called when exiting the SrcAccount production.
+	ExitSrcAccount(c *SrcAccountContext)
 
 	// ExitPrint is called when exiting the Print production.
 	ExitPrint(c *PrintContext)

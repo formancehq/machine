@@ -48,6 +48,8 @@ func (p Program) Print() {
 			fmt.Print("OP_FAIL\n")
 		case OP_SEND:
 			fmt.Print("OP_SEND\n")
+		case OP_SOURCE:
+			fmt.Print("OP_SOURCE\n")
 		case OP_ALLOC:
 			fmt.Print("OP_ALLOC\n")
 		default:
