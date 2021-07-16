@@ -129,7 +129,7 @@ func (m *Machine) tick() (bool, byte) {
 		for _, src := range sources {
 			src_funds := m.Balances[string(src)][asset]
 			var amt_to_withdraw uint64
-			if src_funds > target {
+			if src_funds > target || src == "world" {
 				amt_to_withdraw = target
 			} else {
 				amt_to_withdraw = src_funds
@@ -205,6 +205,9 @@ func (m *Machine) tick() (bool, byte) {
 		for i := uint64(0); i < n; i++ {
 			src := string(m.popAccount())
 			mon := m.popMonetary()
+			if mon.Amount == 0 {
+				continue
+			}
 			// verify and withdraw funds
 			if ok := m.withdraw(src, mon.Asset, mon.Amount); !ok {
 				return true, EXIT_FAIL
@@ -272,6 +275,9 @@ func (m *Machine) SetBalances(balances map[string]map[string]uint64) error {
 	for addr, needed_assets := range m.Program.NeededBalances {
 		account := m.getResource(addr)
 		if account, ok := account.(core.Account); ok {
+			if string(account) == "world" {
+				continue
+			}
 			if b, ok := balances[string(account)]; ok {
 				// for every asset that we need balances of on that account
 				for addr := range needed_assets {

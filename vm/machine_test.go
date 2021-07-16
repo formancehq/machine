@@ -412,6 +412,94 @@ func TestMissingBalance(t *testing.T) {
 	)
 }
 
+func TestMissingWorldBalance(t *testing.T) {
+	testJSON(t,
+		`send [GEM 15] (
+			source = @world
+			destination = @a
+		)`,
+		`{}`,
+		map[string]map[string]uint64{},
+		CaseResult{
+			Printed: []core.Value{},
+			Postings: []ledger.Posting{
+				{
+					Asset:       "GEM",
+					Amount:      15,
+					Source:      "world",
+					Destination: "a",
+				},
+			},
+			ExitCode: 1,
+			Error:    "",
+		},
+	)
+}
+
+func TestWorldSource(t *testing.T) {
+	testJSON(t,
+		`send [GEM 15] (
+			source = {
+				@a
+				@world
+			}
+			destination = @b
+		)`,
+		`{}`,
+		map[string]map[string]uint64{
+			"a": {
+				"GEM": 1,
+			},
+		},
+		CaseResult{
+			Printed: []core.Value{},
+			Postings: []ledger.Posting{
+				{
+					Asset:       "GEM",
+					Amount:      14,
+					Source:      "world",
+					Destination: "b",
+				},
+				{
+					Asset:       "GEM",
+					Amount:      1,
+					Source:      "a",
+					Destination: "b",
+				},
+			},
+			ExitCode: 1,
+			Error:    "",
+		},
+	)
+}
+
+func TestNoEmptyPostings(t *testing.T) {
+	testJSON(t,
+		`send [GEM 2] (
+			source = @world
+			destination = {
+				90% to @a
+				10% to @b
+			}
+		)`,
+		`{}`,
+		map[string]map[string]uint64{},
+		CaseResult{
+			Printed: []core.Value{},
+			Postings: []ledger.Posting{
+				{
+					Asset:       "GEM",
+					Amount:      2,
+					Source:      "world",
+					Destination: "a",
+				},
+			},
+			ExitCode: 1,
+			Error:    "",
+		},
+	)
+}
+
 func TestGetNeededBalances(t *testing.T) {
 	p, err := compiler.Compile(`vars {
 		account $a
