@@ -500,6 +500,49 @@ func TestNoEmptyPostings(t *testing.T) {
 	)
 }
 
+func TestAllocateDontTakeTooMuch(t *testing.T) {
+	testJSON(t,
+		`send [CREDIT 200] (
+			source = {
+				@users:001
+				@users:002
+			}
+			destination = {
+				1/2 to @foo
+				1/2 to @bar
+			}
+		)`,
+		`{}`,
+		map[string]map[string]uint64{
+			"users:001": {
+				"CREDIT": 100,
+			},
+			"users:002": {
+				"CREDIT": 100,
+			},
+		},
+		CaseResult{
+			Printed: []core.Value{},
+			Postings: []ledger.Posting{
+				{
+					Asset:       "CREDIT",
+					Amount:      100,
+					Source:      "users:001",
+					Destination: "bar",
+				},
+				{
+					Asset:       "CREDIT",
+					Amount:      100,
+					Source:      "users:002",
+					Destination: "foo",
+				},
+			},
+			ExitCode: 1,
+			Error:    "",
+		},
+	)
+}
+
 func TestGetNeededBalances(t *testing.T) {
 	p, err := compiler.Compile(`vars {
 		account $a

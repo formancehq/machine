@@ -10,17 +10,30 @@ import (
 
 func main() {
 	p, err := compiler.Compile(`vars {
-		account $balance
-		account $payment
-		account $seller
-	}
-	send [GEM 15] (
+		account $user_wallet
+		account $user_credit
+	  }
+	  
+	  send [CREDIT 100] (
+		source = @world
+		destination = $user_wallet
+	  )
+	  
+	  send [CREDIT 100] (
+		source = @world
+		destination = $user_credit
+	  )
+	  
+	  send [CREDIT 200] (
 		source = {
-			$balance
-			$payment
+		  $user_wallet
+		  $user_credit
 		}
-		destination = $seller
-	)`)
+		destination = {
+		  50% to @feebles
+		  50% to @boofaz
+		}
+	  )`)
 
 	if err != nil {
 		panic(err)
@@ -31,25 +44,26 @@ func main() {
 	machine := vm.NewMachine(p)
 
 	var vars map[string]json.RawMessage
-
 	json.Unmarshal([]byte(`{
-		"balance": "users:001",
-		"payment": "payments:001",
-		"seller": "users:002"
+		"user_wallet": "users:020:wallet",
+		"user_credit": "users:020:credit"
 	}`), &vars)
-
 	err = machine.SetVarsFromJSON(vars)
+
 	if err != nil {
 		panic(err)
 	}
-	machine.SetBalances(map[string]map[string]uint64{
-		"users:001": {
-			"GEM": 15,
+	err = machine.SetBalances(map[string]map[string]uint64{
+		"users:020:credit": {
+			"CREDIT": 0,
 		},
-		"payments:001": {
-			"GEM": 0,
+		"users:020:wallet": {
+			"CREDIT": 0,
 		},
 	})
+	if err != nil {
+		panic(err)
+	}
 	exit_code, err := machine.Execute()
 	if err != nil {
 		panic(err)

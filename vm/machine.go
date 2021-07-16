@@ -180,6 +180,7 @@ func (m *Machine) tick() (bool, byte) {
 			total_allocated += res.Uint64()
 		}
 		// for every part in the floored values, fetch them from the sources
+		first_non_empty_idx := 0
 		for _, part := range parts {
 			// if the total allocated is less than the target amount, add 1 unit until it isn't
 			if total_allocated < uint64(total_src) {
@@ -187,14 +188,22 @@ func (m *Machine) tick() (bool, byte) {
 				total_allocated += 1
 			}
 			n := 0 // number of sources needed to fill this part
-			for i, acc := range source_accounts {
+			// start at the first non empty source
+			for i := first_non_empty_idx; i < len(source_accounts); i++ {
+				if part == 0 { // if we finished filling this part
+					break
+				}
 				amt := source_amounts[i] // amount to withdraw from the account
-				if source_amounts[i] > part {
+				if amt > part {
+					// if we have more than enough to fill, don't give too much to this part
 					amt = part
+				} else { // if we had to empty the source
+					first_non_empty_idx++
 				}
 				part -= amt
+				source_amounts[i] -= amt
 				m.pushValue(core.Monetary{Asset: *asset, Amount: amt})
-				m.pushValue(acc)
+				m.pushValue(source_accounts[i])
 				n += 1
 			}
 			m.pushValue(core.Number(n))
