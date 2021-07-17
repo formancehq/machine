@@ -551,6 +551,7 @@ func TestGetNeededBalances(t *testing.T) {
 		source = {
 			$a
 			@b
+			@world
 		}
 		destination = @c
 	)`)

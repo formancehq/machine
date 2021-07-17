@@ -263,6 +263,9 @@ func (m *Machine) GetNeededBalances() (map[string]map[string]struct{}, error) {
 	for addr, needed_assets := range m.Program.NeededBalances {
 		account := m.getResource(addr)
 		if account, ok := account.(core.Account); ok {
+			if string(account) == "world" {
+				continue
+			}
 			needed[string(account)] = map[string]struct{}{}
 			for addr := range needed_assets {
 				mon := m.getResource(addr)
