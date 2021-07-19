@@ -9,4 +9,4 @@ This repo bundles:
 
 # Documentation
 
-You can find the complete Numary documentation at docs.numary.com
+You can find the complete Numary documentation at [docs.numary.com](https://docs.numary.com)
