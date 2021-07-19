@@ -8,6 +8,12 @@ import "github.com/antlr/antlr4/runtime/Go/antlr"
 type NumScriptListener interface {
 	antlr.ParseTreeListener
 
+	// EnterAmountSpecific is called when entering the AmountSpecific production.
+	EnterAmountSpecific(c *AmountSpecificContext)
+
+	// EnterAmountAll is called when entering the AmountAll production.
+	EnterAmountAll(c *AmountAllContext)
+
 	// EnterMonetary is called when entering the monetary production.
 	EnterMonetary(c *MonetaryContext)
 
@@ -82,6 +88,12 @@ type NumScriptListener interface {
 
 	// EnterScript is called when entering the script production.
 	EnterScript(c *ScriptContext)
+
+	// ExitAmountSpecific is called when exiting the AmountSpecific production.
+	ExitAmountSpecific(c *AmountSpecificContext)
+
+	// ExitAmountAll is called when exiting the AmountAll production.
+	ExitAmountAll(c *AmountAllContext)
 
 	// ExitMonetary is called when exiting the monetary production.
 	ExitMonetary(c *MonetaryContext)

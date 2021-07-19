@@ -59,6 +59,32 @@ func (p *parseVisitor) PushValue(val core.Value) (*core.Address, error) {
 	}
 }
 
+func (p *parseVisitor) isMonetaryAll(addr core.Address) bool {
+	if addr.IsConstant() {
+		idx := addr.ToIdx()
+		if idx < len(p.constants) {
+			if mon, ok := p.constants[idx].(core.Monetary); ok {
+				return mon.Amount.All
+			}
+		}
+	}
+	return false
+}
+
+func (p *parseVisitor) isWorld(addr core.Address) bool {
+	if addr.IsConstant() {
+		idx := addr.ToIdx()
+		if idx < len(p.constants) {
+			if acc, ok := p.constants[idx].(core.Account); ok {
+				if string(acc) == "world" {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
 func (p *parseVisitor) VisitScript(c parser.IScriptContext) error {
 	switch c := c.(type) {
 	case *parser.ScriptContext:
@@ -207,12 +233,19 @@ func (p *parseVisitor) VisitLit(c parser.ILiteralContext) (core.Type, *core.Addr
 		return core.TYPE_NUMBER, nil, nil
 	case *parser.LitMonetaryContext:
 		asset := c.Monetary().GetAsset().GetText()
-		amount, err := strconv.ParseUint(c.Monetary().GetAmount().GetText(), 10, 64)
-		if err != nil {
-			return 0, nil, err
+		var amount core.Amount
+		switch c := c.Monetary().GetAmt().(type) {
+		case *parser.AmountAllContext:
+			amount = core.NewAmountAll()
+		case *parser.AmountSpecificContext:
+			a, err := strconv.ParseUint(c.GetText(), 10, 64)
+			if err != nil {
+				return 0, nil, err
+			}
+			amount = core.NewAmountSpecific(a)
 		}
 		monetary := core.Monetary{
-			Asset:  asset,
+			Asset:  core.Asset(asset),
 			Amount: amount,
 		}
 		addr, err := p.PushValue(monetary)
@@ -225,17 +258,21 @@ func (p *parseVisitor) VisitLit(c parser.ILiteralContext) (core.Type, *core.Addr
 	}
 }
 
-func (p *parseVisitor) VisitSource(c parser.ISourceContext) ([]core.Address, error) {
+// Returns the resource addresses of all the accounts,
+// and true if the source is bottomless (contains @world)
+func (p *parseVisitor) VisitSource(c parser.ISourceContext) ([]core.Address, bool, error) {
 	needed_accounts := []core.Address{}
+	bottomless := false
 	switch c := c.(type) {
 	case *parser.SrcAccountContext:
 		ty, addr, err := p.VisitExpr(c.Expression())
 		if err != nil {
-			return nil, err
+			return nil, false, err
 		}
 		if ty != core.TYPE_ACCOUNT {
-			return nil, errors.New("expected account or allocation as destination")
+			return nil, false, errors.New("expected account or allocation as destination")
 		}
+		bottomless = bottomless || p.isWorld(*addr)
 		needed_accounts = append(needed_accounts, *addr)
 		p.PushValue(core.Number(1))
 	case *parser.SrcBlockContext:
@@ -244,17 +281,18 @@ func (p *parseVisitor) VisitSource(c parser.ISourceContext) ([]core.Address, err
 		for i := n - 1; i >= 0; i-- {
 			ty, addr, err := p.VisitExpr(sources[i])
 			if err != nil {
-				return nil, err
+				return nil, false, err
 			}
 			if ty != core.TYPE_ACCOUNT {
-				return nil, errors.New("expected only accounts in sources")
+				return nil, false, errors.New("expected only accounts in sources")
 			}
+			bottomless = bottomless || p.isWorld(*addr)
 			needed_accounts = append(needed_accounts, *addr)
 		}
 		p.PushValue(core.Number(len(c.SourceBlock().GetSources())))
 		p.instructions = append(p.instructions, program.OP_SOURCE)
 	}
-	return needed_accounts, nil
+	return needed_accounts, bottomless, nil
 }
 
 func (p *parseVisitor) VisitAllocation(c parser.IAllocationContext) error {
@@ -345,10 +383,15 @@ func (p *parseVisitor) VisitSend(c *parser.SendContext) error {
 		return errors.New("wrong type for monetary value")
 	}
 
-	needed_accounts, err := p.VisitSource(c.GetSrc())
+	needed_accounts, bottomless, err := p.VisitSource(c.GetSrc())
 	if err != nil {
 		return err
 	}
+	if p.isMonetaryAll(*mon_addr) && bottomless {
+		return errors.New("cannot take all balance of world")
+	}
+
+	// add source accounts to the needed balances
 	for _, acc := range needed_accounts {
 		if b, ok := p.needed_balances[acc]; ok {
 			b[*mon_addr] = struct{}{}
