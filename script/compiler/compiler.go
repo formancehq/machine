@@ -287,8 +287,8 @@ func (p *parseVisitor) VisitAllocation(c parser.IAllocationContext) error {
 		p.PushValue(core.Allotment(allotment))
 		p.instructions = append(p.instructions, program.OP_ALLOC)
 		// distribute to destination accounts
-		for i := len(parts) - 1; i >= 0; i-- {
-			ty, _, err := p.VisitExpr(parts[i].GetDest())
+		for _, part := range parts {
+			ty, _, err := p.VisitExpr(part.GetDest())
 			if err != nil {
 				return nil
 			}

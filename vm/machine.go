@@ -117,13 +117,19 @@ func (m *Machine) tick() (bool, byte) {
 		return true, EXIT_FAIL
 	case program.OP_SOURCE:
 		n := m.popNumber()
-		sources := []core.Account{}
+		sources := make([]core.Account, n)
 		for i := uint64(0); i < n; i++ {
-			sources = append(sources, m.popAccount())
+			sources[i] = m.popAccount()
 		}
 		mon := m.popMonetary()
 		asset := mon.Asset
 		target := mon.Amount
+
+		type part struct {
+			mon core.Monetary
+			acc core.Account
+		}
+		result := []part{}
 
 		var n_actual_src uint64
 		for _, src := range sources {
@@ -135,11 +141,13 @@ func (m *Machine) tick() (bool, byte) {
 				amt_to_withdraw = src_funds
 			}
 			target -= amt_to_withdraw
-			m.pushValue(core.Monetary{
-				Asset:  asset,
-				Amount: amt_to_withdraw,
+			result = append(result, part{
+				mon: core.Monetary{
+					Asset:  asset,
+					Amount: amt_to_withdraw,
+				},
+				acc: src,
 			})
-			m.pushValue(src)
 			n_actual_src++
 			if target == 0 {
 				break
@@ -148,16 +156,21 @@ func (m *Machine) tick() (bool, byte) {
 		if target != 0 {
 			return true, EXIT_FAIL
 		}
+		for i := len(result) - 1; i >= 0; i-- {
+			m.pushValue(result[i].mon)
+			m.pushValue(result[i].acc)
+		}
 		m.pushValue(core.Number(n_actual_src))
 	case program.OP_ALLOC:
 		allotment := m.popAllotment()
-		n := m.popNumber()
-		source_accounts := make([]core.Account, n)
-		source_amounts := make([]uint64, n)
+		nparts := len(allotment)
+		nsources := m.popNumber()
+		source_accounts := make([]core.Account, nsources)
+		source_amounts := make([]uint64, nsources)
 		total_src := uint64(0)
 		var asset *string
 		// extract accounts from stack while checking the assets correspond
-		for i := uint64(0); i < n; i++ {
+		for i := uint64(0); i < nsources; i++ {
 			source_accounts[i] = m.popAccount()
 			mon := m.popMonetary()
 			source_amounts[i] = mon.Amount
@@ -169,24 +182,33 @@ func (m *Machine) tick() (bool, byte) {
 			}
 			total_src += mon.Amount
 		}
-		parts := []uint64{}
+		parts := make([]uint64, nparts)
 		total_allocated := uint64(0)
 		// for every part in the allotment, calculate the floored value
-		for _, part := range allotment {
+		for i, allot := range allotment {
 			var res big.Int
-			res.Mul(part.Num(), new(big.Int).SetUint64(total_src))
-			res.Div(&res, part.Denom())
-			parts = append(parts, res.Uint64())
+			res.Mul(new(big.Int).SetUint64(total_src), allot.Num())
+			res.Div(&res, allot.Denom())
+			parts[i] = res.Uint64()
 			total_allocated += res.Uint64()
 		}
+
+		type subpart struct {
+			mon core.Monetary
+			acc core.Account
+		}
+		result := make([][]subpart, nparts)
+
 		// for every part in the floored values, fetch them from the sources
 		first_non_empty_idx := 0
-		for _, part := range parts {
+		for ipart, part := range parts {
 			// if the total allocated is less than the target amount, add 1 unit until it isn't
 			if total_allocated < uint64(total_src) {
 				part += 1
 				total_allocated += 1
 			}
+
+			result[ipart] = []subpart{}
 			n := 0 // number of sources needed to fill this part
 			// start at the first non empty source
 			for i := first_non_empty_idx; i < len(source_accounts); i++ {
@@ -202,11 +224,22 @@ func (m *Machine) tick() (bool, byte) {
 				}
 				part -= amt
 				source_amounts[i] -= amt
-				m.pushValue(core.Monetary{Asset: *asset, Amount: amt})
-				m.pushValue(source_accounts[i])
+				result[ipart] = append(result[ipart], subpart{
+					mon: core.Monetary{Asset: *asset, Amount: amt},
+					acc: source_accounts[i],
+				})
 				n += 1
 			}
-			m.pushValue(core.Number(n))
+		}
+		fmt.Println(result)
+		for i := len(result) - 1; i >= 0; i-- {
+			part := result[i]
+			for j := len(part) - 1; j >= 0; j-- {
+				subpart := part[j]
+				m.pushValue(subpart.mon)
+				m.pushValue(subpart.acc)
+			}
+			m.pushValue(core.Number(len(part)))
 		}
 	case program.OP_SEND:
 		dest := m.popAccount()

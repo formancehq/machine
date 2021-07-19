@@ -287,14 +287,14 @@ send [GEM 15] (
 			Postings: []ledger.Posting{
 				{
 					Asset:       "GEM",
-					Amount:      12,
-					Source:      "payments:001",
+					Amount:      3,
+					Source:      "users:001",
 					Destination: "users:002",
 				},
 				{
 					Asset:       "GEM",
-					Amount:      3,
-					Source:      "users:001",
+					Amount:      12,
+					Source:      "payments:001",
 					Destination: "users:002",
 				},
 			},
@@ -331,9 +331,9 @@ send [GEM 15] (
 			Postings: []ledger.Posting{
 				{
 					Asset:       "GEM",
-					Amount:      1,
+					Amount:      13,
 					Source:      "users:001",
-					Destination: "b",
+					Destination: "users:002",
 				},
 				{
 					Asset:       "GEM",
@@ -343,9 +343,9 @@ send [GEM 15] (
 				},
 				{
 					Asset:       "GEM",
-					Amount:      13,
+					Amount:      1,
 					Source:      "users:001",
-					Destination: "users:002",
+					Destination: "b",
 				},
 			},
 			ExitCode: EXIT_OK,
@@ -456,14 +456,14 @@ func TestWorldSource(t *testing.T) {
 			Postings: []ledger.Posting{
 				{
 					Asset:       "GEM",
-					Amount:      14,
-					Source:      "world",
+					Amount:      1,
+					Source:      "a",
 					Destination: "b",
 				},
 				{
 					Asset:       "GEM",
-					Amount:      1,
-					Source:      "a",
+					Amount:      14,
+					Source:      "world",
 					Destination: "b",
 				},
 			},
@@ -528,13 +528,13 @@ func TestAllocateDontTakeTooMuch(t *testing.T) {
 					Asset:       "CREDIT",
 					Amount:      100,
 					Source:      "users:001",
-					Destination: "bar",
+					Destination: "foo",
 				},
 				{
 					Asset:       "CREDIT",
 					Amount:      100,
 					Source:      "users:002",
-					Destination: "foo",
+					Destination: "bar",
 				},
 			},
 			ExitCode: 1,
