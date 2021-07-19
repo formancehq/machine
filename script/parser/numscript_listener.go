@@ -11,6 +11,12 @@ type NumScriptListener interface {
 	// EnterMonetary is called when entering the monetary production.
 	EnterMonetary(c *MonetaryContext)
 
+	// EnterRatio is called when entering the Ratio production.
+	EnterRatio(c *RatioContext)
+
+	// EnterPercentage is called when entering the Percentage production.
+	EnterPercentage(c *PercentageContext)
+
 	// EnterLitAccount is called when entering the LitAccount production.
 	EnterLitAccount(c *LitAccountContext)
 
@@ -34,6 +40,27 @@ type NumScriptListener interface {
 
 	// EnterArgument is called when entering the argument production.
 	EnterArgument(c *ArgumentContext)
+
+	// EnterAllocationPart is called when entering the allocationPart production.
+	EnterAllocationPart(c *AllocationPartContext)
+
+	// EnterAllocationBlock is called when entering the allocationBlock production.
+	EnterAllocationBlock(c *AllocationBlockContext)
+
+	// EnterAllocBlock is called when entering the AllocBlock production.
+	EnterAllocBlock(c *AllocBlockContext)
+
+	// EnterAllocAccount is called when entering the AllocAccount production.
+	EnterAllocAccount(c *AllocAccountContext)
+
+	// EnterSourceBlock is called when entering the sourceBlock production.
+	EnterSourceBlock(c *SourceBlockContext)
+
+	// EnterSrcBlock is called when entering the SrcBlock production.
+	EnterSrcBlock(c *SrcBlockContext)
+
+	// EnterSrcAccount is called when entering the SrcAccount production.
+	EnterSrcAccount(c *SrcAccountContext)
 
 	// EnterPrint is called when entering the Print production.
 	EnterPrint(c *PrintContext)
@@ -59,6 +86,12 @@ type NumScriptListener interface {
 	// ExitMonetary is called when exiting the monetary production.
 	ExitMonetary(c *MonetaryContext)
 
+	// ExitRatio is called when exiting the Ratio production.
+	ExitRatio(c *RatioContext)
+
+	// ExitPercentage is called when exiting the Percentage production.
+	ExitPercentage(c *PercentageContext)
+
 	// ExitLitAccount is called when exiting the LitAccount production.
 	ExitLitAccount(c *LitAccountContext)
 
@@ -82,6 +115,27 @@ type NumScriptListener interface {
 
 	// ExitArgument is called when exiting the argument production.
 	ExitArgument(c *ArgumentContext)
+
+	// ExitAllocationPart is called when exiting the allocationPart production.
+	ExitAllocationPart(c *AllocationPartContext)
+
+	// ExitAllocationBlock is called when exiting the allocationBlock production.
+	ExitAllocationBlock(c *AllocationBlockContext)
+
+	// ExitAllocBlock is called when exiting the AllocBlock production.
+	ExitAllocBlock(c *AllocBlockContext)
+
+	// ExitAllocAccount is called when exiting the AllocAccount production.
+	ExitAllocAccount(c *AllocAccountContext)
+
+	// ExitSourceBlock is called when exiting the sourceBlock production.
+	ExitSourceBlock(c *SourceBlockContext)
+
+	// ExitSrcBlock is called when exiting the SrcBlock production.
+	ExitSrcBlock(c *SrcBlockContext)
+
+	// ExitSrcAccount is called when exiting the SrcAccount production.
+	ExitSrcAccount(c *SrcAccountContext)
 
 	// ExitPrint is called when exiting the Print production.
 	ExitPrint(c *PrintContext)

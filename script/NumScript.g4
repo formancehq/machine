@@ -7,6 +7,9 @@ VARS: 'vars';
 PRINT: 'print';
 FAIL: 'fail';
 SEND: 'send';
+SOURCE: 'source';
+DESTINATION: 'destination';
+ALLOCATE: 'allocate';
 OP_ADD: '+';
 OP_SUB: '-';
 LPAREN: '(';
@@ -20,13 +23,20 @@ TY_ACCOUNT: 'account';
 TY_ASSET: 'asset';
 TY_NUMBER: 'number';
 TY_MONETARY: 'monetary';
+RATIO: [0-9]+ [ ]* '/' [ ]* [0-9]+;
 NUMBER: [0-9]+;
+PERCENT: '%';
 IDENTIFIER: [a-z0-9_:]+;
-VARIABLE_NAME: '$' [a-z_]+ [a-z0-9_]+;
-ACCOUNT: '@' [a-z_]+ [a-z0-9_:]+;
-ASSET: [A-Z0-9/]+;
+VARIABLE_NAME: '$' [a-z_]+ [a-z0-9_]*;
+ACCOUNT: '@' [a-z_]+ [a-z0-9_:]*;
+ASSET: [A-Z/0-9]+;
 
 monetary: LBRACK asset=ASSET amount=NUMBER RBRACK;
+
+frac
+  : r=RATIO # Ratio
+  | p=NUMBER PERCENT # Percentage
+  ;
 
 literal
   : ACCOUNT # LitAccount
@@ -43,10 +53,28 @@ expression
 
 argument: name=IDENTIFIER EQ val=expression;
 
+allocationPart: fr=frac 'to' dest=expression;
+
+allocationBlock: LBRACE NEWLINE (parts+=allocationPart NEWLINE)+ RBRACE;
+
+allocation
+  : allocationBlock # AllocBlock
+  | expression # AllocAccount
+  ;
+
+sourceBlock: LBRACE NEWLINE (sources+=expression NEWLINE)+ RBRACE;
+
+source
+  : sourceBlock # SrcBlock
+  | expression # SrcAccount
+  ;
+
 statement
   : PRINT expr=expression # Print
   | FAIL # Fail
-  | SEND LPAREN NEWLINE* ((args+=argument ',' NEWLINE*)+ args+=argument? NEWLINE*) RPAREN # Send
+  | SEND mon=expression LPAREN NEWLINE
+      ( SOURCE '=' src=source NEWLINE DESTINATION '=' dest=allocation
+      | DESTINATION '=' dest=allocation NEWLINE SOURCE '=' src=source) NEWLINE RPAREN # Send
   ;
 
 type_: TY_ACCOUNT | TY_ASSET | TY_NUMBER | TY_MONETARY;

@@ -9,14 +9,15 @@ import (
 )
 
 type Program struct {
-	Constants    []core.Value
-	Instructions []byte
-	Variables    map[string]VarInfo
+	Constants      []core.Value
+	Instructions   []byte
+	Variables      map[string]VarInfo
+	NeededBalances map[core.Address]map[core.Address]struct{}
 }
 
 type VarInfo struct {
 	Ty   core.Type
-	Addr Address
+	Addr core.Address
 }
 
 func (p Program) Print() {
@@ -26,7 +27,12 @@ func (p Program) Print() {
 		switch p.Instructions[i] {
 		case OP_APUSH:
 			fmt.Print("OP_APUSH\n")
-			fmt.Printf("%02d-%02d   #%d\n", i+1, i+3, binary.LittleEndian.Uint16(p.Instructions[i+1:i+3]))
+			address := binary.LittleEndian.Uint16(p.Instructions[i+1 : i+3])
+			if address >= 32768 {
+				fmt.Printf("%02d-%02d   #VAR(%d)\n", i+1, i+3, address-32768)
+			} else {
+				fmt.Printf("%02d-%02d   #CONST(%d)\n", i+1, i+3, address)
+			}
 			i += 2
 		case OP_IPUSH:
 			fmt.Print("OP_IPUSH\n")
@@ -42,6 +48,12 @@ func (p Program) Print() {
 			fmt.Print("OP_FAIL\n")
 		case OP_SEND:
 			fmt.Print("OP_SEND\n")
+		case OP_SOURCE:
+			fmt.Print("OP_SOURCE\n")
+		case OP_ALLOC:
+			fmt.Print("OP_ALLOC\n")
+		default:
+			fmt.Print("Unknown opcode")
 		}
 	}
 

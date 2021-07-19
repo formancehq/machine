@@ -1,14 +1,18 @@
 package core
 
-import "fmt"
+import (
+	"fmt"
+	"math/big"
+)
 
-type Type = byte
+type Type byte
 
 const (
 	TYPE_ACCOUNT = Type(iota + 1)
 	TYPE_ASSET
 	TYPE_NUMBER
 	TYPE_MONETARY
+	TYPE_ALLOTMENT
 )
 
 type Value interface {
@@ -44,4 +48,15 @@ type Monetary struct {
 func (Monetary) GetType() Type { return TYPE_MONETARY }
 func (a Monetary) String() string {
 	return fmt.Sprintf("[%v %v]", a.Asset, a.Amount)
+}
+
+type Allotment []big.Rat
+
+func (Allotment) GetType() Type { return TYPE_ALLOTMENT }
+func (a Allotment) String() string {
+	out := "{\n"
+	for _, ratio := range a {
+		out += fmt.Sprintf("	%v\n", &ratio)
+	}
+	return out + "}"
 }
