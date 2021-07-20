@@ -35,6 +35,9 @@ type NumScriptListener interface {
 	// EnterLitMonetary is called when entering the LitMonetary production.
 	EnterLitMonetary(c *LitMonetaryContext)
 
+	// EnterVariable is called when entering the variable production.
+	EnterVariable(c *VariableContext)
+
 	// EnterExprAddSub is called when entering the ExprAddSub production.
 	EnterExprAddSub(c *ExprAddSubContext)
 
@@ -44,17 +47,35 @@ type NumScriptListener interface {
 	// EnterExprVariable is called when entering the ExprVariable production.
 	EnterExprVariable(c *ExprVariableContext)
 
-	// EnterArgument is called when entering the argument production.
-	EnterArgument(c *ArgumentContext)
+	// EnterPortionConst is called when entering the portionConst production.
+	EnterPortionConst(c *PortionConstContext)
 
-	// EnterAllocationPart is called when entering the allocationPart production.
-	EnterAllocationPart(c *AllocationPartContext)
+	// EnterPortionVar is called when entering the portionVar production.
+	EnterPortionVar(c *PortionVarContext)
 
-	// EnterAllocationBlock is called when entering the allocationBlock production.
-	EnterAllocationBlock(c *AllocationBlockContext)
+	// EnterPortionRemaining is called when entering the portionRemaining production.
+	EnterPortionRemaining(c *PortionRemainingContext)
 
-	// EnterAllocBlock is called when entering the AllocBlock production.
-	EnterAllocBlock(c *AllocBlockContext)
+	// EnterAllocBlockConst is called when entering the allocBlockConst production.
+	EnterAllocBlockConst(c *AllocBlockConstContext)
+
+	// EnterAllocPartDynConst is called when entering the allocPartDynConst production.
+	EnterAllocPartDynConst(c *AllocPartDynConstContext)
+
+	// EnterAllocPartDynVar is called when entering the allocPartDynVar production.
+	EnterAllocPartDynVar(c *AllocPartDynVarContext)
+
+	// EnterAllocPartDynRemaining is called when entering the allocPartDynRemaining production.
+	EnterAllocPartDynRemaining(c *AllocPartDynRemainingContext)
+
+	// EnterAllocBlockDyn is called when entering the allocBlockDyn production.
+	EnterAllocBlockDyn(c *AllocBlockDynContext)
+
+	// EnterAllocConst is called when entering the AllocConst production.
+	EnterAllocConst(c *AllocConstContext)
+
+	// EnterAllocDyn is called when entering the AllocDyn production.
+	EnterAllocDyn(c *AllocDynContext)
 
 	// EnterAllocAccount is called when entering the AllocAccount production.
 	EnterAllocAccount(c *AllocAccountContext)
@@ -116,6 +137,9 @@ type NumScriptListener interface {
 	// ExitLitMonetary is called when exiting the LitMonetary production.
 	ExitLitMonetary(c *LitMonetaryContext)
 
+	// ExitVariable is called when exiting the variable production.
+	ExitVariable(c *VariableContext)
+
 	// ExitExprAddSub is called when exiting the ExprAddSub production.
 	ExitExprAddSub(c *ExprAddSubContext)
 
@@ -125,17 +149,35 @@ type NumScriptListener interface {
 	// ExitExprVariable is called when exiting the ExprVariable production.
 	ExitExprVariable(c *ExprVariableContext)
 
-	// ExitArgument is called when exiting the argument production.
-	ExitArgument(c *ArgumentContext)
+	// ExitPortionConst is called when exiting the portionConst production.
+	ExitPortionConst(c *PortionConstContext)
 
-	// ExitAllocationPart is called when exiting the allocationPart production.
-	ExitAllocationPart(c *AllocationPartContext)
+	// ExitPortionVar is called when exiting the portionVar production.
+	ExitPortionVar(c *PortionVarContext)
 
-	// ExitAllocationBlock is called when exiting the allocationBlock production.
-	ExitAllocationBlock(c *AllocationBlockContext)
+	// ExitPortionRemaining is called when exiting the portionRemaining production.
+	ExitPortionRemaining(c *PortionRemainingContext)
 
-	// ExitAllocBlock is called when exiting the AllocBlock production.
-	ExitAllocBlock(c *AllocBlockContext)
+	// ExitAllocBlockConst is called when exiting the allocBlockConst production.
+	ExitAllocBlockConst(c *AllocBlockConstContext)
+
+	// ExitAllocPartDynConst is called when exiting the allocPartDynConst production.
+	ExitAllocPartDynConst(c *AllocPartDynConstContext)
+
+	// ExitAllocPartDynVar is called when exiting the allocPartDynVar production.
+	ExitAllocPartDynVar(c *AllocPartDynVarContext)
+
+	// ExitAllocPartDynRemaining is called when exiting the allocPartDynRemaining production.
+	ExitAllocPartDynRemaining(c *AllocPartDynRemainingContext)
+
+	// ExitAllocBlockDyn is called when exiting the allocBlockDyn production.
+	ExitAllocBlockDyn(c *AllocBlockDynContext)
+
+	// ExitAllocConst is called when exiting the AllocConst production.
+	ExitAllocConst(c *AllocConstContext)
+
+	// ExitAllocDyn is called when exiting the AllocDyn production.
+	ExitAllocDyn(c *AllocDynContext)
 
 	// ExitAllocAccount is called when exiting the AllocAccount production.
 	ExitAllocAccount(c *AllocAccountContext)

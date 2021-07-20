@@ -24,6 +24,7 @@ TY_ACCOUNT: 'account';
 TY_ASSET: 'asset';
 TY_NUMBER: 'number';
 TY_MONETARY: 'monetary';
+TY_PORTION: 'portion';
 RATIO: [0-9]+ [ ]* '/' [ ]* [0-9]+;
 NUMBER: [0-9]+;
 PERCENT: '%';
@@ -39,7 +40,7 @@ amount
 
 monetary: LBRACK asset=ASSET amt=amount RBRACK;
 
-frac
+portion
   : r=RATIO # Ratio
   | pint=NUMBER ('.' pfrac=NUMBER)? PERCENT # Percentage
   ;
@@ -51,20 +52,30 @@ literal
   | monetary # LitMonetary
   ;
 
+  variable: VARIABLE_NAME;
+
 expression
   : lhs=expression op=(OP_ADD|OP_SUB) rhs=expression # ExprAddSub
   | lit=literal # ExprLiteral
-  | variable=VARIABLE_NAME # ExprVariable
+  | var_=variable # ExprVariable
   ;
 
-argument: name=IDENTIFIER EQ val=expression;
+portionConst: por=portion;
+portionVar: por=variable;
+portionRemaining: 'remaining';
 
-allocationPart: fr=frac 'to' dest=expression;
+allocBlockConst: LBRACE NEWLINE (portions+=portionConst 'to' dests+=expression NEWLINE)+ RBRACE;
 
-allocationBlock: LBRACE NEWLINE (parts+=allocationPart NEWLINE)+ RBRACE;
+allocPartDyn
+  : portionConst # allocPartDynConst
+  | portionVar # allocPartDynVar
+  | portionRemaining # allocPartDynRemaining
+  ;
+allocBlockDyn: LBRACE NEWLINE (portions+=allocPartDyn  'to' dests+=expression NEWLINE)+ RBRACE;
 
 allocation
-  : allocationBlock # AllocBlock
+  : allocBlockConst # AllocConst
+  | allocBlockDyn # AllocDyn
   | expression # AllocAccount
   ;
 
@@ -83,9 +94,9 @@ statement
       | DESTINATION '=' dest=allocation NEWLINE SOURCE '=' src=source) NEWLINE RPAREN # Send
   ;
 
-type_: TY_ACCOUNT | TY_ASSET | TY_NUMBER | TY_MONETARY;
+type_: TY_ACCOUNT | TY_ASSET | TY_NUMBER | TY_MONETARY | TY_PORTION;
 
-varDecl: ty=type_ name=VARIABLE_NAME;
+varDecl: ty=type_ name=variable;
 
 varListDecl: VARS LBRACE NEWLINE+ (v+=varDecl NEWLINE+)+ RBRACE NEWLINE+;
 

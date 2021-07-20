@@ -52,6 +52,8 @@ func (p Program) String() string {
 			out += fmt.Sprint("OP_SOURCE\n")
 		case OP_ALLOC:
 			out += fmt.Sprint("OP_ALLOC\n")
+		case OP_MAKE_ALLOTMENT:
+			out += fmt.Sprint("OP_MAKE_ALLOTMENT\n")
 		default:
 			out += fmt.Sprint("Unknown opcode")
 		}

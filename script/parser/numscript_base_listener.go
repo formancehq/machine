@@ -75,6 +75,12 @@ func (s *BaseNumScriptListener) EnterLitMonetary(ctx *LitMonetaryContext) {}
 // ExitLitMonetary is called when production LitMonetary is exited.
 func (s *BaseNumScriptListener) ExitLitMonetary(ctx *LitMonetaryContext) {}
 
+// EnterVariable is called when production variable is entered.
+func (s *BaseNumScriptListener) EnterVariable(ctx *VariableContext) {}
+
+// ExitVariable is called when production variable is exited.
+func (s *BaseNumScriptListener) ExitVariable(ctx *VariableContext) {}
+
 // EnterExprAddSub is called when production ExprAddSub is entered.
 func (s *BaseNumScriptListener) EnterExprAddSub(ctx *ExprAddSubContext) {}
 
@@ -93,29 +99,65 @@ func (s *BaseNumScriptListener) EnterExprVariable(ctx *ExprVariableContext) {}
 // ExitExprVariable is called when production ExprVariable is exited.
 func (s *BaseNumScriptListener) ExitExprVariable(ctx *ExprVariableContext) {}
 
-// EnterArgument is called when production argument is entered.
-func (s *BaseNumScriptListener) EnterArgument(ctx *ArgumentContext) {}
+// EnterPortionConst is called when production portionConst is entered.
+func (s *BaseNumScriptListener) EnterPortionConst(ctx *PortionConstContext) {}
 
-// ExitArgument is called when production argument is exited.
-func (s *BaseNumScriptListener) ExitArgument(ctx *ArgumentContext) {}
+// ExitPortionConst is called when production portionConst is exited.
+func (s *BaseNumScriptListener) ExitPortionConst(ctx *PortionConstContext) {}
 
-// EnterAllocationPart is called when production allocationPart is entered.
-func (s *BaseNumScriptListener) EnterAllocationPart(ctx *AllocationPartContext) {}
+// EnterPortionVar is called when production portionVar is entered.
+func (s *BaseNumScriptListener) EnterPortionVar(ctx *PortionVarContext) {}
 
-// ExitAllocationPart is called when production allocationPart is exited.
-func (s *BaseNumScriptListener) ExitAllocationPart(ctx *AllocationPartContext) {}
+// ExitPortionVar is called when production portionVar is exited.
+func (s *BaseNumScriptListener) ExitPortionVar(ctx *PortionVarContext) {}
 
-// EnterAllocationBlock is called when production allocationBlock is entered.
-func (s *BaseNumScriptListener) EnterAllocationBlock(ctx *AllocationBlockContext) {}
+// EnterPortionRemaining is called when production portionRemaining is entered.
+func (s *BaseNumScriptListener) EnterPortionRemaining(ctx *PortionRemainingContext) {}
 
-// ExitAllocationBlock is called when production allocationBlock is exited.
-func (s *BaseNumScriptListener) ExitAllocationBlock(ctx *AllocationBlockContext) {}
+// ExitPortionRemaining is called when production portionRemaining is exited.
+func (s *BaseNumScriptListener) ExitPortionRemaining(ctx *PortionRemainingContext) {}
 
-// EnterAllocBlock is called when production AllocBlock is entered.
-func (s *BaseNumScriptListener) EnterAllocBlock(ctx *AllocBlockContext) {}
+// EnterAllocBlockConst is called when production allocBlockConst is entered.
+func (s *BaseNumScriptListener) EnterAllocBlockConst(ctx *AllocBlockConstContext) {}
 
-// ExitAllocBlock is called when production AllocBlock is exited.
-func (s *BaseNumScriptListener) ExitAllocBlock(ctx *AllocBlockContext) {}
+// ExitAllocBlockConst is called when production allocBlockConst is exited.
+func (s *BaseNumScriptListener) ExitAllocBlockConst(ctx *AllocBlockConstContext) {}
+
+// EnterAllocPartDynConst is called when production allocPartDynConst is entered.
+func (s *BaseNumScriptListener) EnterAllocPartDynConst(ctx *AllocPartDynConstContext) {}
+
+// ExitAllocPartDynConst is called when production allocPartDynConst is exited.
+func (s *BaseNumScriptListener) ExitAllocPartDynConst(ctx *AllocPartDynConstContext) {}
+
+// EnterAllocPartDynVar is called when production allocPartDynVar is entered.
+func (s *BaseNumScriptListener) EnterAllocPartDynVar(ctx *AllocPartDynVarContext) {}
+
+// ExitAllocPartDynVar is called when production allocPartDynVar is exited.
+func (s *BaseNumScriptListener) ExitAllocPartDynVar(ctx *AllocPartDynVarContext) {}
+
+// EnterAllocPartDynRemaining is called when production allocPartDynRemaining is entered.
+func (s *BaseNumScriptListener) EnterAllocPartDynRemaining(ctx *AllocPartDynRemainingContext) {}
+
+// ExitAllocPartDynRemaining is called when production allocPartDynRemaining is exited.
+func (s *BaseNumScriptListener) ExitAllocPartDynRemaining(ctx *AllocPartDynRemainingContext) {}
+
+// EnterAllocBlockDyn is called when production allocBlockDyn is entered.
+func (s *BaseNumScriptListener) EnterAllocBlockDyn(ctx *AllocBlockDynContext) {}
+
+// ExitAllocBlockDyn is called when production allocBlockDyn is exited.
+func (s *BaseNumScriptListener) ExitAllocBlockDyn(ctx *AllocBlockDynContext) {}
+
+// EnterAllocConst is called when production AllocConst is entered.
+func (s *BaseNumScriptListener) EnterAllocConst(ctx *AllocConstContext) {}
+
+// ExitAllocConst is called when production AllocConst is exited.
+func (s *BaseNumScriptListener) ExitAllocConst(ctx *AllocConstContext) {}
+
+// EnterAllocDyn is called when production AllocDyn is entered.
+func (s *BaseNumScriptListener) EnterAllocDyn(ctx *AllocDynContext) {}
+
+// ExitAllocDyn is called when production AllocDyn is exited.
+func (s *BaseNumScriptListener) ExitAllocDyn(ctx *AllocDynContext) {}
 
 // EnterAllocAccount is called when production AllocAccount is entered.
 func (s *BaseNumScriptListener) EnterAllocAccount(ctx *AllocAccountContext) {}

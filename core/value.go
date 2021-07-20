@@ -9,12 +9,13 @@ import (
 type Type byte
 
 const (
-	TYPE_ACCOUNT = Type(iota + 1)
-	TYPE_ASSET
-	TYPE_NUMBER
-	TYPE_MONETARY
-	TYPE_ALLOTMENT
-	TYPE_AMOUNT
+	TYPE_ACCOUNT   = Type(iota + 1) // address of an account
+	TYPE_ASSET                      // name of an asset
+	TYPE_NUMBER                     // 64bit unsigned integer
+	TYPE_MONETARY                   // [asset number]
+	TYPE_PORTION                    // rational number between 0 and 1
+	TYPE_ALLOTMENT                  // list of portions
+	TYPE_AMOUNT                     // either ALL or a SPECIFIC number
 )
 
 type Value interface {
@@ -63,10 +64,9 @@ func (a Allotment) String() string {
 	return out + "}"
 }
 
-// invariant: specific must be zero if all is true
 type Amount struct {
 	All      bool
-	Specific uint64
+	Specific uint64 // invariant: Specific must be zero if All is true
 }
 
 func (Amount) GetType() Type { return TYPE_AMOUNT }
@@ -91,6 +91,10 @@ func NewAmountSpecific(x uint64) Amount {
 		Specific: x,
 	}
 }
+
+type Portion big.Rat
+
+func (Portion) GetType() Type { return TYPE_PORTION }
 
 func ValueEquals(lhs, rhs Value) bool {
 	if reflect.TypeOf(lhs) != reflect.TypeOf(rhs) {
