@@ -323,14 +323,22 @@ func (p *parseVisitor) VisitFrac(c parser.IFracContext) (*big.Rat, error) {
 		}
 		return big.NewRat(int64(n), int64(d)), nil
 	case *parser.PercentageContext:
-		n, err := strconv.ParseInt(c.GetP().GetText(), 10, 64)
-		if err != nil {
-			return nil, err
+		pint := c.GetPint().GetText()
+		maybe_pfrac := c.GetPfrac()
+		var pfrac string
+		if maybe_pfrac != nil {
+			pfrac = maybe_pfrac.GetText()
 		}
-		if n <= 0 || n >= 100 {
+		res, ok := new(big.Rat).SetString(pint + "." + pfrac)
+		res.Mul(res, big.NewRat(1, 100))
+		fmt.Println(res)
+		if !ok {
+			return nil, errors.New("percentage was not in a valid format")
+		}
+		if res.Cmp(big.NewRat(0, 1)) != 1 || res.Cmp(big.NewRat(1, 1)) != -1 {
 			return nil, errors.New("percentage must be greater than zero and less than 100")
 		}
-		return big.NewRat(n, 100), nil
+		return res, nil
 	default:
 		panic("internal compiler error")
 	}

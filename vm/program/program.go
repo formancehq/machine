@@ -20,55 +20,56 @@ type VarInfo struct {
 	Addr core.Address
 }
 
-func (p Program) Print() {
-	fmt.Println("Program:\nINSTRUCTIONS")
+func (p Program) String() string {
+	out := "Program:\nINSTRUCTIONS"
 	for i := 0; i < len(p.Instructions); i++ {
-		fmt.Printf("%02d----- ", i)
+		out += fmt.Sprintf("%02d----- ", i)
 		switch p.Instructions[i] {
 		case OP_APUSH:
-			fmt.Print("OP_APUSH\n")
+			out += fmt.Sprint("OP_APUSH\n")
 			address := binary.LittleEndian.Uint16(p.Instructions[i+1 : i+3])
 			if address >= 32768 {
-				fmt.Printf("%02d-%02d   #VAR(%d)\n", i+1, i+3, address-32768)
+				out += fmt.Sprintf("%02d-%02d   #VAR(%d)\n", i+1, i+3, address-32768)
 			} else {
-				fmt.Printf("%02d-%02d   #CONST(%d)\n", i+1, i+3, address)
+				out += fmt.Sprintf("%02d-%02d   #CONST(%d)\n", i+1, i+3, address)
 			}
 			i += 2
 		case OP_IPUSH:
-			fmt.Print("OP_IPUSH\n")
-			fmt.Printf("%02d-%02d   %d\n", i+1, i+9, binary.LittleEndian.Uint64(p.Instructions[i+1:i+9]))
+			out += fmt.Sprint("OP_IPUSH\n")
+			out += fmt.Sprintf("%02d-%02d   %d\n", i+1, i+9, binary.LittleEndian.Uint64(p.Instructions[i+1:i+9]))
 			i += 8
 		case OP_IADD:
-			fmt.Print("OP_IADD\n")
+			out += fmt.Sprint("OP_IADD\n")
 		case OP_ISUB:
-			fmt.Print("OP_ISUB\n")
+			out += fmt.Sprint("OP_ISUB\n")
 		case OP_PRINT:
-			fmt.Print("OP_PRINT\n")
+			out += fmt.Sprint("OP_PRINT\n")
 		case OP_FAIL:
-			fmt.Print("OP_FAIL\n")
+			out += fmt.Sprint("OP_FAIL\n")
 		case OP_SEND:
-			fmt.Print("OP_SEND\n")
+			out += fmt.Sprint("OP_SEND\n")
 		case OP_SOURCE:
-			fmt.Print("OP_SOURCE\n")
+			out += fmt.Sprint("OP_SOURCE\n")
 		case OP_ALLOC:
-			fmt.Print("OP_ALLOC\n")
+			out += fmt.Sprint("OP_ALLOC\n")
 		default:
-			fmt.Print("Unknown opcode")
+			out += fmt.Sprint("Unknown opcode")
 		}
 	}
 
-	fmt.Println("CONSTANTS")
+	out += fmt.Sprintln("CONSTANTS")
 	i := 0
 	for i = 0; i < len(p.Constants); i++ {
-		fmt.Printf("%02d ", i)
-		fmt.Printf("%s\n", p.Constants[i])
+		out += fmt.Sprintf("%02d ", i)
+		out += fmt.Sprintf("%s\n", p.Constants[i])
 	}
 
-	fmt.Println("VARIABLES")
+	out += fmt.Sprintln("VARIABLES")
 	for name, info := range p.Variables {
-		fmt.Printf("%02d ", info.Addr.ToIdx())
-		fmt.Printf("%-4s\n", name)
+		out += fmt.Sprintf("%02d ", info.Addr.ToIdx())
+		out += fmt.Sprintf("%-4s\n", name)
 	}
+	return out
 }
 
 func (p *Program) ParseVariables(vars map[string]core.Value) ([]core.Value, error) {

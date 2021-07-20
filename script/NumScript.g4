@@ -35,7 +35,7 @@ monetary: LBRACK asset=ASSET amount=NUMBER RBRACK;
 
 frac
   : r=RATIO # Ratio
-  | p=NUMBER PERCENT # Percentage
+  | pint=NUMBER ('.' pfrac=NUMBER)? PERCENT # Percentage
   ;
 
 literal
