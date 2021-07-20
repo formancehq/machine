@@ -18,6 +18,7 @@ LBRACK: '[';
 RBRACK: ']';
 LBRACE: '{';
 RBRACE: '}';
+ALL: '*';
 EQ: '=';
 TY_ACCOUNT: 'account';
 TY_ASSET: 'asset';
@@ -31,7 +32,12 @@ VARIABLE_NAME: '$' [a-z_]+ [a-z0-9_]*;
 ACCOUNT: '@' [a-z_]+ [a-z0-9_:]*;
 ASSET: [A-Z/0-9]+;
 
-monetary: LBRACK asset=ASSET amount=NUMBER RBRACK;
+amount
+  : num=NUMBER # AmountSpecific
+  | ALL # AmountAll
+  ;
+
+monetary: LBRACK asset=ASSET amt=amount RBRACK;
 
 frac
   : r=RATIO # Ratio
@@ -84,6 +90,7 @@ varDecl: ty=type_ name=VARIABLE_NAME;
 varListDecl: VARS LBRACE NEWLINE+ (v+=varDecl NEWLINE+)+ RBRACE NEWLINE+;
 
 script:
+  NEWLINE*
   vars=varListDecl?
   stmts+=statement
   (NEWLINE+ stmts+=statement)*

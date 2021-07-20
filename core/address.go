@@ -23,3 +23,11 @@ func (a Address) ToBytes() []byte {
 func (a Address) ToIdx() int {
 	return int(a) & 0x7FFF
 }
+
+func (a Address) IsConstant() bool {
+	return uint16(a) < (1 << 15)
+}
+
+func (a Address) IsVariable() bool {
+	return uint16(a) >= (1 << 15)
+}

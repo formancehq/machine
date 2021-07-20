@@ -353,6 +353,73 @@ send [GEM 15] (
 	)
 }
 
+func TestSendAll(t *testing.T) {
+	testJSON(t,
+		`send [USD/2 *] (
+  source = @users:001
+  destination = @platform
+)`,
+		`{}`,
+		map[string]map[string]uint64{
+			"users:001": {
+				"USD/2": 17,
+			},
+		},
+		CaseResult{
+			Printed: []core.Value{},
+			Postings: []ledger.Posting{
+				{
+					Asset:       "USD/2",
+					Amount:      17,
+					Source:      "users:001",
+					Destination: "platform",
+				},
+			},
+			ExitCode: EXIT_OK,
+		},
+	)
+}
+
+func TestSendAllMulti(t *testing.T) {
+	testJSON(t,
+		`send [USD/2 *] (
+			source = {
+			  @users:001:wallet
+			  @users:001:credit
+			}
+			destination = @platform
+		  )
+		  `,
+		`{}`,
+		map[string]map[string]uint64{
+			"users:001:wallet": {
+				"USD/2": 19,
+			},
+			"users:001:credit": {
+				"USD/2": 22,
+			},
+		},
+		CaseResult{
+			Printed: []core.Value{},
+			Postings: []ledger.Posting{
+				{
+					Asset:       "USD/2",
+					Amount:      19,
+					Source:      "users:001:wallet",
+					Destination: "platform",
+				},
+				{
+					Asset:       "USD/2",
+					Amount:      22,
+					Source:      "users:001:credit",
+					Destination: "platform",
+				},
+			},
+			ExitCode: EXIT_OK,
+		},
+	)
+}
+
 func TestInsufficientFunds(t *testing.T) {
 	testJSON(t,
 		`vars {
@@ -494,6 +561,27 @@ func TestNoEmptyPostings(t *testing.T) {
 					Destination: "a",
 				},
 			},
+			ExitCode: 1,
+			Error:    "",
+		},
+	)
+}
+
+func TestNoEmptyPostings2(t *testing.T) {
+	testJSON(t,
+		`send [GEM *] (
+			source = @foo
+			destination = @bar
+		)`,
+		`{}`,
+		map[string]map[string]uint64{
+			"foo": {
+				"GEM": 0,
+			},
+		},
+		CaseResult{
+			Printed:  []core.Value{},
+			Postings: []ledger.Posting{},
 			ExitCode: 1,
 			Error:    "",
 		},

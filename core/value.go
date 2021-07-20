@@ -14,6 +14,7 @@ const (
 	TYPE_NUMBER
 	TYPE_MONETARY
 	TYPE_ALLOTMENT
+	TYPE_AMOUNT
 )
 
 type Value interface {
@@ -42,8 +43,8 @@ func (n Number) String() string {
 }
 
 type Monetary struct {
-	Asset  string `json:"asset"`
-	Amount uint64 `json:"amount"`
+	Asset  Asset  `json:"asset"`
+	Amount Amount `json:"amount"`
 }
 
 func (Monetary) GetType() Type { return TYPE_MONETARY }
@@ -60,6 +61,35 @@ func (a Allotment) String() string {
 		out += fmt.Sprintf("	%v\n", &ratio)
 	}
 	return out + "}"
+}
+
+// invariant: specific must be zero if all is true
+type Amount struct {
+	All      bool
+	Specific uint64
+}
+
+func (Amount) GetType() Type { return TYPE_AMOUNT }
+func (a Amount) String() string {
+	if a.All {
+		return "*"
+	} else {
+		return fmt.Sprint(a.Specific)
+	}
+}
+
+func NewAmountAll() Amount {
+	return Amount{
+		All:      true,
+		Specific: 0,
+	}
+}
+
+func NewAmountSpecific(x uint64) Amount {
+	return Amount{
+		All:      false,
+		Specific: x,
+	}
 }
 
 func ValueEquals(lhs, rhs Value) bool {
