@@ -3,6 +3,7 @@ package core
 import (
 	"fmt"
 	"math/big"
+	"reflect"
 )
 
 type Type byte
@@ -89,4 +90,24 @@ func NewAmountSpecific(x uint64) Amount {
 		All:      false,
 		Specific: x,
 	}
+}
+
+func ValueEquals(lhs, rhs Value) bool {
+	if reflect.TypeOf(lhs) != reflect.TypeOf(rhs) {
+		return false
+	}
+	if lhsa, ok := lhs.(Allotment); ok {
+		rhsa := rhs.(Allotment)
+		if len(lhsa) != len(rhsa) {
+			return false
+		}
+		for i := range lhsa {
+			if lhsa[i].Cmp(&rhsa[i]) != 0 {
+				return false
+			}
+		}
+	} else if lhs != rhs {
+		return false
+	}
+	return true
 }
