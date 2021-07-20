@@ -128,7 +128,28 @@ func TestSend(t *testing.T) {
 				program.OP_IPUSH, 01, 00, 00, 00, 00, 00, 00, 00,
 				program.OP_APUSH, 02, 00,
 				program.OP_SEND,
-			}, Constants: []core.Value{core.Monetary{Asset: "EUR/2", Amount: 99}, alice, bob},
+			}, Constants: []core.Value{core.Monetary{Asset: "EUR/2", Amount: core.NewAmountSpecific(99)}, alice, bob},
+			Error: "",
+		},
+	})
+}
+
+func TestSendAll(t *testing.T) {
+	alice := core.Account("alice")
+	bob := core.Account("bob")
+	test(t, TestCase{
+		Case: `send [EUR/2 *] (
+	source = @alice
+	destination = @bob
+)`,
+		Expected: CaseResult{
+			Instructions: []byte{
+				program.OP_APUSH, 00, 00,
+				program.OP_APUSH, 01, 00,
+				program.OP_IPUSH, 01, 00, 00, 00, 00, 00, 00, 00,
+				program.OP_APUSH, 02, 00,
+				program.OP_SEND,
+			}, Constants: []core.Value{core.Monetary{Asset: "EUR/2", Amount: core.NewAmountAll()}, alice, bob},
 			Error: "",
 		},
 	})
@@ -155,6 +176,20 @@ func TestLogicError(t *testing.T) {
 			Instructions: nil,
 			Constants:    nil,
 			Error:        "expected",
+		},
+	})
+}
+
+func TestPreventTakeAllFromWorld(t *testing.T) {
+	test(t, TestCase{
+		Case: `send [GEM *] (
+			source = @world
+			destination = @foo
+		)`,
+		Expected: CaseResult{
+			Instructions: nil,
+			Constants:    nil,
+			Error:        "cannot",
 		},
 	})
 }

@@ -58,15 +58,30 @@ func (m *Machine) getResource(addr core.Address) core.Value {
 	}
 }
 
-func (m *Machine) withdraw(account string, asset string, amount uint64) bool {
+func (m *Machine) getBalance(account core.Account, asset core.Asset) (uint64, error) {
+	if account == "world" {
+		return 0, errors.New("tried to use balance of world")
+	}
+	if acc_balance, ok := m.Balances[string(account)]; ok {
+		if balance, ok := acc_balance[string(asset)]; ok {
+			return balance, nil
+		} else {
+			return 0, fmt.Errorf("missing %v balance of %v", asset, account)
+		}
+	} else {
+		return 0, fmt.Errorf("missing balance of %v", account)
+	}
+}
+
+func (m *Machine) withdraw(account core.Account, asset core.Asset, amount uint64) bool {
 	if account == "world" {
 		return true
 	}
 	withdraw_ok := false
-	if acc_balance, ok := m.Balances[account]; ok {
-		if balance, ok := acc_balance[asset]; ok {
+	if acc_balance, ok := m.Balances[string(account)]; ok {
+		if balance, ok := acc_balance[string(asset)]; ok {
 			if balance >= amount {
-				acc_balance[asset] -= amount
+				acc_balance[string(asset)] -= amount
 				withdraw_ok = true
 			}
 		}
@@ -74,18 +89,32 @@ func (m *Machine) withdraw(account string, asset string, amount uint64) bool {
 	return withdraw_ok
 }
 
-func (m *Machine) credit(account string, asset string, amount uint64) {
-	if acc_balance, ok := m.Balances[account]; ok {
-		if _, ok := acc_balance[asset]; ok {
-			acc_balance[asset] += amount
+func (m *Machine) credit(account core.Account, asset core.Asset, amount uint64) {
+	if acc_balance, ok := m.Balances[string(account)]; ok {
+		if _, ok := acc_balance[string(asset)]; ok {
+			acc_balance[string(asset)] += amount
 		} else {
-			acc_balance[asset] = amount
+			acc_balance[string(asset)] = amount
 		}
 	} else {
-		m.Balances[account] = map[string]uint64{
-			asset: amount,
+		m.Balances[string(account)] = map[string]uint64{
+			string(asset): amount,
 		}
 	}
+}
+
+func (m *Machine) resolveMonetary(account core.Account, mon core.Monetary) (uint64, error) {
+	var res uint64
+	if mon.Amount.All {
+		a, err := m.getBalance(account, mon.Asset)
+		if err != nil {
+			return 0, err
+		}
+		res = a
+	} else {
+		res = mon.Amount.Specific
+	}
+	return res, nil
 }
 
 func (m *Machine) tick() (bool, byte) {
@@ -133,27 +162,34 @@ func (m *Machine) tick() (bool, byte) {
 
 		var n_actual_src uint64
 		for _, src := range sources {
-			src_funds := m.Balances[string(src)][asset]
+			src_funds := m.Balances[string(src)][string(asset)]
 			var amt_to_withdraw uint64
-			if src_funds > target || src == "world" {
-				amt_to_withdraw = target
-			} else {
+			if target.All {
+				if src == "world" {
+					return true, EXIT_FAIL
+				}
 				amt_to_withdraw = src_funds
+			} else {
+				if target.Specific == 0 {
+					break
+				}
+				if src_funds > target.Specific || src == "world" {
+					amt_to_withdraw = target.Specific
+				} else {
+					amt_to_withdraw = src_funds
+				}
+				target.Specific -= amt_to_withdraw
 			}
-			target -= amt_to_withdraw
 			result = append(result, part{
 				mon: core.Monetary{
 					Asset:  asset,
-					Amount: amt_to_withdraw,
+					Amount: core.NewAmountSpecific(amt_to_withdraw),
 				},
 				acc: src,
 			})
 			n_actual_src++
-			if target == 0 {
-				break
-			}
 		}
-		if target != 0 {
+		if !target.All && target.Specific != 0 {
 			return true, EXIT_FAIL
 		}
 		for i := len(result) - 1; i >= 0; i-- {
@@ -168,19 +204,23 @@ func (m *Machine) tick() (bool, byte) {
 		source_accounts := make([]core.Account, nsources)
 		source_amounts := make([]uint64, nsources)
 		total_src := uint64(0)
-		var asset *string
+		var asset *core.Asset
 		// extract accounts from stack while checking the assets correspond
 		for i := uint64(0); i < nsources; i++ {
 			source_accounts[i] = m.popAccount()
 			mon := m.popMonetary()
-			source_amounts[i] = mon.Amount
+			amt, err := m.resolveMonetary(source_accounts[i], mon)
+			if err != nil {
+				return true, EXIT_FAIL
+			}
+			source_amounts[i] = amt
 			// check that the assets correspond
 			if asset == nil {
 				asset = &mon.Asset
 			} else if *asset != mon.Asset {
 				return true, EXIT_FAIL
 			}
-			total_src += mon.Amount
+			total_src += amt
 		}
 		parts := make([]uint64, nparts)
 		total_allocated := uint64(0)
@@ -225,13 +265,12 @@ func (m *Machine) tick() (bool, byte) {
 				part -= amt
 				source_amounts[i] -= amt
 				result[ipart] = append(result[ipart], subpart{
-					mon: core.Monetary{Asset: *asset, Amount: amt},
+					mon: core.Monetary{Asset: *asset, Amount: core.NewAmountSpecific(amt)},
 					acc: source_accounts[i],
 				})
 				n += 1
 			}
 		}
-		fmt.Println(result)
 		for i := len(result) - 1; i >= 0; i-- {
 			part := result[i]
 			for j := len(part) - 1; j >= 0; j-- {
@@ -245,21 +284,25 @@ func (m *Machine) tick() (bool, byte) {
 		dest := m.popAccount()
 		n := m.popNumber()
 		for i := uint64(0); i < n; i++ {
-			src := string(m.popAccount())
+			src := m.popAccount()
 			mon := m.popMonetary()
-			if mon.Amount == 0 {
+			amt, err := m.resolveMonetary(src, mon)
+			if err != nil {
+				return true, EXIT_FAIL
+			}
+			if amt == 0 {
 				continue
 			}
 			// verify and withdraw funds
-			if ok := m.withdraw(src, mon.Asset, mon.Amount); !ok {
+			if ok := m.withdraw(src, mon.Asset, amt); !ok {
 				return true, EXIT_FAIL
 			}
-			m.credit(string(dest), mon.Asset, mon.Amount)
+			m.credit(dest, mon.Asset, amt)
 			m.Postings = append(m.Postings, ledger.Posting{
 				Source:      string(src),
 				Destination: string(dest),
 				Asset:       string(mon.Asset),
-				Amount:      int64(mon.Amount),
+				Amount:      int64(amt),
 			})
 		}
 	}

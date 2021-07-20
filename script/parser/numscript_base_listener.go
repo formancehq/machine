@@ -21,6 +21,18 @@ func (s *BaseNumScriptListener) EnterEveryRule(ctx antlr.ParserRuleContext) {}
 // ExitEveryRule is called when any rule is exited.
 func (s *BaseNumScriptListener) ExitEveryRule(ctx antlr.ParserRuleContext) {}
 
+// EnterAmountSpecific is called when production AmountSpecific is entered.
+func (s *BaseNumScriptListener) EnterAmountSpecific(ctx *AmountSpecificContext) {}
+
+// ExitAmountSpecific is called when production AmountSpecific is exited.
+func (s *BaseNumScriptListener) ExitAmountSpecific(ctx *AmountSpecificContext) {}
+
+// EnterAmountAll is called when production AmountAll is entered.
+func (s *BaseNumScriptListener) EnterAmountAll(ctx *AmountAllContext) {}
+
+// ExitAmountAll is called when production AmountAll is exited.
+func (s *BaseNumScriptListener) ExitAmountAll(ctx *AmountAllContext) {}
+
 // EnterMonetary is called when production monetary is entered.
 func (s *BaseNumScriptListener) EnterMonetary(ctx *MonetaryContext) {}
 
