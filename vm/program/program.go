@@ -117,12 +117,18 @@ func (p *Program) ParseVariablesJSON(vars map[string]json.RawMessage) ([]core.Va
 				}
 				value = number
 			case core.TYPE_MONETARY:
-				var monetary core.Monetary
-				err := json.Unmarshal(val, &monetary)
+				var mon struct {
+					Asset  string `json:"asset"`
+					Amount uint64 `json:"amount"`
+				}
+				err := json.Unmarshal(val, &mon)
 				if err != nil {
 					return nil, err
 				}
-				value = monetary
+				value = core.Monetary{
+					Asset:  core.Asset(mon.Asset),
+					Amount: core.NewAmountSpecific(mon.Amount),
+				}
 			}
 			variables[info.Addr.ToIdx()] = value
 		} else {

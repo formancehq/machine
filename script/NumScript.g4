@@ -90,6 +90,7 @@ varDecl: ty=type_ name=VARIABLE_NAME;
 varListDecl: VARS LBRACE NEWLINE+ (v+=varDecl NEWLINE+)+ RBRACE NEWLINE+;
 
 script:
+  NEWLINE*
   vars=varListDecl?
   stmts+=statement
   (NEWLINE+ stmts+=statement)*

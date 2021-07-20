@@ -9,10 +9,16 @@ import (
 )
 
 func main() {
-	p, err := compiler.Compile(`send [GEM 15] (
+	p, err := compiler.Compile(`
+	vars {
+		monetary $value
+	}
+
+	send $value (
 		source = {
 			@a
 			@b
+			@world
 		}
 		destination = {
 			80% to @c
@@ -30,7 +36,13 @@ func main() {
 	machine := vm.NewMachine(p)
 
 	var vars map[string]json.RawMessage
-	json.Unmarshal([]byte(`{}`), &vars)
+	json.Unmarshal([]byte(`{
+		"value": {
+			"asset": "GEM",
+			"amount": 45
+		}
+	}`), &vars)
+	fmt.Println(vars)
 	err = machine.SetVarsFromJSON(vars)
 
 	if err != nil {
