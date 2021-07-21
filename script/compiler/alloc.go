@@ -73,17 +73,7 @@ func (p *parseVisitor) VisitAllocBlockConst(c parser.IAllocBlockConstContext) er
 	p.PushValue(core.Allotment(allotment))
 	p.instructions = append(p.instructions, program.OP_ALLOC)
 	// distribute to destination accounts
-	for _, dest := range c.GetDests() {
-		ty, _, err := p.VisitExpr(dest)
-		if err != nil {
-			return nil
-		}
-		if ty != core.TYPE_ACCOUNT {
-			return errors.New("expected account as destination of allocation line")
-		}
-		p.instructions = append(p.instructions, program.OP_SEND)
-	}
-	return nil
+	return p.VisitAllocDestination(c.GetDests())
 }
 
 func (p *parseVisitor) VisitAllocBlockDyn(c parser.IAllocBlockDynContext) error {
@@ -125,7 +115,11 @@ func (p *parseVisitor) VisitAllocBlockDyn(c parser.IAllocBlockDynContext) error 
 	p.instructions = append(p.instructions, program.OP_MAKE_ALLOTMENT)
 	p.instructions = append(p.instructions, program.OP_ALLOC)
 	// distribute to destination accounts
-	for _, dest := range c.GetDests() {
+	return p.VisitAllocDestination(c.GetDests())
+}
+
+func (p *parseVisitor) VisitAllocDestination(dests []parser.IExpressionContext) error {
+	for _, dest := range dests {
 		ty, _, err := p.VisitExpr(dest)
 		if err != nil {
 			return err
