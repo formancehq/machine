@@ -199,19 +199,13 @@ func (m *Machine) tick() (bool, byte) {
 		m.pushValue(core.Number(n_actual_src))
 	case program.OP_MAKE_ALLOTMENT:
 		n := m.popNumber()
-		portions := make([]*big.Rat, n)
+		portions := make([]core.Portion, n)
 		// fill the slice with portions and at most 1 nil
 		for i := uint64(0); i < n; i++ {
-			v := m.popValue()
-			if v.GetType() == core.TYPE_NUMBER { // number used for "remaining" slot
-				portions[i] = nil
-			} else if portion, ok := v.(core.Portion); ok {
-				rat := big.Rat(portion)
-				portions[i] = &rat
-			} else {
-				panic("unexpected type on stack")
-			}
+			p := m.popPortion()
+			portions[i] = p
 		}
+		fmt.Println(portions)
 		allotment, err := core.NewAllotment(portions)
 		if err != nil {
 			return true, EXIT_FAIL

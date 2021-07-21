@@ -3,7 +3,6 @@ package program
 import (
 	"encoding/binary"
 	"encoding/json"
-	"errors"
 	"fmt"
 
 	"github.com/numary/machine/core"
@@ -139,9 +138,9 @@ func (p *Program) ParseVariablesJSON(vars map[string]json.RawMessage) ([]core.Va
 				if err != nil {
 					return nil, err
 				}
-				res, ok := core.ParsePortion(s)
-				if !ok {
-					return nil, errors.New("portion was invalid")
+				res, err := core.ParsePortionSpecific(s)
+				if err != nil {
+					return nil, err
 				}
 				value = *res
 			}

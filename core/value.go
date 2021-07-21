@@ -1,6 +1,7 @@
 package core
 
 import (
+	"errors"
 	"fmt"
 	"math/big"
 	"reflect"
@@ -92,12 +93,35 @@ func NewAmountSpecific(x uint64) Amount {
 	}
 }
 
-type Portion big.Rat
+type Portion struct {
+	Remaining bool
+	Specific  *big.Rat
+}
 
 func (Portion) GetType() Type { return TYPE_PORTION }
 func (p Portion) String() string {
-	rat := big.Rat(p)
-	return fmt.Sprint(&rat)
+	if p.Remaining {
+		return "remaining"
+	} else {
+		return fmt.Sprintf("%v", p.Specific)
+	}
+}
+
+func NewPortionRemaining() Portion {
+	return Portion{
+		Remaining: true,
+		Specific:  nil,
+	}
+}
+
+func NewPortionSpecific(r big.Rat) (*Portion, error) {
+	if r.Cmp(big.NewRat(0, 1)) != 1 || r.Cmp(big.NewRat(1, 1)) != -1 {
+		return nil, errors.New("portion must be between 0 and 1 exclusive")
+	}
+	return &Portion{
+		Remaining: false,
+		Specific:  &r,
+	}, nil
 }
 
 func ValueEquals(lhs, rhs Value) bool {

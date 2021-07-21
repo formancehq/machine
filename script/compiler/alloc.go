@@ -33,18 +33,17 @@ func (p *parseVisitor) VisitAllocation(c parser.IAllocationContext) error {
 
 func (p *parseVisitor) VisitAllocBlockConst(c parser.IAllocBlockConstContext) error {
 	// allocate
-	portions := []*big.Rat{}
+	portions := []core.Portion{}
 	for _, c := range c.GetPortions() {
 		switch c := c.(type) {
 		case *parser.AllocPartConstConstContext:
-			portion, ok := core.ParsePortion(c.PortionConst().GetPor().GetText())
-			if !ok {
-				return errors.New("allocation portion is invalid")
+			portion, err := core.ParsePortionSpecific(c.PortionConst().GetPor().GetText())
+			if err != nil {
+				return err
 			}
-			rat := big.Rat(*portion)
-			portions = append(portions, &rat)
+			portions = append(portions, *portion)
 		case *parser.AllocPartConstRemainingContext:
-			portions = append(portions, nil)
+			portions = append(portions, core.NewPortionRemaining())
 		}
 	}
 	allotment, err := core.NewAllotment(portions)
@@ -65,11 +64,11 @@ func (p *parseVisitor) VisitAllocBlockDyn(c parser.IAllocBlockDynContext) error 
 		c := portions[i]
 		switch c := c.(type) {
 		case *parser.AllocPartDynConstContext:
-			portion, ok := core.ParsePortion(c.PortionConst().GetPor().GetText())
-			if !ok {
-				return errors.New("allocation portion is invalid")
+			portion, err := core.ParsePortionSpecific(c.PortionConst().GetPor().GetText())
+			if err != nil {
+				return err
 			}
-			rat := big.Rat(*portion)
+			rat := big.Rat(*portion.Specific)
 			total.Add(&rat, total)
 			p.PushValue(core.Portion(*portion))
 		case *parser.AllocPartDynVarContext:
@@ -84,7 +83,7 @@ func (p *parseVisitor) VisitAllocBlockDyn(c parser.IAllocBlockDynContext) error 
 			if has_remaining {
 				return errors.New("two uses of `remaining` in the same allocation")
 			}
-			p.PushValue(core.Number(0)) // use Number(0) as indicator of 'remaining' portion in the stack
+			p.PushValue(core.NewPortionRemaining())
 			has_remaining = true
 		}
 	}

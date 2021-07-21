@@ -1,12 +1,13 @@
 package core
 
 import (
+	"errors"
 	"fmt"
 	"math/big"
 	"regexp"
 )
 
-func ParsePortion(input string) (*Portion, bool) {
+func ParsePortionSpecific(input string) (*Portion, error) {
 	var res *big.Rat
 
 	re := regexp.MustCompile(`^([0-9]+)(?:[.]([0-9]+))?[%]$`)
@@ -18,7 +19,7 @@ func ParsePortion(input string) (*Portion, bool) {
 		fractional := percent_match[2]
 		rat, ok := new(big.Rat).SetString(integral + "." + fractional)
 		if !ok {
-			return nil, false
+			return nil, errors.New("invalid format")
 		}
 		rat.Mul(rat, big.NewRat(1, 100))
 		res = rat
@@ -30,15 +31,18 @@ func ParsePortion(input string) (*Portion, bool) {
 			denominator := fraction_match[2]
 			rat, ok := new(big.Rat).SetString(numerator + "/" + denominator)
 			if !ok {
-				return nil, false
+				return nil, errors.New("invalid format")
 			}
 			res = rat
 		}
 	}
 
-	if res == nil || res.Cmp(big.NewRat(0, 1)) != 1 || res.Cmp(big.NewRat(1, 1)) != -1 {
-		return nil, false
+	if res == nil {
+		return nil, errors.New("invalid format")
 	}
-	portion := Portion(*res)
-	return &portion, true
+	portion, err := NewPortionSpecific(*res)
+	if err != nil {
+		return nil, err
+	}
+	return portion, nil
 }

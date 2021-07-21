@@ -2,16 +2,18 @@ package core
 
 import (
 	"errors"
+	"fmt"
 	"math/big"
 )
 
-func NewAllotment(portions []*big.Rat) (*Allotment, error) {
+func NewAllotment(portions []Portion) (*Allotment, error) {
 	n := len(portions)
 	total := big.NewRat(0, 1)
 	var remaining_idx *int
 	allotment := make([]big.Rat, n)
 	for i := 0; i < n; i++ {
-		if portions[i] == nil {
+		fmt.Println(portions[i])
+		if portions[i].Remaining {
 			if remaining_idx != nil {
 				return nil, errors.New("two uses of `remaining` in the same allotment")
 			}
@@ -19,7 +21,7 @@ func NewAllotment(portions []*big.Rat) (*Allotment, error) {
 			idx := i
 			remaining_idx = &idx
 		} else {
-			rat := big.Rat(*portions[i])
+			rat := big.Rat(*portions[i].Specific)
 			allotment[i] = rat
 			total.Add(total, &rat)
 		}
