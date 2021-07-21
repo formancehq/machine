@@ -200,12 +200,10 @@ func (m *Machine) tick() (bool, byte) {
 	case program.OP_MAKE_ALLOTMENT:
 		n := m.popNumber()
 		portions := make([]core.Portion, n)
-		// fill the slice with portions and at most 1 nil
 		for i := uint64(0); i < n; i++ {
 			p := m.popPortion()
 			portions[i] = p
 		}
-		fmt.Println(portions)
 		allotment, err := core.NewAllotment(portions)
 		if err != nil {
 			return true, EXIT_FAIL
@@ -321,8 +319,6 @@ func (m *Machine) tick() (bool, byte) {
 			})
 		}
 	}
-
-	fmt.Println(m.Stack)
 
 	m.P += 1
 

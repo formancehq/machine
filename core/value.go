@@ -1,9 +1,7 @@
 package core
 
 import (
-	"errors"
 	"fmt"
-	"math/big"
 	"reflect"
 )
 
@@ -54,75 +52,11 @@ func (a Monetary) String() string {
 	return fmt.Sprintf("[%v %v]", a.Asset, a.Amount)
 }
 
-type Allotment []big.Rat
-
 func (Allotment) GetType() Type { return TYPE_ALLOTMENT }
-func (a Allotment) String() string {
-	out := "{\n"
-	for _, ratio := range a {
-		out += fmt.Sprintf("	%v\n", &ratio)
-	}
-	return out + "}"
-}
-
-type Amount struct {
-	All      bool
-	Specific uint64 // invariant: Specific must be zero if All is true
-}
 
 func (Amount) GetType() Type { return TYPE_AMOUNT }
-func (a Amount) String() string {
-	if a.All {
-		return "*"
-	} else {
-		return fmt.Sprint(a.Specific)
-	}
-}
-
-func NewAmountAll() Amount {
-	return Amount{
-		All:      true,
-		Specific: 0,
-	}
-}
-
-func NewAmountSpecific(x uint64) Amount {
-	return Amount{
-		All:      false,
-		Specific: x,
-	}
-}
-
-type Portion struct {
-	Remaining bool
-	Specific  *big.Rat
-}
 
 func (Portion) GetType() Type { return TYPE_PORTION }
-func (p Portion) String() string {
-	if p.Remaining {
-		return "remaining"
-	} else {
-		return fmt.Sprintf("%v", p.Specific)
-	}
-}
-
-func NewPortionRemaining() Portion {
-	return Portion{
-		Remaining: true,
-		Specific:  nil,
-	}
-}
-
-func NewPortionSpecific(r big.Rat) (*Portion, error) {
-	if r.Cmp(big.NewRat(0, 1)) != 1 || r.Cmp(big.NewRat(1, 1)) != -1 {
-		return nil, errors.New("portion must be between 0 and 1 exclusive")
-	}
-	return &Portion{
-		Remaining: false,
-		Specific:  &r,
-	}, nil
-}
 
 func ValueEquals(lhs, rhs Value) bool {
 	if reflect.TypeOf(lhs) != reflect.TypeOf(rhs) {

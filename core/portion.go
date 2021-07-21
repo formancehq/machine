@@ -7,13 +7,33 @@ import (
 	"regexp"
 )
 
+type Portion struct {
+	Remaining bool
+	Specific  *big.Rat
+}
+
+func NewPortionRemaining() Portion {
+	return Portion{
+		Remaining: true,
+		Specific:  nil,
+	}
+}
+
+func NewPortionSpecific(r big.Rat) (*Portion, error) {
+	if r.Cmp(big.NewRat(0, 1)) != 1 || r.Cmp(big.NewRat(1, 1)) != -1 {
+		return nil, errors.New("portion must be between 0 and 1 exclusive")
+	}
+	return &Portion{
+		Remaining: false,
+		Specific:  &r,
+	}, nil
+}
+
 func ParsePortionSpecific(input string) (*Portion, error) {
 	var res *big.Rat
 
 	re := regexp.MustCompile(`^([0-9]+)(?:[.]([0-9]+))?[%]$`)
 	percent_match := re.FindStringSubmatch(input)
-	fmt.Println(input)
-	fmt.Println(percent_match)
 	if len(percent_match) != 0 {
 		integral := percent_match[1]
 		fractional := percent_match[2]
@@ -45,4 +65,12 @@ func ParsePortionSpecific(input string) (*Portion, error) {
 		return nil, err
 	}
 	return portion, nil
+}
+
+func (p Portion) String() string {
+	if p.Remaining {
+		return "remaining"
+	} else {
+		return fmt.Sprintf("%v", p.Specific)
+	}
 }
