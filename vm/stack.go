@@ -49,6 +49,14 @@ func (m *Machine) popAllotment() core.Allotment {
 	}
 }
 
+func (m *Machine) popPortion() core.Portion {
+	if m, ok := m.popValue().(core.Portion); ok {
+		return m
+	} else {
+		panic("unexpected type on stack")
+	}
+}
+
 func (m *Machine) pushValue(v core.Value) {
 	m.Stack = append(m.Stack, v)
 }

@@ -197,6 +197,19 @@ func (m *Machine) tick() (bool, byte) {
 			m.pushValue(result[i].acc)
 		}
 		m.pushValue(core.Number(n_actual_src))
+	case program.OP_MAKE_ALLOTMENT:
+		n := m.popNumber()
+		portions := make([]core.Portion, n)
+		for i := uint64(0); i < n; i++ {
+			p := m.popPortion()
+			portions[i] = p
+		}
+		allotment, err := core.NewAllotment(portions)
+		if err != nil {
+			return true, EXIT_FAIL
+		}
+		m.pushValue(*allotment)
+
 	case program.OP_ALLOC:
 		allotment := m.popAllotment()
 		nparts := len(allotment)

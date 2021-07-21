@@ -272,6 +272,74 @@ func TestPreventTakeAllFromWorld(t *testing.T) {
 	})
 }
 
+func TestOverflowingAllocation(t *testing.T) {
+	test(t, TestCase{
+		Case: `send [GEM 15] (
+			source = @world
+			destination = {
+				2/3 to @a
+				2/3 to @b
+			}
+		)`,
+		Expected: CaseResult{
+			Instructions: nil,
+			Constants:    nil,
+			Error:        "100%",
+		},
+	})
+
+	test(t, TestCase{
+		Case: `send [GEM 15] (
+			source = @world
+			destination = {
+				1/2 to @a
+				1/2 to @b
+				remaining to @c
+			}
+		)`,
+		Expected: CaseResult{
+			Instructions: nil,
+			Constants:    nil,
+			Error:        "100%",
+		},
+	})
+
+	test(t, TestCase{
+		Case: `send [GEM 15] (
+			source = @world
+			destination = {
+				2/3 to @a
+				1/2 to @b
+				remaining to @c
+			}
+		)`,
+		Expected: CaseResult{
+			Instructions: nil,
+			Constants:    nil,
+			Error:        "100%",
+		},
+	})
+
+	test(t, TestCase{
+		Case: `
+		vars {
+			portion $prop
+		}
+		send [GEM 15] (
+			source = @world
+			destination = {
+				2/3 to @a
+				$prop to @b
+			}
+		)`,
+		Expected: CaseResult{
+			Instructions: nil,
+			Constants:    nil,
+			Error:        "remaining",
+		},
+	})
+}
+
 // func TestTooManyConstants(t *testing.T) {
 // 	script := "print 1"
 // 	for i := 0; i < 20000; i++ {
