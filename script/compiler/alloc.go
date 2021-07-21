@@ -4,8 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
-	"strconv"
-	"strings"
 
 	"github.com/numary/machine/core"
 	"github.com/numary/machine/script/parser"
@@ -39,12 +37,13 @@ func (p *parseVisitor) VisitAllocBlockConst(c parser.IAllocBlockConstContext) er
 	allotment := []big.Rat{}
 	portions := c.GetPortions()
 	for _, v := range portions {
-		frac, err := p.VisitPortion(v.GetPor())
-		if err != nil {
-			return err
+		portion, ok := core.ParsePortion(v.GetPor().GetText())
+		if !ok {
+			return errors.New("invalid format for allocation portion")
 		}
-		total.Add(frac, total)
-		allotment = append(allotment, *frac)
+		rat := big.Rat(*portion)
+		total.Add(&rat, total)
+		allotment = append(allotment, rat)
 	}
 	if total.Cmp(big.NewRat(1, 1)) != 0 {
 		return errors.New("sum of fractions did not equal 100%")
@@ -70,14 +69,16 @@ func (p *parseVisitor) VisitAllocBlockDyn(c parser.IAllocBlockDynContext) error 
 	// allocate
 	portions := c.GetPortions()
 	has_remaining := false
-	for _, v := range portions {
-		switch c := v.(type) {
+	for i := len(portions) - 1; i >= 0; i-- {
+		c := portions[i]
+		switch c := c.(type) {
 		case *parser.AllocPartDynConstContext:
-			portion, err := p.VisitPortion(c.PortionConst().GetPor())
-			if err != nil {
-				return err
+			portion, ok := core.ParsePortion(c.PortionConst().GetPor().GetText())
+			if !ok {
+				return errors.New("invalid format for allocation portion")
 			}
-			total.Add(portion, total)
+			rat := big.Rat(*portion)
+			total.Add(&rat, total)
 			p.PushValue(core.Portion(*portion))
 		case *parser.AllocPartDynVarContext:
 			ty, _, err := p.VisitVariable(c.PortionVar().GetPor())
@@ -105,7 +106,7 @@ func (p *parseVisitor) VisitAllocBlockDyn(c parser.IAllocBlockDynContext) error 
 	for _, dest := range c.GetDests() {
 		ty, _, err := p.VisitExpr(dest)
 		if err != nil {
-			return nil
+			return err
 		}
 		if ty != core.TYPE_ACCOUNT {
 			return errors.New("expected account as destination of allocation line")
@@ -113,47 +114,4 @@ func (p *parseVisitor) VisitAllocBlockDyn(c parser.IAllocBlockDynContext) error 
 		p.instructions = append(p.instructions, program.OP_SEND)
 	}
 	return nil
-}
-
-func (p *parseVisitor) VisitPortion(c parser.IPortionContext) (*big.Rat, error) {
-	switch c := c.(type) {
-	case *parser.RatioContext:
-		v := strings.Split(c.GetR().GetText(), "/")
-		ns := strings.Trim(v[0], " \t")
-		ds := strings.Trim(v[1], " \t")
-		n, err := strconv.ParseInt(ns, 10, 64)
-		if err != nil {
-			return nil, err
-		}
-		if n <= 0 {
-			return nil, errors.New("numerator must be greater than zero")
-		}
-		d, err := strconv.ParseInt(ds, 10, 64)
-		if err != nil {
-			return nil, err
-		}
-		if d <= 0 {
-			return nil, errors.New("denominator must be greater than zero")
-		}
-		return big.NewRat(int64(n), int64(d)), nil
-	case *parser.PercentageContext:
-		pint := c.GetPint().GetText()
-		maybe_pfrac := c.GetPfrac()
-		var pfrac string
-		if maybe_pfrac != nil {
-			pfrac = maybe_pfrac.GetText()
-		}
-		res, ok := new(big.Rat).SetString(pint + "." + pfrac)
-		res.Mul(res, big.NewRat(1, 100))
-		fmt.Println(res)
-		if !ok {
-			return nil, errors.New("percentage was not in a valid format")
-		}
-		if res.Cmp(big.NewRat(0, 1)) != 1 || res.Cmp(big.NewRat(1, 1)) != -1 {
-			return nil, errors.New("percentage must be greater than zero and less than 100")
-		}
-		return res, nil
-	default:
-		panic("internal compiler error")
-	}
 }

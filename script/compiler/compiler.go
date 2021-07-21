@@ -37,7 +37,7 @@ func (p *parseVisitor) AllocateConstant(v core.Value) (core.Address, error) {
 
 func (p *parseVisitor) PushValue(val core.Value) (*core.Address, error) {
 	switch val := val.(type) {
-	case core.Account, core.Asset, core.Monetary, core.Allotment:
+	case core.Account, core.Asset, core.Monetary, core.Allotment, core.Portion:
 		p.instructions = append(p.instructions, program.OP_APUSH)
 		addr, err := p.AllocateConstant(val)
 		if err != nil {

@@ -3,6 +3,7 @@ package program
 import (
 	"encoding/binary"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/numary/machine/core"
@@ -132,6 +133,17 @@ func (p *Program) ParseVariablesJSON(vars map[string]json.RawMessage) ([]core.Va
 					Asset:  core.Asset(mon.Asset),
 					Amount: core.NewAmountSpecific(mon.Amount),
 				}
+			case core.TYPE_PORTION:
+				var s string
+				err := json.Unmarshal(val, &s)
+				if err != nil {
+					return nil, err
+				}
+				res, ok := core.ParsePortion(s)
+				if !ok {
+					return nil, errors.New("portion was invalid")
+				}
+				value = *res
 			}
 			variables[info.Addr.ToIdx()] = value
 		} else {

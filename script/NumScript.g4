@@ -25,7 +25,10 @@ TY_ASSET: 'asset';
 TY_NUMBER: 'number';
 TY_MONETARY: 'monetary';
 TY_PORTION: 'portion';
-RATIO: [0-9]+ [ ]* '/' [ ]* [0-9]+;
+PORTION:
+  ( [0-9]+ [ ]? '/' [ ]? [0-9]+
+  | [0-9]+      '.'      [0-9]+ '%'
+  );
 NUMBER: [0-9]+;
 PERCENT: '%';
 IDENTIFIER: [a-z0-9_:]+;
@@ -39,11 +42,6 @@ amount
   ;
 
 monetary: LBRACK asset=ASSET amt=amount RBRACK;
-
-portion
-  : r=RATIO # Ratio
-  | pint=NUMBER ('.' pfrac=NUMBER)? PERCENT # Percentage
-  ;
 
 literal
   : ACCOUNT # LitAccount
@@ -60,7 +58,7 @@ expression
   | var_=variable # ExprVariable
   ;
 
-portionConst: por=portion;
+portionConst: por=PORTION;
 portionVar: por=variable;
 portionRemaining: 'remaining';
 

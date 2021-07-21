@@ -17,12 +17,6 @@ type NumScriptListener interface {
 	// EnterMonetary is called when entering the monetary production.
 	EnterMonetary(c *MonetaryContext)
 
-	// EnterRatio is called when entering the Ratio production.
-	EnterRatio(c *RatioContext)
-
-	// EnterPercentage is called when entering the Percentage production.
-	EnterPercentage(c *PercentageContext)
-
 	// EnterLitAccount is called when entering the LitAccount production.
 	EnterLitAccount(c *LitAccountContext)
 
@@ -118,12 +112,6 @@ type NumScriptListener interface {
 
 	// ExitMonetary is called when exiting the monetary production.
 	ExitMonetary(c *MonetaryContext)
-
-	// ExitRatio is called when exiting the Ratio production.
-	ExitRatio(c *RatioContext)
-
-	// ExitPercentage is called when exiting the Percentage production.
-	ExitPercentage(c *PercentageContext)
 
 	// ExitLitAccount is called when exiting the LitAccount production.
 	ExitLitAccount(c *LitAccountContext)

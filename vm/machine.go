@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"reflect"
 
 	ledger "github.com/numary/ledger/core"
 	"github.com/numary/machine/core"
@@ -197,6 +198,50 @@ func (m *Machine) tick() (bool, byte) {
 			m.pushValue(result[i].acc)
 		}
 		m.pushValue(core.Number(n_actual_src))
+	case program.OP_MAKE_ALLOTMENT:
+		n := m.popNumber()
+		portions := make([]*core.Portion, n)
+		total := big.NewRat(0, 1)
+		has_remaining := false
+		// fill the slice with portions and at most 1 nil
+		for i := uint64(0); i < n; i++ {
+			v := m.popValue()
+			fmt.Printf("type: %v\n", reflect.TypeOf(v))
+			if v.GetType() == core.TYPE_NUMBER { // number used for "remaining" slot
+				if has_remaining {
+					panic("encountered two 'remaining' slots in allocation")
+				}
+				portions[i] = nil
+				has_remaining = true
+			} else if portion, ok := v.(core.Portion); ok {
+				portions[i] = &portion
+				rat := big.Rat(portion)
+				total.Add(total, &rat)
+			} else {
+				fmt.Println(v.GetType(), core.TYPE_PORTION)
+				panic("unexpected type on stack")
+			}
+		}
+
+		if total.Cmp(big.NewRat(1, 1)) == 1 {
+			return true, EXIT_FAIL
+		}
+		if has_remaining && total.Cmp(big.NewRat(1, 1)) == 1 {
+			return true, EXIT_FAIL
+		}
+
+		allotment := make([]big.Rat, n)
+		for i := uint64(0); i < n; i++ {
+			if portions[i] == nil {
+				remaining := big.NewRat(1, 1)
+				remaining.Sub(remaining, total)
+				allotment[i] = *remaining
+			} else {
+				allotment[i] = big.Rat(*portions[i])
+			}
+		}
+		m.pushValue(core.Allotment(allotment))
+
 	case program.OP_ALLOC:
 		allotment := m.popAllotment()
 		nparts := len(allotment)
@@ -306,6 +351,8 @@ func (m *Machine) tick() (bool, byte) {
 			})
 		}
 	}
+
+	fmt.Println(m.Stack)
 
 	m.P += 1
 

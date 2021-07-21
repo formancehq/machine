@@ -39,18 +39,6 @@ func (s *BaseNumScriptListener) EnterMonetary(ctx *MonetaryContext) {}
 // ExitMonetary is called when production monetary is exited.
 func (s *BaseNumScriptListener) ExitMonetary(ctx *MonetaryContext) {}
 
-// EnterRatio is called when production Ratio is entered.
-func (s *BaseNumScriptListener) EnterRatio(ctx *RatioContext) {}
-
-// ExitRatio is called when production Ratio is exited.
-func (s *BaseNumScriptListener) ExitRatio(ctx *RatioContext) {}
-
-// EnterPercentage is called when production Percentage is entered.
-func (s *BaseNumScriptListener) EnterPercentage(ctx *PercentageContext) {}
-
-// ExitPercentage is called when production Percentage is exited.
-func (s *BaseNumScriptListener) ExitPercentage(ctx *PercentageContext) {}
-
 // EnterLitAccount is called when production LitAccount is entered.
 func (s *BaseNumScriptListener) EnterLitAccount(ctx *LitAccountContext) {}
 

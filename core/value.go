@@ -13,7 +13,7 @@ const (
 	TYPE_ASSET                      // name of an asset
 	TYPE_NUMBER                     // 64bit unsigned integer
 	TYPE_MONETARY                   // [asset number]
-	TYPE_PORTION                    // rational number between 0 and 1
+	TYPE_PORTION                    // rational number between 0 and 1 both exclusive
 	TYPE_ALLOTMENT                  // list of portions
 	TYPE_AMOUNT                     // either ALL or a SPECIFIC number
 )
@@ -95,6 +95,10 @@ func NewAmountSpecific(x uint64) Amount {
 type Portion big.Rat
 
 func (Portion) GetType() Type { return TYPE_PORTION }
+func (p Portion) String() string {
+	rat := big.Rat(p)
+	return fmt.Sprint(&rat)
+}
 
 func ValueEquals(lhs, rhs Value) bool {
 	if reflect.TypeOf(lhs) != reflect.TypeOf(rhs) {
