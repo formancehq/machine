@@ -34,19 +34,41 @@ func (p *parseVisitor) VisitAllocation(c parser.IAllocationContext) error {
 func (p *parseVisitor) VisitAllocBlockConst(c parser.IAllocBlockConstContext) error {
 	total := big.NewRat(0, 1)
 	// allocate
-	allotment := []big.Rat{}
-	portions := c.GetPortions()
-	for _, v := range portions {
-		portion, ok := core.ParsePortion(v.GetPor().GetText())
-		if !ok {
-			return errors.New("invalid format for allocation portion")
+	portions := []*big.Rat{}
+	has_remaining := false
+	portions_c := c.GetPortions()
+	for _, c := range portions_c {
+		switch c := c.(type) {
+		case *parser.AllocPartConstConstContext:
+			portion, ok := core.ParsePortion(c.PortionConst().GetPor().GetText())
+			if !ok {
+				return errors.New("invalid format for allocation portion")
+			}
+			rat := big.Rat(*portion)
+			total.Add(&rat, total)
+			portions = append(portions, &rat)
+		case *parser.AllocPartConstRemainingContext:
+			if has_remaining {
+				return errors.New("two uses of `remaining` in the same allocation")
+			}
+			portions = append(portions, nil)
+			has_remaining = true
 		}
-		rat := big.Rat(*portion)
-		total.Add(&rat, total)
-		allotment = append(allotment, rat)
 	}
-	if total.Cmp(big.NewRat(1, 1)) != 0 {
-		return errors.New("sum of fractions did not equal 100%")
+	if !has_remaining && total.Cmp(big.NewRat(1, 1)) != 0 {
+		return errors.New("sum of portions did not equal 100%")
+	} else if has_remaining && total.Cmp(big.NewRat(1, 1)) != -1 {
+		return errors.New("allocation has a 'remaining' portion even though all portions sum to 100%")
+	}
+	allotment := []big.Rat{}
+	for _, p := range portions {
+		if p == nil {
+			remaining := big.NewRat(1, 1)
+			remaining.Sub(remaining, total)
+			allotment = append(allotment, *remaining)
+		} else {
+			allotment = append(allotment, *p)
+		}
 	}
 	p.PushValue(core.Allotment(allotment))
 	p.instructions = append(p.instructions, program.OP_ALLOC)

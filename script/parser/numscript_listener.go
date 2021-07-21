@@ -50,6 +50,12 @@ type NumScriptListener interface {
 	// EnterPortionRemaining is called when entering the portionRemaining production.
 	EnterPortionRemaining(c *PortionRemainingContext)
 
+	// EnterAllocPartConstConst is called when entering the allocPartConstConst production.
+	EnterAllocPartConstConst(c *AllocPartConstConstContext)
+
+	// EnterAllocPartConstRemaining is called when entering the allocPartConstRemaining production.
+	EnterAllocPartConstRemaining(c *AllocPartConstRemainingContext)
+
 	// EnterAllocBlockConst is called when entering the allocBlockConst production.
 	EnterAllocBlockConst(c *AllocBlockConstContext)
 
@@ -145,6 +151,12 @@ type NumScriptListener interface {
 
 	// ExitPortionRemaining is called when exiting the portionRemaining production.
 	ExitPortionRemaining(c *PortionRemainingContext)
+
+	// ExitAllocPartConstConst is called when exiting the allocPartConstConst production.
+	ExitAllocPartConstConst(c *AllocPartConstConstContext)
+
+	// ExitAllocPartConstRemaining is called when exiting the allocPartConstRemaining production.
+	ExitAllocPartConstRemaining(c *AllocPartConstRemainingContext)
 
 	// ExitAllocBlockConst is called when exiting the allocBlockConst production.
 	ExitAllocBlockConst(c *AllocBlockConstContext)

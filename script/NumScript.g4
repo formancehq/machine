@@ -62,7 +62,10 @@ portionConst: por=PORTION;
 portionVar: por=variable;
 portionRemaining: 'remaining';
 
-allocBlockConst: LBRACE NEWLINE (portions+=portionConst 'to' dests+=expression NEWLINE)+ RBRACE;
+allocPartConst
+  : portionConst # allocPartConstConst
+  | portionRemaining # allocPartConstRemaining;
+allocBlockConst: LBRACE NEWLINE (portions+=allocPartConst 'to' dests+=expression NEWLINE)+ RBRACE;
 
 allocPartDyn
   : portionConst # allocPartDynConst

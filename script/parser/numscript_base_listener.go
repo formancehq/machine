@@ -105,6 +105,18 @@ func (s *BaseNumScriptListener) EnterPortionRemaining(ctx *PortionRemainingConte
 // ExitPortionRemaining is called when production portionRemaining is exited.
 func (s *BaseNumScriptListener) ExitPortionRemaining(ctx *PortionRemainingContext) {}
 
+// EnterAllocPartConstConst is called when production allocPartConstConst is entered.
+func (s *BaseNumScriptListener) EnterAllocPartConstConst(ctx *AllocPartConstConstContext) {}
+
+// ExitAllocPartConstConst is called when production allocPartConstConst is exited.
+func (s *BaseNumScriptListener) ExitAllocPartConstConst(ctx *AllocPartConstConstContext) {}
+
+// EnterAllocPartConstRemaining is called when production allocPartConstRemaining is entered.
+func (s *BaseNumScriptListener) EnterAllocPartConstRemaining(ctx *AllocPartConstRemainingContext) {}
+
+// ExitAllocPartConstRemaining is called when production allocPartConstRemaining is exited.
+func (s *BaseNumScriptListener) ExitAllocPartConstRemaining(ctx *AllocPartConstRemainingContext) {}
+
 // EnterAllocBlockConst is called when production allocBlockConst is entered.
 func (s *BaseNumScriptListener) EnterAllocBlockConst(ctx *AllocBlockConstContext) {}
 
