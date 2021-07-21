@@ -32,12 +32,9 @@ func (p *parseVisitor) VisitAllocation(c parser.IAllocationContext) error {
 }
 
 func (p *parseVisitor) VisitAllocBlockConst(c parser.IAllocBlockConstContext) error {
-	total := big.NewRat(0, 1)
 	// allocate
 	portions := []*big.Rat{}
-	has_remaining := false
-	portions_c := c.GetPortions()
-	for _, c := range portions_c {
+	for _, c := range c.GetPortions() {
 		switch c := c.(type) {
 		case *parser.AllocPartConstConstContext:
 			portion, ok := core.ParsePortion(c.PortionConst().GetPor().GetText())
@@ -45,34 +42,17 @@ func (p *parseVisitor) VisitAllocBlockConst(c parser.IAllocBlockConstContext) er
 				return errors.New("invalid format for allocation portion")
 			}
 			rat := big.Rat(*portion)
-			total.Add(&rat, total)
 			portions = append(portions, &rat)
 		case *parser.AllocPartConstRemainingContext:
-			if has_remaining {
-				return errors.New("two uses of `remaining` in the same allocation")
-			}
 			portions = append(portions, nil)
-			has_remaining = true
 		}
 	}
-	if !has_remaining && total.Cmp(big.NewRat(1, 1)) != 0 {
-		return errors.New("sum of portions did not equal 100%")
-	} else if has_remaining && total.Cmp(big.NewRat(1, 1)) != -1 {
-		return errors.New("allocation has a 'remaining' portion even though all portions sum to 100%")
+	allotment, err := core.NewAllotment(portions)
+	if err != nil {
+		return err
 	}
-	allotment := []big.Rat{}
-	for _, p := range portions {
-		if p == nil {
-			remaining := big.NewRat(1, 1)
-			remaining.Sub(remaining, total)
-			allotment = append(allotment, *remaining)
-		} else {
-			allotment = append(allotment, *p)
-		}
-	}
-	p.PushValue(core.Allotment(allotment))
+	p.PushValue(*allotment)
 	p.instructions = append(p.instructions, program.OP_ALLOC)
-	// distribute to destination accounts
 	return p.VisitAllocDestination(c.GetDests())
 }
 
@@ -104,7 +84,7 @@ func (p *parseVisitor) VisitAllocBlockDyn(c parser.IAllocBlockDynContext) error 
 			if has_remaining {
 				return errors.New("two uses of `remaining` in the same allocation")
 			}
-			p.PushValue(core.Number(0)) // use Number(0) as indicator of remaining in the stack
+			p.PushValue(core.Number(0)) // use Number(0) as indicator of 'remaining' portion in the stack
 			has_remaining = true
 		}
 	}
