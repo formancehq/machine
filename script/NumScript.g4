@@ -27,7 +27,7 @@ TY_MONETARY: 'monetary';
 TY_PORTION: 'portion';
 PORTION:
   ( [0-9]+ [ ]? '/' [ ]? [0-9]+
-  | [0-9]+      '.'      [0-9]+ '%'
+  | [0-9]+     ('.'      [0-9]+)? '%'
   );
 NUMBER: [0-9]+;
 PERCENT: '%';

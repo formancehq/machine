@@ -1,6 +1,7 @@
 package core
 
 import (
+	"fmt"
 	"math/big"
 	"regexp"
 )
@@ -8,8 +9,10 @@ import (
 func ParsePortion(input string) (*Portion, bool) {
 	var res *big.Rat
 
-	re := regexp.MustCompile(`^([0-9]+)[.]([0-9]+)[%]$`)
+	re := regexp.MustCompile(`^([0-9]+)(?:[.]([0-9]+))?[%]$`)
 	percent_match := re.FindStringSubmatch(input)
+	fmt.Println(input)
+	fmt.Println(percent_match)
 	if len(percent_match) != 0 {
 		integral := percent_match[1]
 		fractional := percent_match[2]

@@ -19,7 +19,7 @@ func main() {
 		source = @users:001
 		destination = {
 			remaining to @seller
-			12.5% to @platform
+			$commission to @platform
 		}
 	)`)
 
