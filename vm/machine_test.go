@@ -353,6 +353,48 @@ send [GEM 15] (
 	)
 }
 
+func TestDynamicAllocation(t *testing.T) {
+	testJSON(t,
+		`vars {
+	portion $p
+}
+send [GEM 15] (
+	source = @a
+	destination = {
+		80% to @b
+		$p to @c
+		remaining to @d
+	}
+)`,
+		`{
+			"p": "15%"
+		}`,
+		map[string]map[string]uint64{
+			"a": {
+				"GEM": 15,
+			},
+		},
+		CaseResult{
+			Printed: []core.Value{},
+			Postings: []ledger.Posting{
+				{
+					Asset:       "GEM",
+					Amount:      13,
+					Source:      "a",
+					Destination: "b",
+				},
+				{
+					Asset:       "GEM",
+					Amount:      2,
+					Source:      "a",
+					Destination: "c",
+				},
+			},
+			ExitCode: EXIT_OK,
+		},
+	)
+}
+
 func TestSendAll(t *testing.T) {
 	testJSON(t,
 		`send [USD/2 *] (

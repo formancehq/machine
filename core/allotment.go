@@ -27,8 +27,8 @@ func NewAllotment(portions []*big.Rat) (*Allotment, error) {
 	if total.Cmp(big.NewRat(1, 1)) == 1 {
 		return nil, errors.New("sum of portions exceeded 100%")
 	}
-	if remaining_idx != nil && total.Cmp(big.NewRat(1, 1)) == 1 {
-		return nil, errors.New("portions include 'remaining' but sum is 100%")
+	if remaining_idx != nil && total.Cmp(big.NewRat(1, 1)) != -1 {
+		return nil, errors.New("portions include 'remaining' but sum is 100% or more")
 	}
 	if remaining_idx != nil {
 		remaining := big.NewRat(1, 1)

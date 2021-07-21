@@ -39,7 +39,7 @@ func (p *parseVisitor) VisitAllocBlockConst(c parser.IAllocBlockConstContext) er
 		case *parser.AllocPartConstConstContext:
 			portion, ok := core.ParsePortion(c.PortionConst().GetPor().GetText())
 			if !ok {
-				return errors.New("invalid format for allocation portion")
+				return errors.New("allocation portion is invalid")
 			}
 			rat := big.Rat(*portion)
 			portions = append(portions, &rat)
@@ -67,7 +67,7 @@ func (p *parseVisitor) VisitAllocBlockDyn(c parser.IAllocBlockDynContext) error 
 		case *parser.AllocPartDynConstContext:
 			portion, ok := core.ParsePortion(c.PortionConst().GetPor().GetText())
 			if !ok {
-				return errors.New("invalid format for allocation portion")
+				return errors.New("allocation portion is invalid")
 			}
 			rat := big.Rat(*portion)
 			total.Add(&rat, total)
@@ -87,6 +87,9 @@ func (p *parseVisitor) VisitAllocBlockDyn(c parser.IAllocBlockDynContext) error 
 			p.PushValue(core.Number(0)) // use Number(0) as indicator of 'remaining' portion in the stack
 			has_remaining = true
 		}
+	}
+	if !has_remaining {
+		return errors.New("allocation has variable portions but no 'remaining'")
 	}
 	p.PushValue(core.Number(len(portions)))
 	if total.Cmp(big.NewRat(1, 1)) != -1 {
