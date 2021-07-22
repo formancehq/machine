@@ -19,22 +19,14 @@ func main() {
 		source = @users:001
 		destination = {
 			remaining to @seller
-			1/2 to @other
-			1/2 to @yetanother
-			$commission to @platform
-		}
-	)
-	
-	send $value (
-		source = @users:001
-		destination = {
-			remaining to @seller
+			1/2 to @test
 			$commission to @platform
 		}
 	)`)
 
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
+		panic("compile error")
 	}
 
 	fmt.Println(p)

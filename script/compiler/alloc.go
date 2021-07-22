@@ -18,7 +18,7 @@ func (p *parseVisitor) VisitAllocation(c parser.IAllocationContext) error {
 			return err
 		}
 		if ty != core.TYPE_ACCOUNT {
-			return p.elistener.LogicError(c,
+			return p.LogicError(c,
 				errors.New("expected account or allocation as destination"),
 			)
 		}
@@ -80,13 +80,13 @@ func (p *parseVisitor) VisitAllocBlockDyn(c parser.IAllocBlockDynContext) error 
 				return err
 			}
 			if ty != core.TYPE_PORTION {
-				return p.elistener.LogicError(c,
+				return p.LogicError(c,
 					fmt.Errorf("tried to use wrong variable type for portion of allocation: %v", ty),
 				)
 			}
 		case *parser.AllocPartDynRemainingContext:
 			if has_remaining {
-				return p.elistener.LogicError(c,
+				return p.LogicError(c,
 					errors.New("two uses of `remaining` in the same allocation"),
 				)
 			}
@@ -95,15 +95,15 @@ func (p *parseVisitor) VisitAllocBlockDyn(c parser.IAllocBlockDynContext) error 
 		}
 	}
 	if !has_remaining {
-		return p.elistener.LogicError(c,
+		return p.LogicError(c,
 			errors.New("allocation has variable portions but no 'remaining'"),
 		)
 	}
 	p.PushValue(core.Number(len(portions)))
 
 	if total.Cmp(big.NewRat(1, 1)) != -1 {
-		return p.elistener.LogicError(c,
-			errors.New("sum of portions did not equal 100%"),
+		return p.LogicError(c,
+			errors.New("sum of known portions is already equal or is greater than 100%"),
 		)
 	}
 	p.instructions = append(p.instructions, program.OP_MAKE_ALLOTMENT)
@@ -120,7 +120,7 @@ func (p *parseVisitor) VisitAllocDestination(dests []parser.IExpressionContext) 
 			return err
 		}
 		if ty != core.TYPE_ACCOUNT {
-			return p.elistener.LogicError(dest, errors.New("expected account as destination of allocation line"))
+			return p.LogicError(dest, errors.New("expected account as destination of allocation line"))
 		}
 		p.instructions = append(p.instructions, program.OP_SEND)
 	}

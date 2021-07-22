@@ -36,8 +36,6 @@ func test(t *testing.T, c TestCase) {
 		} else if !strings.Contains(err.Error(), c.Expected.Error) {
 			t.Error(fmt.Errorf("error is not the one expected: %v", err))
 			return
-		} else {
-			fmt.Println(err)
 		}
 	} else {
 		if err != nil {

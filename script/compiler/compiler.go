@@ -20,16 +20,6 @@ type parseVisitor struct {
 	needed_balances map[core.Address]map[core.Address]struct{} // for each account, set of monetaries (for their assets)
 }
 
-func (p *parseVisitor) LogicError(c antlr.ParserRuleContext, err error) error {
-	p.elistener.Errors = append(p.elistener.Errors, CompileError{
-		line:   c.GetStart().GetLine(),
-		column: c.GetStart().GetColumn(),
-		len:    len(c.GetText()),
-		msg:    err.Error(),
-	})
-	return err
-}
-
 // Allocates constants if it hasn't already been,
 // and returns its resource address.
 func (p *parseVisitor) AllocateConstant(v core.Value) (core.Address, error) {

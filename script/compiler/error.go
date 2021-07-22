@@ -2,6 +2,7 @@ package compiler
 
 import (
 	"fmt"
+	"math"
 	"strings"
 
 	"github.com/antlr/antlr4/runtime/Go/antlr"
@@ -9,9 +10,9 @@ import (
 )
 
 type CompileError struct {
-	line, column int
-	len          int
-	msg          string
+	startl, startc int
+	endl, endc     int
+	msg            string
 }
 
 type CompileErrorList struct {
@@ -23,14 +24,43 @@ func (c *CompileErrorList) Error() string {
 	source := strings.ReplaceAll(c.source, "\t", " ")
 	lines := strings.Split(strings.ReplaceAll(source, "\r\n", "\n"), "\n")
 
-	txt_bar := aurora.Blue("|")
+	txt_bar_good := aurora.Blue("|")
 
 	s := ""
 	for _, e := range c.errors {
-		s += fmt.Sprintf("%v error:%v:%v\n", aurora.Red("-->"), e.line, e.column)
-		s += fmt.Sprintf("%v\n", txt_bar)
-		s += fmt.Sprintf("%v %v\n", txt_bar, lines[e.line-1])
-		s += fmt.Sprintf("%v %v%v\n", txt_bar, strings.Repeat(" ", e.column), aurora.Red(strings.Repeat("^", e.len)+" "+e.msg))
+		ln_pad := int(math.Log10(float64(e.endl))) + 1 // line number padding
+		// error indicator
+		s += fmt.Sprintf("%v error:%v:%v\n", aurora.Red("-->"), e.startl, e.startc)
+		// initial empty line
+		s += fmt.Sprintf("%v %v\n", strings.Repeat(" ", ln_pad), txt_bar_good)
+		// offending lines
+		for l := e.startl; l <= e.endl; l++ { // "print fail"
+			line := lines[l-1]
+			before := ""
+			after := ""
+			start := 0
+			if l == e.startl {
+				before = line[:e.startc]
+				line = line[e.startc:]
+				start = e.startc
+			}
+			if l == e.endl {
+				after = line[e.endc-start+1:]
+				line = line[:e.endc-start+1]
+			}
+			s += aurora.Red(fmt.Sprintf("%0*d | ", ln_pad, l)).String()
+			s += fmt.Sprintf("%v%v%v\n", aurora.BrightBlack(before), line, aurora.BrightBlack(after))
+		}
+		// message
+		start := strings.IndexFunc(lines[e.endl-1], func(r rune) bool {
+			return r != ' '
+		})
+		span := e.endc - start + 1
+		if e.startl == e.endl {
+			start = e.startc
+			span = e.endc - e.startc
+		}
+		s += fmt.Sprintf("%v %v %v%v %v\n", strings.Repeat(" ", ln_pad), txt_bar_good, strings.Repeat(" ", start), aurora.Red(strings.Repeat("^", span)), e.msg)
 	}
 	return s
 }
@@ -40,24 +70,28 @@ type ErrorListener struct {
 	Errors []CompileError
 }
 
-func (l *ErrorListener) SyntaxError(recognizer antlr.Recognizer, offendingSymbol interface{}, line, column int, msg string, e antlr.RecognitionException) {
+func (l *ErrorListener) SyntaxError(recognizer antlr.Recognizer, offendingSymbol interface{}, startl, startc int, msg string, e antlr.RecognitionException) {
 	length := 1
 	if token, ok := offendingSymbol.(antlr.Token); ok {
 		length = len(token.GetText())
 	}
+	endl := startl
+	endc := startc + length - 1 // -1 so that end caracter is inside the offending token
 	l.Errors = append(l.Errors, CompileError{
-		line:   line,
-		column: column,
-		len:    length,
+		startl: startl,
+		startc: startc,
+		endl:   endl,
+		endc:   endc,
 		msg:    msg,
 	})
 }
 
-func (l *ErrorListener) LogicError(c antlr.ParserRuleContext, err error) error {
-	l.Errors = append(l.Errors, CompileError{
-		line:   c.GetStart().GetLine(),
-		column: c.GetStart().GetColumn(),
-		len:    len(c.GetText()),
+func (p *parseVisitor) LogicError(c antlr.ParserRuleContext, err error) error {
+	p.elistener.Errors = append(p.elistener.Errors, CompileError{
+		startl: c.GetStart().GetLine(),
+		startc: c.GetStart().GetColumn(),
+		endl:   c.GetStop().GetLine(),
+		endc:   c.GetStop().GetColumn(),
 		msg:    err.Error(),
 	})
 	return err
