@@ -20,6 +20,16 @@ type parseVisitor struct {
 	needed_balances map[core.Address]map[core.Address]struct{} // for each account, set of monetaries (for their assets)
 }
 
+func (p *parseVisitor) LogicError(c antlr.ParserRuleContext, err error) error {
+	p.elistener.Errors = append(p.elistener.Errors, CompileError{
+		line:   c.GetStart().GetLine(),
+		column: c.GetStart().GetColumn(),
+		len:    len(c.GetText()),
+		msg:    err.Error(),
+	})
+	return err
+}
+
 // Allocates constants if it hasn't already been,
 // and returns its resource address.
 func (p *parseVisitor) AllocateConstant(v core.Value) (core.Address, error) {
@@ -91,7 +101,7 @@ func (p *parseVisitor) VisitVariable(c parser.IVariableContext) (core.Type, *cor
 		p.instructions = append(p.instructions, bytes...)
 		return info.Ty, &info.Addr, nil
 	} else {
-		return 0, nil, fmt.Errorf("variable not declared : %v", name)
+		return 0, nil, p.LogicError(c, errors.New("variable not declared"))
 	}
 }
 
@@ -103,14 +113,14 @@ func (p *parseVisitor) VisitExpr(c parser.IExpressionContext) (core.Type, *core.
 			return 0, nil, err
 		}
 		if ty != core.TYPE_NUMBER {
-			return 0, nil, errors.New("tried to do arithmetic with wrong type")
+			return 0, nil, p.LogicError(c, errors.New("tried to do arithmetic with wrong type"))
 		}
 		ty, _, err = p.VisitExpr(c.GetRhs())
 		if err != nil {
 			return 0, nil, err
 		}
 		if ty != core.TYPE_NUMBER {
-			return 0, nil, errors.New("tried to do arithmetic with wrong type")
+			return 0, nil, p.LogicError(c, errors.New("tried to do arithmetic with wrong type"))
 		}
 		switch c.GetOp().GetTokenType() {
 		case parser.NumScriptLexerOP_ADD:
@@ -140,20 +150,20 @@ func (p *parseVisitor) VisitLit(c parser.ILiteralContext) (core.Type, *core.Addr
 		account := core.Account(c.GetText()[1:])
 		addr, err := p.PushValue(account)
 		if err != nil {
-			return 0, nil, err
+			return 0, nil, p.LogicError(c, err)
 		}
 		return core.TYPE_ACCOUNT, addr, nil
 	case *parser.LitAssetContext:
 		asset := core.Asset(c.GetText())
 		addr, err := p.PushValue(asset)
 		if err != nil {
-			return 0, nil, err
+			return 0, nil, p.LogicError(c, err)
 		}
 		return core.TYPE_ASSET, addr, nil
 	case *parser.LitNumberContext:
 		n, err := strconv.ParseUint(c.GetText(), 10, 64)
 		if err != nil {
-			return 0, nil, err
+			return 0, nil, p.LogicError(c, err)
 		}
 		number := core.Number(n)
 		p.PushValue(number) // does not fail with numbers
@@ -167,7 +177,7 @@ func (p *parseVisitor) VisitLit(c parser.ILiteralContext) (core.Type, *core.Addr
 		case *parser.AmountSpecificContext:
 			a, err := strconv.ParseUint(c.GetText(), 10, 64)
 			if err != nil {
-				return 0, nil, err
+				return 0, nil, p.LogicError(c, err)
 			}
 			amount = core.NewAmountSpecific(a)
 		}
@@ -177,7 +187,7 @@ func (p *parseVisitor) VisitLit(c parser.ILiteralContext) (core.Type, *core.Addr
 		}
 		addr, err := p.PushValue(monetary)
 		if err != nil {
-			return 0, nil, err
+			return 0, nil, p.LogicError(c, err)
 		}
 		return core.TYPE_MONETARY, addr, nil
 	default:
@@ -197,7 +207,7 @@ func (p *parseVisitor) VisitSource(c parser.ISourceContext) ([]core.Address, boo
 			return nil, false, err
 		}
 		if ty != core.TYPE_ACCOUNT {
-			return nil, false, errors.New("expected account or allocation as destination")
+			return nil, false, p.LogicError(c, errors.New("expected account or allocation as destination"))
 		}
 		bottomless = bottomless || p.isWorld(*addr)
 		needed_accounts = append(needed_accounts, *addr)
@@ -211,7 +221,7 @@ func (p *parseVisitor) VisitSource(c parser.ISourceContext) ([]core.Address, boo
 				return nil, false, err
 			}
 			if ty != core.TYPE_ACCOUNT {
-				return nil, false, errors.New("expected only accounts in sources")
+				return nil, false, p.LogicError(c, errors.New("expected only accounts in sources"))
 			}
 			bottomless = bottomless || p.isWorld(*addr)
 			needed_accounts = append(needed_accounts, *addr)
@@ -228,7 +238,7 @@ func (p *parseVisitor) VisitSend(c *parser.SendContext) error {
 		return err
 	}
 	if ty != core.TYPE_MONETARY {
-		return errors.New("wrong type for monetary value")
+		return p.LogicError(c, errors.New("wrong type for monetary value"))
 	}
 
 	needed_accounts, bottomless, err := p.VisitSource(c.GetSrc())
@@ -236,7 +246,7 @@ func (p *parseVisitor) VisitSend(c *parser.SendContext) error {
 		return err
 	}
 	if p.isMonetaryAll(*mon_addr) && bottomless {
-		return errors.New("cannot take all balance of world")
+		return p.LogicError(c, errors.New("cannot take all balance of world"))
 	}
 
 	// add source accounts to the needed balances
@@ -268,12 +278,12 @@ func (p *parseVisitor) VisitPrint(ctx *parser.PrintContext) error {
 
 func (p *parseVisitor) VisitVars(c *parser.VarListDeclContext) error {
 	if len(c.GetV()) > 32768 {
-		return fmt.Errorf("number of variables exceeded %v", 32768)
+		return p.LogicError(c, fmt.Errorf("number of variables exceeded %v", 32768))
 	}
 	for _, v := range c.GetV() {
 		name := v.GetName().GetText()[1:]
 		if _, ok := p.variables[name]; ok {
-			return fmt.Errorf("duplicate variable: %v", name)
+			return p.LogicError(c, errors.New("duplicate variable"))
 		}
 		var ty core.Type
 		switch v.GetTy().GetText() {
@@ -308,7 +318,6 @@ func (p *parseVisitor) VisitScript(c parser.IScriptContext) error {
 			case *parser.VarListDeclContext:
 				err := p.VisitVars(c)
 				if err != nil {
-					p.elistener.LogicError(vars.GetParser().GetCurrentToken(), err)
 					return err
 				}
 			default:
@@ -320,7 +329,6 @@ func (p *parseVisitor) VisitScript(c parser.IScriptContext) error {
 			case *parser.PrintContext:
 				err := p.VisitPrint(c)
 				if err != nil {
-					p.elistener.LogicError(c.GetParser().GetCurrentToken(), err)
 					return err
 				}
 			case *parser.FailContext:
@@ -328,7 +336,6 @@ func (p *parseVisitor) VisitScript(c parser.IScriptContext) error {
 			case *parser.SendContext:
 				err := p.VisitSend(c)
 				if err != nil {
-					p.elistener.LogicError(c.GetParser().GetCurrentToken(), err)
 					return err
 				}
 			default:
@@ -364,7 +371,11 @@ func Compile(input string) (*program.Program, error) {
 	tree := p.Script()
 
 	if len(elistener.Errors) != 0 {
-		return nil, (*CompileErrorList)(&elistener.Errors)
+		err := CompileErrorList{
+			errors: elistener.Errors,
+			source: input,
+		}
+		return nil, &err
 	}
 
 	visitor := parseVisitor{
@@ -375,10 +386,14 @@ func Compile(input string) (*program.Program, error) {
 		needed_balances: make(map[core.Address]map[core.Address]struct{}),
 	}
 
-	_ = visitor.VisitScript(tree)
+	err := visitor.VisitScript(tree)
 
-	if len(elistener.Errors) != 0 {
-		return nil, (*CompileErrorList)(&elistener.Errors)
+	if err != nil {
+		err := CompileErrorList{
+			errors: elistener.Errors,
+			source: input,
+		}
+		return nil, &err
 	}
 
 	return &program.Program{

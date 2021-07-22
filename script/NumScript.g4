@@ -31,7 +31,6 @@ PORTION:
   );
 NUMBER: [0-9]+;
 PERCENT: '%';
-IDENTIFIER: [a-z0-9_:]+;
 VARIABLE_NAME: '$' [a-z_]+ [a-z0-9_]*;
 ACCOUNT: '@' [a-z_]+ [a-z0-9_:]*;
 ASSET: [A-Z/0-9]+;

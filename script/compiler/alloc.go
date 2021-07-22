@@ -18,7 +18,9 @@ func (p *parseVisitor) VisitAllocation(c parser.IAllocationContext) error {
 			return err
 		}
 		if ty != core.TYPE_ACCOUNT {
-			return errors.New("expected account or allocation as destination")
+			return p.elistener.LogicError(c,
+				errors.New("expected account or allocation as destination"),
+			)
 		}
 		p.instructions = append(p.instructions, program.OP_SEND)
 	case *parser.AllocConstContext:
@@ -48,7 +50,8 @@ func (p *parseVisitor) VisitAllocBlockConst(c parser.IAllocBlockConstContext) er
 	}
 	allotment, err := core.NewAllotment(portions)
 	if err != nil {
-		return err
+		c.GetStart()
+		return p.LogicError(c, err)
 	}
 	p.PushValue(*allotment)
 	p.instructions = append(p.instructions, program.OP_ALLOC)
@@ -77,26 +80,36 @@ func (p *parseVisitor) VisitAllocBlockDyn(c parser.IAllocBlockDynContext) error 
 				return err
 			}
 			if ty != core.TYPE_PORTION {
-				return fmt.Errorf("tried to use wrong variable type for portion of allocation: %v", ty)
+				return p.elistener.LogicError(c,
+					fmt.Errorf("tried to use wrong variable type for portion of allocation: %v", ty),
+				)
 			}
 		case *parser.AllocPartDynRemainingContext:
 			if has_remaining {
-				return errors.New("two uses of `remaining` in the same allocation")
+				return p.elistener.LogicError(c,
+					errors.New("two uses of `remaining` in the same allocation"),
+				)
 			}
 			p.PushValue(core.NewPortionRemaining())
 			has_remaining = true
 		}
 	}
 	if !has_remaining {
-		return errors.New("allocation has variable portions but no 'remaining'")
+		return p.elistener.LogicError(c,
+			errors.New("allocation has variable portions but no 'remaining'"),
+		)
 	}
 	p.PushValue(core.Number(len(portions)))
+
 	if total.Cmp(big.NewRat(1, 1)) != -1 {
-		return errors.New("sum of portions did not equal 100%")
+		return p.elistener.LogicError(c,
+			errors.New("sum of portions did not equal 100%"),
+		)
 	}
 	p.instructions = append(p.instructions, program.OP_MAKE_ALLOTMENT)
 	p.instructions = append(p.instructions, program.OP_ALLOC)
 	// distribute to destination accounts
+
 	return p.VisitAllocDestination(c.GetDests())
 }
 
@@ -107,7 +120,7 @@ func (p *parseVisitor) VisitAllocDestination(dests []parser.IExpressionContext) 
 			return err
 		}
 		if ty != core.TYPE_ACCOUNT {
-			return errors.New("expected account as destination of allocation line")
+			return p.elistener.LogicError(dest, errors.New("expected account as destination of allocation line"))
 		}
 		p.instructions = append(p.instructions, program.OP_SEND)
 	}

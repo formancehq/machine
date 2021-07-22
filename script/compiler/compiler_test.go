@@ -31,9 +31,13 @@ func test(t *testing.T, c TestCase) {
 		if err == nil {
 			t.Error(errors.New("expected error and got none"))
 			return
+		} else if err.Error() == "" {
+			t.Error(errors.New("error was not fed to the error listener"))
 		} else if !strings.Contains(err.Error(), c.Expected.Error) {
 			t.Error(fmt.Errorf("error is not the one expected: %v", err))
 			return
+		} else {
+			fmt.Println(err)
 		}
 	} else {
 		if err != nil {
@@ -273,6 +277,7 @@ func TestPreventTakeAllFromWorld(t *testing.T) {
 }
 
 func TestOverflowingAllocation(t *testing.T) {
+	fmt.Println("case: >100%")
 	test(t, TestCase{
 		Case: `send [GEM 15] (
 			source = @world
@@ -288,6 +293,7 @@ func TestOverflowingAllocation(t *testing.T) {
 		},
 	})
 
+	fmt.Println("case: =100% + remaining")
 	test(t, TestCase{
 		Case: `send [GEM 15] (
 			source = @world
@@ -304,6 +310,7 @@ func TestOverflowingAllocation(t *testing.T) {
 		},
 	})
 
+	fmt.Println("case: >100% + remaining")
 	test(t, TestCase{
 		Case: `send [GEM 15] (
 			source = @world
@@ -320,6 +327,29 @@ func TestOverflowingAllocation(t *testing.T) {
 		},
 	})
 
+	fmt.Println("case: >100% + remaining + variable")
+	test(t, TestCase{
+		Case: `
+		vars {
+			portion $prop
+		}
+		send [GEM 15] (
+			source = @world
+			destination = {
+				1/2 to @a
+				2/3 to @b
+				remaining to @c
+				$prop to @d
+			}
+		)`,
+		Expected: CaseResult{
+			Instructions: nil,
+			Constants:    nil,
+			Error:        "100%",
+		},
+	})
+
+	fmt.Println("case: variable - remaining")
 	test(t, TestCase{
 		Case: `
 		vars {

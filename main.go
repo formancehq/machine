@@ -19,6 +19,16 @@ func main() {
 		source = @users:001
 		destination = {
 			remaining to @seller
+			1/2 to @other
+			1/2 to @yetanother
+			$commission to @platform
+		}
+	)
+	
+	send $value (
+		source = @users:001
+		destination = {
+			remaining to @seller
 			$commission to @platform
 		}
 	)`)
