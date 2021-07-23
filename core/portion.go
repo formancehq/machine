@@ -21,7 +21,7 @@ func NewPortionRemaining() Portion {
 
 func NewPortionSpecific(r big.Rat) (*Portion, error) {
 	if r.Cmp(big.NewRat(0, 1)) != 1 || r.Cmp(big.NewRat(1, 1)) != -1 {
-		return nil, errors.New("portion must be between 0 and 1 exclusive")
+		return nil, errors.New("portion must be between 0% and 100% exclusive")
 	}
 	return &Portion{
 		Remaining: false,

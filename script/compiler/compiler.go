@@ -32,7 +32,7 @@ func (p *parseVisitor) AllocateConstant(v core.Value) (core.Address, error) {
 		return 0, errors.New("number of unique constants exceeded 32768")
 	}
 	p.constants = append(p.constants, v)
-	return core.Address(len(p.constants) - 1), nil
+	return core.NewDataAddress(uint16(len(p.constants) - 1)), nil
 }
 
 func (p *parseVisitor) PushValue(val core.Value) (*core.Address, error) {
@@ -197,7 +197,7 @@ func (p *parseVisitor) VisitSource(c parser.ISourceContext) ([]core.Address, boo
 			return nil, false, err
 		}
 		if ty != core.TYPE_ACCOUNT {
-			return nil, false, LogicError(c, errors.New("expected account or allocation as destination"))
+			return nil, false, LogicError(c, errors.New("wrong type: expected account or allocation as destination"))
 		}
 		bottomless = bottomless || p.isWorld(*addr)
 		needed_accounts = append(needed_accounts, *addr)
@@ -211,7 +211,7 @@ func (p *parseVisitor) VisitSource(c parser.ISourceContext) ([]core.Address, boo
 				return nil, false, err
 			}
 			if ty != core.TYPE_ACCOUNT {
-				return nil, false, LogicError(c, errors.New("expected only accounts in sources"))
+				return nil, false, LogicError(c, errors.New("wrong type: expected only accounts in sources"))
 			}
 			bottomless = bottomless || p.isWorld(*addr)
 			needed_accounts = append(needed_accounts, *addr)

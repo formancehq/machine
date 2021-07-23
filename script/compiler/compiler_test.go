@@ -117,6 +117,53 @@ func TestConstant(t *testing.T) {
 	})
 }
 
+func TestUndeclaredVariable(t *testing.T) {
+	test(t, TestCase{
+		Case: "print $nope",
+		Expected: CaseResult{
+			Instructions: []byte{program.OP_APUSH, 00, 00, program.OP_PRINT},
+			Constants:    []core.Value{},
+			Error:        "declared",
+		},
+	})
+}
+
+func TestInvalidTypeInSendValue(t *testing.T) {
+	test(t, TestCase{
+		Case: `
+		send @a (
+			source = {
+				@a
+				[GEM 2]
+			}
+			destination = @b
+		)`,
+		Expected: CaseResult{
+			Instructions: []byte{program.OP_APUSH, 00, 00, program.OP_PRINT},
+			Constants:    []core.Value{},
+			Error:        "wrong type",
+		},
+	})
+}
+
+func TestInvalidTypeInSource(t *testing.T) {
+	test(t, TestCase{
+		Case: `
+		send [USD/2 99] (
+			source = {
+				@a
+				[GEM 2]
+			}
+			destination = @b
+		)`,
+		Expected: CaseResult{
+			Instructions: []byte{program.OP_APUSH, 00, 00, program.OP_PRINT},
+			Constants:    []core.Value{},
+			Error:        "wrong type",
+		},
+	})
+}
+
 func TestAllocationFractions(t *testing.T) {
 	test(t, TestCase{
 		Case: `send [EUR/2 43] (
@@ -325,6 +372,44 @@ func TestOverflowingAllocation(t *testing.T) {
 		},
 	})
 
+	fmt.Println("case: const remaining + remaining")
+	test(t, TestCase{
+		Case: `send [GEM 15] (
+			source = @world
+			destination = {
+				2/3 to @a
+				remaining to @b
+				remaining to @c
+			}
+		)`,
+		Expected: CaseResult{
+			Instructions: nil,
+			Constants:    nil,
+			Error:        "`remaining` in the same",
+		},
+	})
+
+	fmt.Println("case: dyn remaining + remaining")
+	test(t, TestCase{
+		Case: `
+		vars {
+			portion $p
+		}
+		send [GEM 15] (
+			source = @world
+			destination = {
+				$p to @a
+				remaining to @b
+				remaining to @c
+			}
+		)`,
+		Expected: CaseResult{
+			Instructions: nil,
+			Constants:    nil,
+			Error:        "`remaining` in the same",
+		},
+	})
+
 	fmt.Println("case: >100% + remaining + variable")
 	test(t, TestCase{
 		Case: `
@@ -364,6 +449,55 @@ func TestOverflowingAllocation(t *testing.T) {
 			Instructions: nil,
 			Constants:    nil,
 			Error:        "remaining",
+		},
+	})
+}
+
+func TestAllocationWrongDestination(t *testing.T) {
+	test(t, TestCase{
+		Case: `send [GEM 15] (
+			source = @world
+			destination = [GEM 10]
+		)`,
+		Expected: CaseResult{
+			Instructions: nil,
+			Constants:    nil,
+			Error:        "account",
+		},
+	})
+	test(t, TestCase{
+		Case: `send [GEM 15] (
+			source = @world
+			destination = {
+				2/3 to @a
+				1/3 to [GEM 10]
+			}
+		)`,
+		Expected: CaseResult{
+			Instructions: nil,
+			Constants:    nil,
+			Error:        "account",
+		},
+	})
+}
+
+func TestAllocationInvalidPortion(t *testing.T) {
+	test(t, TestCase{
+		Case: `
+		vars {
+			account $p
+		}
+		send [GEM 15] (
+			source = @world
+			destination = {
+				10% to @a
+				$p to @b
+			}
+		)`,
+		Expected: CaseResult{
+			Instructions: nil,
+			Constants:    nil,
+			Error:        "type",
 		},
 	})
 }

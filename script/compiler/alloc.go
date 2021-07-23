@@ -46,6 +46,7 @@ func (p *parseVisitor) VisitAllocBlockConst(c parser.IAllocBlockConstContext) *C
 			portions = append(portions, *portion)
 		case *parser.AllocPartConstRemainingContext:
 			portions = append(portions, core.NewPortionRemaining())
+			// presence of too many 'remaining' checked on allotment creation
 		}
 	}
 	allotment, err := core.NewAllotment(portions)
