@@ -2,3 +2,4 @@ script/.antlr
 docs/*.example.md
 coverage.out
 machine
+main.go
