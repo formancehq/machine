@@ -86,13 +86,24 @@ func (l *ErrorListener) SyntaxError(recognizer antlr.Recognizer, offendingSymbol
 	})
 }
 
-func (p *parseVisitor) LogicError(c antlr.ParserRuleContext, err error) error {
-	p.elistener.Errors = append(p.elistener.Errors, CompileError{
+func LogicError(c antlr.ParserRuleContext, err error) *CompileError {
+	return &CompileError{
 		startl: c.GetStart().GetLine(),
 		startc: c.GetStart().GetColumn(),
 		endl:   c.GetStop().GetLine(),
 		endc:   c.GetStop().GetColumn(),
 		msg:    err.Error(),
-	})
-	return err
+	}
+}
+
+const INTERNAL_ERROR_MSG = "internal compiler error, please report to the issue tracker"
+
+func InternalError(c antlr.ParserRuleContext) *CompileError {
+	return &CompileError{
+		startl: c.GetStart().GetLine(),
+		startc: c.GetStart().GetColumn(),
+		endl:   c.GetStop().GetLine(),
+		endc:   c.GetStop().GetColumn(),
+		msg:    INTERNAL_ERROR_MSG,
+	}
 }

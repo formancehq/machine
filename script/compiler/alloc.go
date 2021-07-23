@@ -10,7 +10,7 @@ import (
 	"github.com/numary/machine/vm/program"
 )
 
-func (p *parseVisitor) VisitAllocation(c parser.IAllocationContext) error {
+func (p *parseVisitor) VisitAllocation(c parser.IAllocationContext) *CompileError {
 	switch c := c.(type) {
 	case *parser.AllocAccountContext:
 		ty, _, err := p.VisitExpr(c.Expression())
@@ -18,7 +18,7 @@ func (p *parseVisitor) VisitAllocation(c parser.IAllocationContext) error {
 			return err
 		}
 		if ty != core.TYPE_ACCOUNT {
-			return p.LogicError(c,
+			return LogicError(c,
 				errors.New("expected account or allocation as destination"),
 			)
 		}
@@ -33,7 +33,7 @@ func (p *parseVisitor) VisitAllocation(c parser.IAllocationContext) error {
 	return nil
 }
 
-func (p *parseVisitor) VisitAllocBlockConst(c parser.IAllocBlockConstContext) error {
+func (p *parseVisitor) VisitAllocBlockConst(c parser.IAllocBlockConstContext) *CompileError {
 	// allocate
 	portions := []core.Portion{}
 	for _, c := range c.GetPortions() {
@@ -41,7 +41,7 @@ func (p *parseVisitor) VisitAllocBlockConst(c parser.IAllocBlockConstContext) er
 		case *parser.AllocPartConstConstContext:
 			portion, err := core.ParsePortionSpecific(c.PortionConst().GetPor().GetText())
 			if err != nil {
-				return err
+				return LogicError(c, err)
 			}
 			portions = append(portions, *portion)
 		case *parser.AllocPartConstRemainingContext:
@@ -51,14 +51,14 @@ func (p *parseVisitor) VisitAllocBlockConst(c parser.IAllocBlockConstContext) er
 	allotment, err := core.NewAllotment(portions)
 	if err != nil {
 		c.GetStart()
-		return p.LogicError(c, err)
+		return LogicError(c, err)
 	}
 	p.PushValue(*allotment)
 	p.instructions = append(p.instructions, program.OP_ALLOC)
 	return p.VisitAllocDestination(c.GetDests())
 }
 
-func (p *parseVisitor) VisitAllocBlockDyn(c parser.IAllocBlockDynContext) error {
+func (p *parseVisitor) VisitAllocBlockDyn(c parser.IAllocBlockDynContext) *CompileError {
 	total := big.NewRat(0, 1)
 	// allocate
 	portions := c.GetPortions()
@@ -69,7 +69,7 @@ func (p *parseVisitor) VisitAllocBlockDyn(c parser.IAllocBlockDynContext) error 
 		case *parser.AllocPartDynConstContext:
 			portion, err := core.ParsePortionSpecific(c.PortionConst().GetPor().GetText())
 			if err != nil {
-				return err
+				return LogicError(c, err)
 			}
 			rat := big.Rat(*portion.Specific)
 			total.Add(&rat, total)
@@ -80,13 +80,13 @@ func (p *parseVisitor) VisitAllocBlockDyn(c parser.IAllocBlockDynContext) error 
 				return err
 			}
 			if ty != core.TYPE_PORTION {
-				return p.LogicError(c,
+				return LogicError(c,
 					fmt.Errorf("tried to use wrong variable type for portion of allocation: %v", ty),
 				)
 			}
 		case *parser.AllocPartDynRemainingContext:
 			if has_remaining {
-				return p.LogicError(c,
+				return LogicError(c,
 					errors.New("two uses of `remaining` in the same allocation"),
 				)
 			}
@@ -95,14 +95,14 @@ func (p *parseVisitor) VisitAllocBlockDyn(c parser.IAllocBlockDynContext) error 
 		}
 	}
 	if !has_remaining {
-		return p.LogicError(c,
+		return LogicError(c,
 			errors.New("allocation has variable portions but no 'remaining'"),
 		)
 	}
 	p.PushValue(core.Number(len(portions)))
 
 	if total.Cmp(big.NewRat(1, 1)) != -1 {
-		return p.LogicError(c,
+		return LogicError(c,
 			errors.New("sum of known portions is already equal or is greater than 100%"),
 		)
 	}
@@ -113,14 +113,14 @@ func (p *parseVisitor) VisitAllocBlockDyn(c parser.IAllocBlockDynContext) error 
 	return p.VisitAllocDestination(c.GetDests())
 }
 
-func (p *parseVisitor) VisitAllocDestination(dests []parser.IExpressionContext) error {
+func (p *parseVisitor) VisitAllocDestination(dests []parser.IExpressionContext) *CompileError {
 	for _, dest := range dests {
 		ty, _, err := p.VisitExpr(dest)
 		if err != nil {
 			return err
 		}
 		if ty != core.TYPE_ACCOUNT {
-			return p.LogicError(dest, errors.New("expected account as destination of allocation line"))
+			return LogicError(dest, errors.New("expected account as destination of allocation line"))
 		}
 		p.instructions = append(p.instructions, program.OP_SEND)
 	}

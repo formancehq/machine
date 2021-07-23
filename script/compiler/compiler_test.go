@@ -369,9 +369,14 @@ func TestOverflowingAllocation(t *testing.T) {
 }
 
 // func TestTooManyConstants(t *testing.T) {
-// 	script := "print 1"
-// 	for i := 0; i < 20000; i++ {
-// 		script += fmt.Sprintf("\nsend(monetary=[A%d 0], source=a%d, destination=b%d)", i, i, i)
+// 	script := ""
+// 	for i := 0; i < 11000; i++ {
+// 		script += fmt.Sprintf(`
+// 		send [A%d 0] (
+// 			source=@a%d
+// 			destination=@b%d
+// 		)`, i, i, i)
+// 		script += "\n"
 // 	}
 // 	test(t, TestCase{
 // 		Case: script,
