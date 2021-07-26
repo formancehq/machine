@@ -117,11 +117,30 @@ func TestConstant(t *testing.T) {
 	})
 }
 
+func TestComments(t *testing.T) {
+	test(t, TestCase{
+		Case: `
+		/* This is a multi-line comment, it spans multiple lines
+		and /* doesn't choke on nested comments */ ! */
+		vars {
+			account $a
+		}
+		// this is a single-line comment
+		print $a
+		`,
+		Expected: CaseResult{
+			Instructions: []byte{program.OP_APUSH, 00, 128, program.OP_PRINT},
+			Constants:    []core.Value{},
+			Error:        "",
+		},
+	})
+}
+
 func TestUndeclaredVariable(t *testing.T) {
 	test(t, TestCase{
 		Case: "print $nope",
 		Expected: CaseResult{
-			Instructions: []byte{program.OP_APUSH, 00, 00, program.OP_PRINT},
+			Instructions: []byte{},
 			Constants:    []core.Value{},
 			Error:        "declared",
 		},
@@ -139,7 +158,7 @@ func TestInvalidTypeInSendValue(t *testing.T) {
 			destination = @b
 		)`,
 		Expected: CaseResult{
-			Instructions: []byte{program.OP_APUSH, 00, 00, program.OP_PRINT},
+			Instructions: []byte{},
 			Constants:    []core.Value{},
 			Error:        "wrong type",
 		},
@@ -157,7 +176,7 @@ func TestInvalidTypeInSource(t *testing.T) {
 			destination = @b
 		)`,
 		Expected: CaseResult{
-			Instructions: []byte{program.OP_APUSH, 00, 00, program.OP_PRINT},
+			Instructions: []byte{},
 			Constants:    []core.Value{},
 			Error:        "wrong type",
 		},

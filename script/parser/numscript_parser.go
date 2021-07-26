@@ -16,7 +16,7 @@ var _ = reflect.Copy
 var _ = strconv.Itoa
 
 var parserATN = []uint16{
-	3, 24715, 42794, 33075, 47597, 16764, 15335, 30598, 22884, 3, 35, 221,
+	3, 24715, 42794, 33075, 47597, 16764, 15335, 30598, 22884, 3, 36, 221,
 	4, 2, 9, 2, 4, 3, 9, 3, 4, 4, 9, 4, 4, 5, 9, 5, 4, 6, 9, 6, 4, 7, 9, 7,
 	4, 8, 9, 8, 4, 9, 9, 9, 4, 10, 9, 10, 4, 11, 9, 11, 4, 12, 9, 12, 4, 13,
 	9, 13, 4, 14, 9, 14, 4, 15, 9, 15, 4, 16, 9, 16, 4, 17, 9, 17, 4, 18, 9,
@@ -41,62 +41,62 @@ var parserATN = []uint16{
 	6, 21, 203, 10, 21, 13, 21, 14, 21, 204, 3, 21, 7, 21, 208, 10, 21, 12,
 	21, 14, 21, 211, 11, 21, 3, 21, 7, 21, 214, 10, 21, 12, 21, 14, 21, 217,
 	11, 21, 3, 21, 3, 21, 3, 21, 2, 3, 10, 22, 2, 4, 6, 8, 10, 12, 14, 16,
-	18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 2, 4, 3, 2, 14, 15, 3,
-	2, 24, 28, 2, 227, 2, 44, 3, 2, 2, 2, 4, 46, 3, 2, 2, 2, 6, 55, 3, 2, 2,
+	18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 2, 4, 3, 2, 16, 17, 3,
+	2, 26, 30, 2, 227, 2, 44, 3, 2, 2, 2, 4, 46, 3, 2, 2, 2, 6, 55, 3, 2, 2,
 	2, 8, 57, 3, 2, 2, 2, 10, 62, 3, 2, 2, 2, 12, 72, 3, 2, 2, 2, 14, 74, 3,
 	2, 2, 2, 16, 76, 3, 2, 2, 2, 18, 80, 3, 2, 2, 2, 20, 82, 3, 2, 2, 2, 22,
 	98, 3, 2, 2, 2, 24, 100, 3, 2, 2, 2, 26, 116, 3, 2, 2, 2, 28, 118, 3, 2,
 	2, 2, 30, 131, 3, 2, 2, 2, 32, 161, 3, 2, 2, 2, 34, 163, 3, 2, 2, 2, 36,
-	165, 3, 2, 2, 2, 38, 168, 3, 2, 2, 2, 40, 194, 3, 2, 2, 2, 42, 45, 7, 30,
-	2, 2, 43, 45, 7, 22, 2, 2, 44, 42, 3, 2, 2, 2, 44, 43, 3, 2, 2, 2, 45,
-	3, 3, 2, 2, 2, 46, 47, 7, 18, 2, 2, 47, 48, 7, 35, 2, 2, 48, 49, 5, 2,
-	2, 2, 49, 50, 7, 19, 2, 2, 50, 5, 3, 2, 2, 2, 51, 56, 7, 34, 2, 2, 52,
-	56, 7, 35, 2, 2, 53, 56, 7, 30, 2, 2, 54, 56, 5, 4, 3, 2, 55, 51, 3, 2,
+	165, 3, 2, 2, 2, 38, 168, 3, 2, 2, 2, 40, 194, 3, 2, 2, 2, 42, 45, 7, 32,
+	2, 2, 43, 45, 7, 24, 2, 2, 44, 42, 3, 2, 2, 2, 44, 43, 3, 2, 2, 2, 45,
+	3, 3, 2, 2, 2, 46, 47, 7, 20, 2, 2, 47, 48, 7, 36, 2, 2, 48, 49, 5, 2,
+	2, 2, 49, 50, 7, 21, 2, 2, 50, 5, 3, 2, 2, 2, 51, 56, 7, 35, 2, 2, 52,
+	56, 7, 36, 2, 2, 53, 56, 7, 32, 2, 2, 54, 56, 5, 4, 3, 2, 55, 51, 3, 2,
 	2, 2, 55, 52, 3, 2, 2, 2, 55, 53, 3, 2, 2, 2, 55, 54, 3, 2, 2, 2, 56, 7,
-	3, 2, 2, 2, 57, 58, 7, 33, 2, 2, 58, 9, 3, 2, 2, 2, 59, 60, 8, 6, 1, 2,
+	3, 2, 2, 2, 57, 58, 7, 34, 2, 2, 58, 9, 3, 2, 2, 2, 59, 60, 8, 6, 1, 2,
 	60, 63, 5, 6, 4, 2, 61, 63, 5, 8, 5, 2, 62, 59, 3, 2, 2, 2, 62, 61, 3,
 	2, 2, 2, 63, 69, 3, 2, 2, 2, 64, 65, 12, 5, 2, 2, 65, 66, 9, 2, 2, 2, 66,
 	68, 5, 10, 6, 6, 67, 64, 3, 2, 2, 2, 68, 71, 3, 2, 2, 2, 69, 67, 3, 2,
 	2, 2, 69, 70, 3, 2, 2, 2, 70, 11, 3, 2, 2, 2, 71, 69, 3, 2, 2, 2, 72, 73,
-	7, 29, 2, 2, 73, 13, 3, 2, 2, 2, 74, 75, 5, 8, 5, 2, 75, 15, 3, 2, 2, 2,
+	7, 31, 2, 2, 73, 13, 3, 2, 2, 2, 74, 75, 5, 8, 5, 2, 75, 15, 3, 2, 2, 2,
 	76, 77, 7, 3, 2, 2, 77, 17, 3, 2, 2, 2, 78, 81, 5, 12, 7, 2, 79, 81, 5,
 	16, 9, 2, 80, 78, 3, 2, 2, 2, 80, 79, 3, 2, 2, 2, 81, 19, 3, 2, 2, 2, 82,
-	83, 7, 20, 2, 2, 83, 89, 7, 5, 2, 2, 84, 85, 5, 18, 10, 2, 85, 86, 7, 4,
+	83, 7, 22, 2, 2, 83, 89, 7, 5, 2, 2, 84, 85, 5, 18, 10, 2, 85, 86, 7, 4,
 	2, 2, 86, 87, 5, 10, 6, 2, 87, 88, 7, 5, 2, 2, 88, 90, 3, 2, 2, 2, 89,
 	84, 3, 2, 2, 2, 90, 91, 3, 2, 2, 2, 91, 89, 3, 2, 2, 2, 91, 92, 3, 2, 2,
-	2, 92, 93, 3, 2, 2, 2, 93, 94, 7, 21, 2, 2, 94, 21, 3, 2, 2, 2, 95, 99,
+	2, 92, 93, 3, 2, 2, 2, 93, 94, 7, 23, 2, 2, 94, 21, 3, 2, 2, 2, 95, 99,
 	5, 12, 7, 2, 96, 99, 5, 14, 8, 2, 97, 99, 5, 16, 9, 2, 98, 95, 3, 2, 2,
 	2, 98, 96, 3, 2, 2, 2, 98, 97, 3, 2, 2, 2, 99, 23, 3, 2, 2, 2, 100, 101,
-	7, 20, 2, 2, 101, 107, 7, 5, 2, 2, 102, 103, 5, 22, 12, 2, 103, 104, 7,
+	7, 22, 2, 2, 101, 107, 7, 5, 2, 2, 102, 103, 5, 22, 12, 2, 103, 104, 7,
 	4, 2, 2, 104, 105, 5, 10, 6, 2, 105, 106, 7, 5, 2, 2, 106, 108, 3, 2, 2,
 	2, 107, 102, 3, 2, 2, 2, 108, 109, 3, 2, 2, 2, 109, 107, 3, 2, 2, 2, 109,
-	110, 3, 2, 2, 2, 110, 111, 3, 2, 2, 2, 111, 112, 7, 21, 2, 2, 112, 25,
+	110, 3, 2, 2, 2, 110, 111, 3, 2, 2, 2, 111, 112, 7, 23, 2, 2, 112, 25,
 	3, 2, 2, 2, 113, 117, 5, 20, 11, 2, 114, 117, 5, 24, 13, 2, 115, 117, 5,
 	10, 6, 2, 116, 113, 3, 2, 2, 2, 116, 114, 3, 2, 2, 2, 116, 115, 3, 2, 2,
-	2, 117, 27, 3, 2, 2, 2, 118, 119, 7, 20, 2, 2, 119, 123, 7, 5, 2, 2, 120,
+	2, 117, 27, 3, 2, 2, 2, 118, 119, 7, 22, 2, 2, 119, 123, 7, 5, 2, 2, 120,
 	121, 5, 10, 6, 2, 121, 122, 7, 5, 2, 2, 122, 124, 3, 2, 2, 2, 123, 120,
 	3, 2, 2, 2, 124, 125, 3, 2, 2, 2, 125, 123, 3, 2, 2, 2, 125, 126, 3, 2,
-	2, 2, 126, 127, 3, 2, 2, 2, 127, 128, 7, 21, 2, 2, 128, 29, 3, 2, 2, 2,
+	2, 2, 126, 127, 3, 2, 2, 2, 127, 128, 7, 23, 2, 2, 128, 29, 3, 2, 2, 2,
 	129, 132, 5, 28, 15, 2, 130, 132, 5, 10, 6, 2, 131, 129, 3, 2, 2, 2, 131,
-	130, 3, 2, 2, 2, 132, 31, 3, 2, 2, 2, 133, 134, 7, 8, 2, 2, 134, 162, 5,
-	10, 6, 2, 135, 162, 7, 9, 2, 2, 136, 137, 7, 10, 2, 2, 137, 138, 5, 10,
-	6, 2, 138, 139, 7, 16, 2, 2, 139, 156, 7, 5, 2, 2, 140, 141, 7, 11, 2,
-	2, 141, 142, 7, 23, 2, 2, 142, 143, 5, 30, 16, 2, 143, 144, 7, 5, 2, 2,
-	144, 145, 7, 12, 2, 2, 145, 146, 7, 23, 2, 2, 146, 147, 5, 26, 14, 2, 147,
-	157, 3, 2, 2, 2, 148, 149, 7, 12, 2, 2, 149, 150, 7, 23, 2, 2, 150, 151,
-	5, 26, 14, 2, 151, 152, 7, 5, 2, 2, 152, 153, 7, 11, 2, 2, 153, 154, 7,
-	23, 2, 2, 154, 155, 5, 30, 16, 2, 155, 157, 3, 2, 2, 2, 156, 140, 3, 2,
-	2, 2, 156, 148, 3, 2, 2, 2, 157, 158, 3, 2, 2, 2, 158, 159, 7, 5, 2, 2,
-	159, 160, 7, 17, 2, 2, 160, 162, 3, 2, 2, 2, 161, 133, 3, 2, 2, 2, 161,
+	130, 3, 2, 2, 2, 132, 31, 3, 2, 2, 2, 133, 134, 7, 10, 2, 2, 134, 162,
+	5, 10, 6, 2, 135, 162, 7, 11, 2, 2, 136, 137, 7, 12, 2, 2, 137, 138, 5,
+	10, 6, 2, 138, 139, 7, 18, 2, 2, 139, 156, 7, 5, 2, 2, 140, 141, 7, 13,
+	2, 2, 141, 142, 7, 25, 2, 2, 142, 143, 5, 30, 16, 2, 143, 144, 7, 5, 2,
+	2, 144, 145, 7, 14, 2, 2, 145, 146, 7, 25, 2, 2, 146, 147, 5, 26, 14, 2,
+	147, 157, 3, 2, 2, 2, 148, 149, 7, 14, 2, 2, 149, 150, 7, 25, 2, 2, 150,
+	151, 5, 26, 14, 2, 151, 152, 7, 5, 2, 2, 152, 153, 7, 13, 2, 2, 153, 154,
+	7, 25, 2, 2, 154, 155, 5, 30, 16, 2, 155, 157, 3, 2, 2, 2, 156, 140, 3,
+	2, 2, 2, 156, 148, 3, 2, 2, 2, 157, 158, 3, 2, 2, 2, 158, 159, 7, 5, 2,
+	2, 159, 160, 7, 19, 2, 2, 160, 162, 3, 2, 2, 2, 161, 133, 3, 2, 2, 2, 161,
 	135, 3, 2, 2, 2, 161, 136, 3, 2, 2, 2, 162, 33, 3, 2, 2, 2, 163, 164, 9,
 	3, 2, 2, 164, 35, 3, 2, 2, 2, 165, 166, 5, 34, 18, 2, 166, 167, 5, 8, 5,
-	2, 167, 37, 3, 2, 2, 2, 168, 169, 7, 7, 2, 2, 169, 171, 7, 20, 2, 2, 170,
+	2, 167, 37, 3, 2, 2, 2, 168, 169, 7, 9, 2, 2, 169, 171, 7, 22, 2, 2, 170,
 	172, 7, 5, 2, 2, 171, 170, 3, 2, 2, 2, 172, 173, 3, 2, 2, 2, 173, 171,
 	3, 2, 2, 2, 173, 174, 3, 2, 2, 2, 174, 181, 3, 2, 2, 2, 175, 177, 5, 36,
 	19, 2, 176, 178, 7, 5, 2, 2, 177, 176, 3, 2, 2, 2, 178, 179, 3, 2, 2, 2,
 	179, 177, 3, 2, 2, 2, 179, 180, 3, 2, 2, 2, 180, 182, 3, 2, 2, 2, 181,
 	175, 3, 2, 2, 2, 182, 183, 3, 2, 2, 2, 183, 181, 3, 2, 2, 2, 183, 184,
-	3, 2, 2, 2, 184, 185, 3, 2, 2, 2, 185, 187, 7, 21, 2, 2, 186, 188, 7, 5,
+	3, 2, 2, 2, 184, 185, 3, 2, 2, 2, 185, 187, 7, 23, 2, 2, 186, 188, 7, 5,
 	2, 2, 187, 186, 3, 2, 2, 2, 188, 189, 3, 2, 2, 2, 189, 187, 3, 2, 2, 2,
 	189, 190, 3, 2, 2, 2, 190, 39, 3, 2, 2, 2, 191, 193, 7, 5, 2, 2, 192, 191,
 	3, 2, 2, 2, 193, 196, 3, 2, 2, 2, 194, 192, 3, 2, 2, 2, 194, 195, 3, 2,
@@ -113,17 +113,17 @@ var parserATN = []uint16{
 	183, 189, 194, 198, 204, 209, 215,
 }
 var literalNames = []string{
-	"", "'remaining'", "'to'", "", "", "'vars'", "'print'", "'fail'", "'send'",
-	"'source'", "'destination'", "'allocate'", "'+'", "'-'", "'('", "')'",
-	"'['", "']'", "'{'", "'}'", "'*'", "'='", "'account'", "'asset'", "'number'",
-	"'monetary'", "'portion'", "", "", "'%'",
+	"", "'remaining'", "'to'", "", "", "", "", "'vars'", "'print'", "'fail'",
+	"'send'", "'source'", "'destination'", "'allocate'", "'+'", "'-'", "'('",
+	"')'", "'['", "']'", "'{'", "'}'", "'*'", "'='", "'account'", "'asset'",
+	"'number'", "'monetary'", "'portion'", "", "", "'%'",
 }
 var symbolicNames = []string{
-	"", "", "", "NEWLINE", "WHITESPACE", "VARS", "PRINT", "FAIL", "SEND", "SOURCE",
-	"DESTINATION", "ALLOCATE", "OP_ADD", "OP_SUB", "LPAREN", "RPAREN", "LBRACK",
-	"RBRACK", "LBRACE", "RBRACE", "ALL", "EQ", "TY_ACCOUNT", "TY_ASSET", "TY_NUMBER",
-	"TY_MONETARY", "TY_PORTION", "PORTION", "NUMBER", "PERCENT", "IDENTIFIER",
-	"VARIABLE_NAME", "ACCOUNT", "ASSET",
+	"", "", "", "NEWLINE", "WHITESPACE", "MULTILINE_COMMENT", "LINE_COMMENT",
+	"VARS", "PRINT", "FAIL", "SEND", "SOURCE", "DESTINATION", "ALLOCATE", "OP_ADD",
+	"OP_SUB", "LPAREN", "RPAREN", "LBRACK", "RBRACK", "LBRACE", "RBRACE", "ALL",
+	"EQ", "TY_ACCOUNT", "TY_ASSET", "TY_NUMBER", "TY_MONETARY", "TY_PORTION",
+	"PORTION", "NUMBER", "PERCENT", "VARIABLE_NAME", "ACCOUNT", "ASSET",
 }
 
 var ruleNames = []string{
@@ -164,40 +164,41 @@ func NewNumScriptParser(input antlr.TokenStream) *NumScriptParser {
 
 // NumScriptParser tokens.
 const (
-	NumScriptParserEOF           = antlr.TokenEOF
-	NumScriptParserT__0          = 1
-	NumScriptParserT__1          = 2
-	NumScriptParserNEWLINE       = 3
-	NumScriptParserWHITESPACE    = 4
-	NumScriptParserVARS          = 5
-	NumScriptParserPRINT         = 6
-	NumScriptParserFAIL          = 7
-	NumScriptParserSEND          = 8
-	NumScriptParserSOURCE        = 9
-	NumScriptParserDESTINATION   = 10
-	NumScriptParserALLOCATE      = 11
-	NumScriptParserOP_ADD        = 12
-	NumScriptParserOP_SUB        = 13
-	NumScriptParserLPAREN        = 14
-	NumScriptParserRPAREN        = 15
-	NumScriptParserLBRACK        = 16
-	NumScriptParserRBRACK        = 17
-	NumScriptParserLBRACE        = 18
-	NumScriptParserRBRACE        = 19
-	NumScriptParserALL           = 20
-	NumScriptParserEQ            = 21
-	NumScriptParserTY_ACCOUNT    = 22
-	NumScriptParserTY_ASSET      = 23
-	NumScriptParserTY_NUMBER     = 24
-	NumScriptParserTY_MONETARY   = 25
-	NumScriptParserTY_PORTION    = 26
-	NumScriptParserPORTION       = 27
-	NumScriptParserNUMBER        = 28
-	NumScriptParserPERCENT       = 29
-	NumScriptParserIDENTIFIER    = 30
-	NumScriptParserVARIABLE_NAME = 31
-	NumScriptParserACCOUNT       = 32
-	NumScriptParserASSET         = 33
+	NumScriptParserEOF               = antlr.TokenEOF
+	NumScriptParserT__0              = 1
+	NumScriptParserT__1              = 2
+	NumScriptParserNEWLINE           = 3
+	NumScriptParserWHITESPACE        = 4
+	NumScriptParserMULTILINE_COMMENT = 5
+	NumScriptParserLINE_COMMENT      = 6
+	NumScriptParserVARS              = 7
+	NumScriptParserPRINT             = 8
+	NumScriptParserFAIL              = 9
+	NumScriptParserSEND              = 10
+	NumScriptParserSOURCE            = 11
+	NumScriptParserDESTINATION       = 12
+	NumScriptParserALLOCATE          = 13
+	NumScriptParserOP_ADD            = 14
+	NumScriptParserOP_SUB            = 15
+	NumScriptParserLPAREN            = 16
+	NumScriptParserRPAREN            = 17
+	NumScriptParserLBRACK            = 18
+	NumScriptParserRBRACK            = 19
+	NumScriptParserLBRACE            = 20
+	NumScriptParserRBRACE            = 21
+	NumScriptParserALL               = 22
+	NumScriptParserEQ                = 23
+	NumScriptParserTY_ACCOUNT        = 24
+	NumScriptParserTY_ASSET          = 25
+	NumScriptParserTY_NUMBER         = 26
+	NumScriptParserTY_MONETARY       = 27
+	NumScriptParserTY_PORTION        = 28
+	NumScriptParserPORTION           = 29
+	NumScriptParserNUMBER            = 30
+	NumScriptParserPERCENT           = 31
+	NumScriptParserVARIABLE_NAME     = 32
+	NumScriptParserACCOUNT           = 33
+	NumScriptParserASSET             = 34
 )
 
 // NumScriptParser rules.
@@ -2368,7 +2369,7 @@ func (p *NumScriptParser) AllocBlockDyn() (localctx IAllocBlockDynContext) {
 	p.GetErrorHandler().Sync(p)
 	_la = p.GetTokenStream().LA(1)
 
-	for ok := true; ok; ok = (((_la)&-(0x1f+1)) == 0 && ((1<<uint(_la))&((1<<NumScriptParserT__0)|(1<<NumScriptParserPORTION)|(1<<NumScriptParserVARIABLE_NAME))) != 0) {
+	for ok := true; ok; ok = (((_la-1)&-(0x1f+1)) == 0 && ((1<<uint((_la-1)))&((1<<(NumScriptParserT__0-1))|(1<<(NumScriptParserPORTION-1))|(1<<(NumScriptParserVARIABLE_NAME-1)))) != 0) {
 		{
 			p.SetState(100)
 
@@ -2781,7 +2782,7 @@ func (p *NumScriptParser) SourceBlock() (localctx ISourceBlockContext) {
 	p.GetErrorHandler().Sync(p)
 	_la = p.GetTokenStream().LA(1)
 
-	for ok := true; ok; ok = (((_la-16)&-(0x1f+1)) == 0 && ((1<<uint((_la-16)))&((1<<(NumScriptParserLBRACK-16))|(1<<(NumScriptParserNUMBER-16))|(1<<(NumScriptParserVARIABLE_NAME-16))|(1<<(NumScriptParserACCOUNT-16))|(1<<(NumScriptParserASSET-16)))) != 0) {
+	for ok := true; ok; ok = (((_la-18)&-(0x1f+1)) == 0 && ((1<<uint((_la-18)))&((1<<(NumScriptParserLBRACK-18))|(1<<(NumScriptParserNUMBER-18))|(1<<(NumScriptParserVARIABLE_NAME-18))|(1<<(NumScriptParserACCOUNT-18))|(1<<(NumScriptParserASSET-18)))) != 0) {
 		{
 			p.SetState(118)
 

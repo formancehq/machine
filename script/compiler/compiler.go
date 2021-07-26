@@ -338,11 +338,6 @@ func (p *parseVisitor) VisitScript(c parser.IScriptContext) *CompileError {
 	return nil
 }
 
-type arg struct {
-	name string
-	ty   core.Type
-}
-
 func Compile(input string) (*program.Program, error) {
 	elistener := &ErrorListener{}
 
