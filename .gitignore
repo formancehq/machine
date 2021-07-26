@@ -1,3 +1,4 @@
+.vscode
 script/.antlr
 docs/*.example.md
 coverage.out
