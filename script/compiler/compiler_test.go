@@ -31,6 +31,8 @@ func test(t *testing.T, c TestCase) {
 		if err == nil {
 			t.Error(errors.New("expected error and got none"))
 			return
+		} else if err.Error() == "" {
+			t.Error(errors.New("error was not fed to the error listener"))
 		} else if !strings.Contains(err.Error(), c.Expected.Error) {
 			t.Error(fmt.Errorf("error is not the one expected: %v", err))
 			return
@@ -111,6 +113,53 @@ func TestConstant(t *testing.T) {
 			Instructions: []byte{program.OP_APUSH, 00, 00, program.OP_PRINT},
 			Constants:    []core.Value{user},
 			Error:        "",
+		},
+	})
+}
+
+func TestUndeclaredVariable(t *testing.T) {
+	test(t, TestCase{
+		Case: "print $nope",
+		Expected: CaseResult{
+			Instructions: []byte{program.OP_APUSH, 00, 00, program.OP_PRINT},
+			Constants:    []core.Value{},
+			Error:        "declared",
+		},
+	})
+}
+
+func TestInvalidTypeInSendValue(t *testing.T) {
+	test(t, TestCase{
+		Case: `
+		send @a (
+			source = {
+				@a
+				[GEM 2]
+			}
+			destination = @b
+		)`,
+		Expected: CaseResult{
+			Instructions: []byte{program.OP_APUSH, 00, 00, program.OP_PRINT},
+			Constants:    []core.Value{},
+			Error:        "wrong type",
+		},
+	})
+}
+
+func TestInvalidTypeInSource(t *testing.T) {
+	test(t, TestCase{
+		Case: `
+		send [USD/2 99] (
+			source = {
+				@a
+				[GEM 2]
+			}
+			destination = @b
+		)`,
+		Expected: CaseResult{
+			Instructions: []byte{program.OP_APUSH, 00, 00, program.OP_PRINT},
+			Constants:    []core.Value{},
+			Error:        "wrong type",
 		},
 	})
 }
@@ -273,6 +322,7 @@ func TestPreventTakeAllFromWorld(t *testing.T) {
 }
 
 func TestOverflowingAllocation(t *testing.T) {
+	fmt.Println("case: >100%")
 	test(t, TestCase{
 		Case: `send [GEM 15] (
 			source = @world
@@ -288,6 +338,7 @@ func TestOverflowingAllocation(t *testing.T) {
 		},
 	})
 
+	fmt.Println("case: =100% + remaining")
 	test(t, TestCase{
 		Case: `send [GEM 15] (
 			source = @world
@@ -304,6 +355,7 @@ func TestOverflowingAllocation(t *testing.T) {
 		},
 	})
 
+	fmt.Println("case: >100% + remaining")
 	test(t, TestCase{
 		Case: `send [GEM 15] (
 			source = @world
@@ -320,6 +372,67 @@ func TestOverflowingAllocation(t *testing.T) {
 		},
 	})
 
+	fmt.Println("case: const remaining + remaining")
+	test(t, TestCase{
+		Case: `send [GEM 15] (
+			source = @world
+			destination = {
+				2/3 to @a
+				remaining to @b
+				remaining to @c
+			}
+		)`,
+		Expected: CaseResult{
+			Instructions: nil,
+			Constants:    nil,
+			Error:        "`remaining` in the same",
+		},
+	})
+
+	fmt.Println("case: dyn remaining + remaining")
+	test(t, TestCase{
+		Case: `
+		vars {
+			portion $p
+		}
+		send [GEM 15] (
+			source = @world
+			destination = {
+				$p to @a
+				remaining to @b
+				remaining to @c
+			}
+		)`,
+		Expected: CaseResult{
+			Instructions: nil,
+			Constants:    nil,
+			Error:        "`remaining` in the same",
+		},
+	})
+
+	fmt.Println("case: >100% + remaining + variable")
+	test(t, TestCase{
+		Case: `
+		vars {
+			portion $prop
+		}
+		send [GEM 15] (
+			source = @world
+			destination = {
+				1/2 to @a
+				2/3 to @b
+				remaining to @c
+				$prop to @d
+			}
+		)`,
+		Expected: CaseResult{
+			Instructions: nil,
+			Constants:    nil,
+			Error:        "100%",
+		},
+	})
+
+	fmt.Println("case: variable - remaining")
 	test(t, TestCase{
 		Case: `
 		vars {
@@ -340,10 +453,64 @@ func TestOverflowingAllocation(t *testing.T) {
 	})
 }
 
+func TestAllocationWrongDestination(t *testing.T) {
+	test(t, TestCase{
+		Case: `send [GEM 15] (
+			source = @world
+			destination = [GEM 10]
+		)`,
+		Expected: CaseResult{
+			Instructions: nil,
+			Constants:    nil,
+			Error:        "account",
+		},
+	})
+	test(t, TestCase{
+		Case: `send [GEM 15] (
+			source = @world
+			destination = {
+				2/3 to @a
+				1/3 to [GEM 10]
+			}
+		)`,
+		Expected: CaseResult{
+			Instructions: nil,
+			Constants:    nil,
+			Error:        "account",
+		},
+	})
+}
+
+func TestAllocationInvalidPortion(t *testing.T) {
+	test(t, TestCase{
+		Case: `
+		vars {
+			account $p
+		}
+		send [GEM 15] (
+			source = @world
+			destination = {
+				10% to @a
+				$p to @b
+			}
+		)`,
+		Expected: CaseResult{
+			Instructions: nil,
+			Constants:    nil,
+			Error:        "type",
+		},
+	})
+}
+
 // func TestTooManyConstants(t *testing.T) {
-// 	script := "print 1"
-// 	for i := 0; i < 20000; i++ {
-// 		script += fmt.Sprintf("\nsend(monetary=[A%d 0], source=a%d, destination=b%d)", i, i, i)
+// 	script := ""
+// 	for i := 0; i < 11000; i++ {
+// 		script += fmt.Sprintf(`
+// 		send [A%d 0] (
+// 			source=@a%d
+// 			destination=@b%d
+// 		)`, i, i, i)
+// 		script += "\n"
 // 	}
 // 	test(t, TestCase{
 // 		Case: script,

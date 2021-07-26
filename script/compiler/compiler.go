@@ -32,7 +32,7 @@ func (p *parseVisitor) AllocateConstant(v core.Value) (core.Address, error) {
 		return 0, errors.New("number of unique constants exceeded 32768")
 	}
 	p.constants = append(p.constants, v)
-	return core.Address(len(p.constants) - 1), nil
+	return core.NewDataAddress(uint16(len(p.constants) - 1)), nil
 }
 
 func (p *parseVisitor) PushValue(val core.Value) (*core.Address, error) {
@@ -53,7 +53,7 @@ func (p *parseVisitor) PushValue(val core.Value) (*core.Address, error) {
 		p.instructions = append(p.instructions, bytes...)
 		return nil, nil
 	default:
-		panic("internal compiler error")
+		return nil, errors.New(INTERNAL_ERROR_MSG)
 	}
 }
 
@@ -83,7 +83,7 @@ func (p *parseVisitor) isWorld(addr core.Address) bool {
 	return false
 }
 
-func (p *parseVisitor) VisitVariable(c parser.IVariableContext) (core.Type, *core.Address, error) {
+func (p *parseVisitor) VisitVariable(c parser.IVariableContext) (core.Type, *core.Address, *CompileError) {
 	name := c.GetText()[1:] // strip '$' prefix
 	if info, ok := p.variables[name]; ok {
 		p.instructions = append(p.instructions, program.OP_APUSH)
@@ -91,11 +91,11 @@ func (p *parseVisitor) VisitVariable(c parser.IVariableContext) (core.Type, *cor
 		p.instructions = append(p.instructions, bytes...)
 		return info.Ty, &info.Addr, nil
 	} else {
-		return 0, nil, fmt.Errorf("variable not declared : %v", name)
+		return 0, nil, LogicError(c, errors.New("variable not declared"))
 	}
 }
 
-func (p *parseVisitor) VisitExpr(c parser.IExpressionContext) (core.Type, *core.Address, error) {
+func (p *parseVisitor) VisitExpr(c parser.IExpressionContext) (core.Type, *core.Address, *CompileError) {
 	switch c := c.(type) {
 	case *parser.ExprAddSubContext:
 		ty, _, err := p.VisitExpr(c.GetLhs())
@@ -103,14 +103,14 @@ func (p *parseVisitor) VisitExpr(c parser.IExpressionContext) (core.Type, *core.
 			return 0, nil, err
 		}
 		if ty != core.TYPE_NUMBER {
-			return 0, nil, errors.New("tried to do arithmetic with wrong type")
+			return 0, nil, LogicError(c, errors.New("tried to do arithmetic with wrong type"))
 		}
 		ty, _, err = p.VisitExpr(c.GetRhs())
 		if err != nil {
 			return 0, nil, err
 		}
 		if ty != core.TYPE_NUMBER {
-			return 0, nil, errors.New("tried to do arithmetic with wrong type")
+			return 0, nil, LogicError(c, errors.New("tried to do arithmetic with wrong type"))
 		}
 		switch c.GetOp().GetTokenType() {
 		case parser.NumScriptLexerOP_ADD:
@@ -129,31 +129,31 @@ func (p *parseVisitor) VisitExpr(c parser.IExpressionContext) (core.Type, *core.
 		ty, addr, err := p.VisitVariable(c.GetVar_())
 		return ty, addr, err
 	default:
-		panic("internal compiler error")
+		return 0, nil, InternalError(c)
 	}
 }
 
 // pushes a value from a literal onto the stack
-func (p *parseVisitor) VisitLit(c parser.ILiteralContext) (core.Type, *core.Address, error) {
+func (p *parseVisitor) VisitLit(c parser.ILiteralContext) (core.Type, *core.Address, *CompileError) {
 	switch c := c.(type) {
 	case *parser.LitAccountContext:
 		account := core.Account(c.GetText()[1:])
 		addr, err := p.PushValue(account)
 		if err != nil {
-			return 0, nil, err
+			return 0, nil, LogicError(c, err)
 		}
 		return core.TYPE_ACCOUNT, addr, nil
 	case *parser.LitAssetContext:
 		asset := core.Asset(c.GetText())
 		addr, err := p.PushValue(asset)
 		if err != nil {
-			return 0, nil, err
+			return 0, nil, LogicError(c, err)
 		}
 		return core.TYPE_ASSET, addr, nil
 	case *parser.LitNumberContext:
 		n, err := strconv.ParseUint(c.GetText(), 10, 64)
 		if err != nil {
-			return 0, nil, err
+			return 0, nil, LogicError(c, err)
 		}
 		number := core.Number(n)
 		p.PushValue(number) // does not fail with numbers
@@ -167,7 +167,7 @@ func (p *parseVisitor) VisitLit(c parser.ILiteralContext) (core.Type, *core.Addr
 		case *parser.AmountSpecificContext:
 			a, err := strconv.ParseUint(c.GetText(), 10, 64)
 			if err != nil {
-				return 0, nil, err
+				return 0, nil, LogicError(c, err)
 			}
 			amount = core.NewAmountSpecific(a)
 		}
@@ -177,17 +177,17 @@ func (p *parseVisitor) VisitLit(c parser.ILiteralContext) (core.Type, *core.Addr
 		}
 		addr, err := p.PushValue(monetary)
 		if err != nil {
-			return 0, nil, err
+			return 0, nil, LogicError(c, err)
 		}
 		return core.TYPE_MONETARY, addr, nil
 	default:
-		panic("internal compiler error")
+		return 0, nil, InternalError(c)
 	}
 }
 
 // Returns the resource addresses of all the accounts,
 // and true if the source is bottomless (contains @world)
-func (p *parseVisitor) VisitSource(c parser.ISourceContext) ([]core.Address, bool, error) {
+func (p *parseVisitor) VisitSource(c parser.ISourceContext) ([]core.Address, bool, *CompileError) {
 	needed_accounts := []core.Address{}
 	bottomless := false
 	switch c := c.(type) {
@@ -197,7 +197,7 @@ func (p *parseVisitor) VisitSource(c parser.ISourceContext) ([]core.Address, boo
 			return nil, false, err
 		}
 		if ty != core.TYPE_ACCOUNT {
-			return nil, false, errors.New("expected account or allocation as destination")
+			return nil, false, LogicError(c, errors.New("wrong type: expected account or allocation as destination"))
 		}
 		bottomless = bottomless || p.isWorld(*addr)
 		needed_accounts = append(needed_accounts, *addr)
@@ -211,7 +211,7 @@ func (p *parseVisitor) VisitSource(c parser.ISourceContext) ([]core.Address, boo
 				return nil, false, err
 			}
 			if ty != core.TYPE_ACCOUNT {
-				return nil, false, errors.New("expected only accounts in sources")
+				return nil, false, LogicError(c, errors.New("wrong type: expected only accounts in sources"))
 			}
 			bottomless = bottomless || p.isWorld(*addr)
 			needed_accounts = append(needed_accounts, *addr)
@@ -222,13 +222,13 @@ func (p *parseVisitor) VisitSource(c parser.ISourceContext) ([]core.Address, boo
 	return needed_accounts, bottomless, nil
 }
 
-func (p *parseVisitor) VisitSend(c *parser.SendContext) error {
+func (p *parseVisitor) VisitSend(c *parser.SendContext) *CompileError {
 	ty, mon_addr, err := p.VisitExpr(c.GetMon())
 	if err != nil {
 		return err
 	}
 	if ty != core.TYPE_MONETARY {
-		return errors.New("wrong type for monetary value")
+		return LogicError(c, errors.New("wrong type for monetary value"))
 	}
 
 	needed_accounts, bottomless, err := p.VisitSource(c.GetSrc())
@@ -236,7 +236,7 @@ func (p *parseVisitor) VisitSend(c *parser.SendContext) error {
 		return err
 	}
 	if p.isMonetaryAll(*mon_addr) && bottomless {
-		return errors.New("cannot take all balance of world")
+		return LogicError(c, errors.New("cannot take all balance of world"))
 	}
 
 	// add source accounts to the needed balances
@@ -257,7 +257,7 @@ func (p *parseVisitor) VisitSend(c *parser.SendContext) error {
 	return nil
 }
 
-func (p *parseVisitor) VisitPrint(ctx *parser.PrintContext) error {
+func (p *parseVisitor) VisitPrint(ctx *parser.PrintContext) *CompileError {
 	_, _, err := p.VisitExpr(ctx.GetExpr())
 	if err != nil {
 		return err
@@ -266,14 +266,14 @@ func (p *parseVisitor) VisitPrint(ctx *parser.PrintContext) error {
 	return nil
 }
 
-func (p *parseVisitor) VisitVars(c *parser.VarListDeclContext) error {
+func (p *parseVisitor) VisitVars(c *parser.VarListDeclContext) *CompileError {
 	if len(c.GetV()) > 32768 {
-		return fmt.Errorf("number of variables exceeded %v", 32768)
+		return LogicError(c, fmt.Errorf("number of variables exceeded %v", 32768))
 	}
 	for _, v := range c.GetV() {
 		name := v.GetName().GetText()[1:]
 		if _, ok := p.variables[name]; ok {
-			return fmt.Errorf("duplicate variable: %v", name)
+			return LogicError(c, errors.New("duplicate variable"))
 		}
 		var ty core.Type
 		switch v.GetTy().GetText() {
@@ -288,7 +288,7 @@ func (p *parseVisitor) VisitVars(c *parser.VarListDeclContext) error {
 		case "portion":
 			ty = core.TYPE_PORTION
 		default:
-			return errors.New("internal compiler error")
+			return InternalError(c)
 		}
 		addr := core.NewVarAddress(uint16(len(p.variables)))
 		p.variables[name] = program.VarInfo{
@@ -299,7 +299,7 @@ func (p *parseVisitor) VisitVars(c *parser.VarListDeclContext) error {
 	return nil
 }
 
-func (p *parseVisitor) VisitScript(c parser.IScriptContext) error {
+func (p *parseVisitor) VisitScript(c parser.IScriptContext) *CompileError {
 	switch c := c.(type) {
 	case *parser.ScriptContext:
 		vars := c.GetVars()
@@ -308,11 +308,10 @@ func (p *parseVisitor) VisitScript(c parser.IScriptContext) error {
 			case *parser.VarListDeclContext:
 				err := p.VisitVars(c)
 				if err != nil {
-					p.elistener.LogicError(vars.GetParser().GetCurrentToken(), err)
 					return err
 				}
 			default:
-				panic("internal compiler error")
+				return InternalError(c)
 			}
 		}
 		for _, stmt := range c.GetStmts() {
@@ -320,7 +319,6 @@ func (p *parseVisitor) VisitScript(c parser.IScriptContext) error {
 			case *parser.PrintContext:
 				err := p.VisitPrint(c)
 				if err != nil {
-					p.elistener.LogicError(c.GetParser().GetCurrentToken(), err)
 					return err
 				}
 			case *parser.FailContext:
@@ -328,15 +326,14 @@ func (p *parseVisitor) VisitScript(c parser.IScriptContext) error {
 			case *parser.SendContext:
 				err := p.VisitSend(c)
 				if err != nil {
-					p.elistener.LogicError(c.GetParser().GetCurrentToken(), err)
 					return err
 				}
 			default:
-				panic("Invalid context")
+				return InternalError(c)
 			}
 		}
 	default:
-		panic("Invalid context")
+		return InternalError(c)
 	}
 	return nil
 }
@@ -364,7 +361,11 @@ func Compile(input string) (*program.Program, error) {
 	tree := p.Script()
 
 	if len(elistener.Errors) != 0 {
-		return nil, (*CompileErrorList)(&elistener.Errors)
+		err := CompileErrorList{
+			errors: elistener.Errors,
+			source: input,
+		}
+		return nil, &err
 	}
 
 	visitor := parseVisitor{
@@ -375,10 +376,14 @@ func Compile(input string) (*program.Program, error) {
 		needed_balances: make(map[core.Address]map[core.Address]struct{}),
 	}
 
-	_ = visitor.VisitScript(tree)
+	err := visitor.VisitScript(tree)
 
-	if len(elistener.Errors) != 0 {
-		return nil, (*CompileErrorList)(&elistener.Errors)
+	if err != nil {
+		err := CompileErrorList{
+			errors: []CompileError{*err},
+			source: input,
+		}
+		return nil, &err
 	}
 
 	return &program.Program{

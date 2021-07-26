@@ -255,6 +255,28 @@ func TestVariablesJSON(t *testing.T) {
 	)
 }
 
+func TestVariablesJSONInvalid(t *testing.T) {
+	testJSON(t,
+		`vars {
+			portion $p
+		}
+		send [EUR/2 999] (
+			source = @world
+			destination = {
+				$p to @b
+				remaining to @c
+			}
+		)`,
+		`{
+			"p": "3/2"
+		}`,
+		map[string]map[string]uint64{},
+		CaseResult{
+			Error: "portion must be",
+		},
+	)
+}
+
 func TestSource(t *testing.T) {
 	testJSON(t,
 		`vars {
