@@ -3,6 +3,8 @@ grammar NumScript;
 NEWLINE: [\r\n];
 WHITESPACE: [ \t]+ -> skip;
 
+MULTILINE_COMMENT: '/*' (MULTILINE_COMMENT|.)*? '*/' -> skip;
+LINE_COMMENT: '//' .*? NEWLINE -> skip;
 VARS: 'vars';
 PRINT: 'print';
 FAIL: 'fail';

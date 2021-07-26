@@ -45,8 +45,12 @@ func (c *CompileErrorList) Error() string {
 				start = e.startc
 			}
 			if l == e.endl {
-				after = line[e.endc-start+1:]
-				line = line[:e.endc-start+1]
+				idx := e.endc - start + 1
+				if idx >= len(line) { // because newline was erased
+					idx -= 1
+				}
+				after = line[idx:]
+				line = line[:idx]
 			}
 			s += aurora.Red(fmt.Sprintf("%0*d | ", ln_pad, l)).String()
 			s += fmt.Sprintf("%v%v%v\n", aurora.BrightBlack(before), line, aurora.BrightBlack(after))
