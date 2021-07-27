@@ -41,15 +41,6 @@ type NumScriptListener interface {
 	// EnterExprVariable is called when entering the ExprVariable production.
 	EnterExprVariable(c *ExprVariableContext)
 
-	// EnterPortionConst is called when entering the portionConst production.
-	EnterPortionConst(c *PortionConstContext)
-
-	// EnterPortionVar is called when entering the portionVar production.
-	EnterPortionVar(c *PortionVarContext)
-
-	// EnterPortionRemaining is called when entering the portionRemaining production.
-	EnterPortionRemaining(c *PortionRemainingContext)
-
 	// EnterAllocPartConstConst is called when entering the allocPartConstConst production.
 	EnterAllocPartConstConst(c *AllocPartConstConstContext)
 
@@ -142,15 +133,6 @@ type NumScriptListener interface {
 
 	// ExitExprVariable is called when exiting the ExprVariable production.
 	ExitExprVariable(c *ExprVariableContext)
-
-	// ExitPortionConst is called when exiting the portionConst production.
-	ExitPortionConst(c *PortionConstContext)
-
-	// ExitPortionVar is called when exiting the portionVar production.
-	ExitPortionVar(c *PortionVarContext)
-
-	// ExitPortionRemaining is called when exiting the portionRemaining production.
-	ExitPortionRemaining(c *PortionRemainingContext)
 
 	// ExitAllocPartConstConst is called when exiting the allocPartConstConst production.
 	ExitAllocPartConstConst(c *AllocPartConstConstContext)

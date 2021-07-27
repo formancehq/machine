@@ -87,24 +87,6 @@ func (s *BaseNumScriptListener) EnterExprVariable(ctx *ExprVariableContext) {}
 // ExitExprVariable is called when production ExprVariable is exited.
 func (s *BaseNumScriptListener) ExitExprVariable(ctx *ExprVariableContext) {}
 
-// EnterPortionConst is called when production portionConst is entered.
-func (s *BaseNumScriptListener) EnterPortionConst(ctx *PortionConstContext) {}
-
-// ExitPortionConst is called when production portionConst is exited.
-func (s *BaseNumScriptListener) ExitPortionConst(ctx *PortionConstContext) {}
-
-// EnterPortionVar is called when production portionVar is entered.
-func (s *BaseNumScriptListener) EnterPortionVar(ctx *PortionVarContext) {}
-
-// ExitPortionVar is called when production portionVar is exited.
-func (s *BaseNumScriptListener) ExitPortionVar(ctx *PortionVarContext) {}
-
-// EnterPortionRemaining is called when production portionRemaining is entered.
-func (s *BaseNumScriptListener) EnterPortionRemaining(ctx *PortionRemainingContext) {}
-
-// ExitPortionRemaining is called when production portionRemaining is exited.
-func (s *BaseNumScriptListener) ExitPortionRemaining(ctx *PortionRemainingContext) {}
-
 // EnterAllocPartConstConst is called when production allocPartConstConst is entered.
 func (s *BaseNumScriptListener) EnterAllocPartConstConst(ctx *AllocPartConstConstContext) {}
 

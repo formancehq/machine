@@ -31,6 +31,7 @@ PORTION:
   ( [0-9]+ [ ]? '/' [ ]? [0-9]+
   | [0-9]+     ('.'      [0-9]+)? '%'
   );
+PORTION_REMAINING: 'remaining';
 NUMBER: [0-9]+;
 PERCENT: '%';
 VARIABLE_NAME: '$' [a-z_]+ [a-z0-9_]*;
@@ -51,7 +52,7 @@ literal
   | monetary # LitMonetary
   ;
 
-  variable: VARIABLE_NAME;
+variable: VARIABLE_NAME;
 
 expression
   : lhs=expression op=(OP_ADD|OP_SUB) rhs=expression # ExprAddSub
@@ -59,19 +60,15 @@ expression
   | var_=variable # ExprVariable
   ;
 
-portionConst: por=PORTION;
-portionVar: por=variable;
-portionRemaining: 'remaining';
-
 allocPartConst
-  : portionConst # allocPartConstConst
-  | portionRemaining # allocPartConstRemaining;
+  : PORTION # allocPartConstConst
+  | PORTION_REMAINING # allocPartConstRemaining;
 allocBlockConst: LBRACE NEWLINE (portions+=allocPartConst 'to' dests+=expression NEWLINE)+ RBRACE;
 
 allocPartDyn
-  : portionConst # allocPartDynConst
-  | portionVar # allocPartDynVar
-  | portionRemaining # allocPartDynRemaining
+  : PORTION # allocPartDynConst
+  | por=variable # allocPartDynVar
+  | PORTION_REMAINING # allocPartDynRemaining
   ;
 allocBlockDyn: LBRACE NEWLINE (portions+=allocPartDyn  'to' dests+=expression NEWLINE)+ RBRACE;
 
