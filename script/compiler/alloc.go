@@ -39,7 +39,7 @@ func (p *parseVisitor) VisitAllocBlockConst(c parser.IAllocBlockConstContext) *C
 	for _, c := range c.GetPortions() {
 		switch c := c.(type) {
 		case *parser.AllocPartConstConstContext:
-			portion, err := core.ParsePortionSpecific(c.PortionConst().GetPor().GetText())
+			portion, err := core.ParsePortionSpecific(c.GetText())
 			if err != nil {
 				return LogicError(c, err)
 			}
@@ -68,7 +68,7 @@ func (p *parseVisitor) VisitAllocBlockDyn(c parser.IAllocBlockDynContext) *Compi
 		c := portions[i]
 		switch c := c.(type) {
 		case *parser.AllocPartDynConstContext:
-			portion, err := core.ParsePortionSpecific(c.PortionConst().GetPor().GetText())
+			portion, err := core.ParsePortionSpecific(c.GetText())
 			if err != nil {
 				return LogicError(c, err)
 			}
@@ -76,13 +76,13 @@ func (p *parseVisitor) VisitAllocBlockDyn(c parser.IAllocBlockDynContext) *Compi
 			total.Add(&rat, total)
 			p.PushValue(core.Portion(*portion))
 		case *parser.AllocPartDynVarContext:
-			ty, _, err := p.VisitVariable(c.PortionVar().GetPor())
+			ty, _, err := p.VisitVariable(c.GetPor())
 			if err != nil {
 				return err
 			}
 			if ty != core.TYPE_PORTION {
 				return LogicError(c,
-					fmt.Errorf("tried to use wrong variable type for portion of allocation: %v", ty),
+					fmt.Errorf("wrong type: expected type portion for variable: %v", ty),
 				)
 			}
 		case *parser.AllocPartDynRemainingContext:
