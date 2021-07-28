@@ -3,21 +3,17 @@ package program
 import (
 	"encoding/binary"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/numary/machine/core"
 )
 
 type Program struct {
-	Constants      []core.Value
 	Instructions   []byte
-	Variables      map[string]VarInfo
+	Resources      []Resource
+	Parameters     map[string]core.Address
 	NeededBalances map[core.Address]map[core.Address]struct{}
-}
-
-type VarInfo struct {
-	Ty   core.Type
-	Addr core.Address
 }
 
 func (p Program) String() string {
@@ -26,7 +22,7 @@ func (p Program) String() string {
 		out += fmt.Sprintf("%02d----- ", i)
 		switch p.Instructions[i] {
 		case OP_APUSH:
-			out += fmt.Sprint("OP_APUSH\n")
+			out += "OP_APUSH\n"
 			address := binary.LittleEndian.Uint16(p.Instructions[i+1 : i+3])
 			if address >= 32768 {
 				out += fmt.Sprintf("%02d-%02d   #VAR(%d)\n", i+1, i+3, address-32768)
@@ -35,86 +31,102 @@ func (p Program) String() string {
 			}
 			i += 2
 		case OP_IPUSH:
-			out += fmt.Sprint("OP_IPUSH\n")
+			out += "OP_IPUSH\n"
 			out += fmt.Sprintf("%02d-%02d   %d\n", i+1, i+9, binary.LittleEndian.Uint64(p.Instructions[i+1:i+9]))
 			i += 8
 		case OP_IADD:
-			out += fmt.Sprint("OP_IADD\n")
+			out += "OP_IADD\n"
 		case OP_ISUB:
-			out += fmt.Sprint("OP_ISUB\n")
+			out += "OP_ISUB\n"
 		case OP_PRINT:
-			out += fmt.Sprint("OP_PRINT\n")
+			out += "OP_PRINT\n"
 		case OP_FAIL:
-			out += fmt.Sprint("OP_FAIL\n")
+			out += "OP_FAIL\n"
 		case OP_SEND:
-			out += fmt.Sprint("OP_SEND\n")
+			out += "OP_SEND\n"
 		case OP_SOURCE:
-			out += fmt.Sprint("OP_SOURCE\n")
+			out += "OP_SOURCE\n"
 		case OP_ALLOC:
-			out += fmt.Sprint("OP_ALLOC\n")
+			out += "OP_ALLOC\n"
 		case OP_MAKE_ALLOTMENT:
-			out += fmt.Sprint("OP_MAKE_ALLOTMENT\n")
+			out += "OP_MAKE_ALLOTMENT\n"
 		default:
-			out += fmt.Sprint("Unknown opcode")
+			out += "Unknown opcode"
 		}
 	}
 
 	out += fmt.Sprintln("CONSTANTS")
 	i := 0
-	for i = 0; i < len(p.Constants); i++ {
+	for i = 0; i < len(p.Resources); i++ {
 		out += fmt.Sprintf("%02d ", i)
-		out += fmt.Sprintf("%s\n", p.Constants[i])
-	}
-
-	out += fmt.Sprintln("VARIABLES")
-	for name, info := range p.Variables {
-		out += fmt.Sprintf("%02d ", info.Addr.ToIdx())
-		out += fmt.Sprintf("%-4s\n", name)
+		out += fmt.Sprintf("%v\n", p.Resources[i])
 	}
 	return out
 }
 
-func (p *Program) ParseVariables(vars map[string]core.Value) ([]core.Value, error) {
-	variables := make([]core.Value, len(p.Variables))
-	if len(vars) != len(p.Variables) {
-		return nil, fmt.Errorf(
-			"mismatching number of variables: %v != %v",
-			len(vars),
-			len(p.Variables))
-	}
-	for name, info := range p.Variables {
-		if val, ok := vars[name]; ok && val.GetType() == info.Ty {
-			variables[info.Addr.ToIdx()] = val
-		} else {
-			return nil, fmt.Errorf("missing variables: %v", name)
+// func (p *Program) ParseVariables(vars map[string]core.Value) ([]core.Value, error) {
+// 	variables := make([]core.Value, len(p.Resources))
+// 	if len(vars) != len(p.Variables) {
+// 		return nil, fmt.Errorf(
+// 			"mismatching number of variables: %v != %v",
+// 			len(vars),
+// 			len(p.Variables))
+// 	}
+// 	for name, info := range p.Variables {
+// 		if val, ok := vars[name]; ok && val.GetType() == info.Ty {
+// 			variables[info.Addr.ToIdx()] = val
+// 		} else {
+// 			return nil, fmt.Errorf("missing variables: %v", name)
+// 		}
+// 	}
+// 	return variables, nil
+// }
+
+func (p *Program) ParseVariables(vars map[string]core.Value) (map[string]core.Value, error) {
+	variables := make(map[string]core.Value)
+	for _, res := range p.Resources {
+		if param, ok := res.(Parameter); ok {
+			if val, ok := vars[param.Name]; ok && val.GetType() == param.Typ {
+				variables[param.Name] = val
+				delete(vars, param.Name)
+			} else {
+				return nil, fmt.Errorf("missing variables: %q", param.Name)
+			}
 		}
+	}
+	for name := range vars {
+		return nil, fmt.Errorf("extraneous variable: %q", name)
 	}
 	return variables, nil
 }
 
-func (p *Program) ParseVariablesJSON(vars map[string]json.RawMessage) ([]core.Value, error) {
-	variables := make([]core.Value, len(p.Variables))
-	for name, info := range p.Variables {
-		if val, ok := vars[name]; ok {
+func (p *Program) ParseVariablesJSON(vars map[string]json.RawMessage) (map[string]core.Value, error) {
+	variables := make(map[string]core.Value)
+	for _, res := range p.Resources {
+		if param, ok := res.(Parameter); ok {
+			data, ok := vars[param.Name]
+			if !ok {
+				return nil, fmt.Errorf("missing variable: %q", param.Name)
+			}
 			var value core.Value
-			switch info.Ty {
+			switch param.Typ {
 			case core.TYPE_ACCOUNT:
 				var account core.Account
-				err := json.Unmarshal(val, &account)
+				err := json.Unmarshal(data, &account)
 				if err != nil {
 					return nil, err
 				}
 				value = account
 			case core.TYPE_ASSET:
 				var asset core.Asset
-				err := json.Unmarshal(val, &asset)
+				err := json.Unmarshal(data, &asset)
 				if err != nil {
 					return nil, err
 				}
 				value = asset
 			case core.TYPE_NUMBER:
 				var number core.Number
-				err := json.Unmarshal(val, &number)
+				err := json.Unmarshal(data, &number)
 				if err != nil {
 					return nil, err
 				}
@@ -124,7 +136,7 @@ func (p *Program) ParseVariablesJSON(vars map[string]json.RawMessage) ([]core.Va
 					Asset  string `json:"asset"`
 					Amount uint64 `json:"amount"`
 				}
-				err := json.Unmarshal(val, &mon)
+				err := json.Unmarshal(data, &mon)
 				if err != nil {
 					return nil, err
 				}
@@ -134,7 +146,7 @@ func (p *Program) ParseVariablesJSON(vars map[string]json.RawMessage) ([]core.Va
 				}
 			case core.TYPE_PORTION:
 				var s string
-				err := json.Unmarshal(val, &s)
+				err := json.Unmarshal(data, &s)
 				if err != nil {
 					return nil, err
 				}
@@ -143,11 +155,15 @@ func (p *Program) ParseVariablesJSON(vars map[string]json.RawMessage) ([]core.Va
 					return nil, err
 				}
 				value = *res
+			default:
+				return nil, errors.New("unexpected variable type in program")
 			}
-			variables[info.Addr.ToIdx()] = value
-		} else {
-			return nil, fmt.Errorf("missing variable %v", name)
+			variables[param.Name] = value
+			delete(vars, param.Name)
 		}
+	}
+	for name := range vars {
+		return nil, fmt.Errorf("extraneous variable: %q", name)
 	}
 	return variables, nil
 }

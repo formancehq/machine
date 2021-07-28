@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -14,7 +15,7 @@ import (
 
 type CaseResult struct {
 	Instructions []byte
-	Constants    []core.Value
+	Resources    []program.Resource
 	Variables    []string
 	Error        string
 }
@@ -48,17 +49,33 @@ func test(t *testing.T, c TestCase) {
 			t.Error(fmt.Errorf("generated program is incorrect: %v", *p))
 			fmt.Println(p.Instructions, "vs", c.Expected.Instructions)
 			return
-		} else if len(p.Constants) != len(c.Expected.Constants) {
+		} else if len(p.Resources) != len(c.Expected.Resources) {
 			t.Error(fmt.Errorf("unexpected program constants: %v", *p))
 			return
 		} else {
-			for i := range c.Expected.Constants {
-				if !core.ValueEquals(p.Constants[i], c.Expected.Constants[i]) {
+			for i := range c.Expected.Resources {
+				if !ResourceEquals(p.Resources[i], c.Expected.Resources[i]) {
 					t.Error(fmt.Errorf("unexpected program constants: %v", *p))
 					return
 				}
 			}
 		}
+	}
+}
+
+func ResourceEquals(lhs program.Resource, rhs program.Resource) bool {
+	if reflect.TypeOf(lhs) != reflect.TypeOf(rhs) {
+		return false
+	}
+	switch lhs := lhs.(type) {
+	case program.Constant:
+		return core.ValueEquals(lhs.Inner, rhs.(program.Constant).Inner)
+	case program.Parameter:
+		return lhs.Typ == rhs.(program.Parameter).Typ
+	case program.Metadata:
+		return lhs.Typ == rhs.(program.Metadata).Typ
+	default:
+		panic("invalid resource")
 	}
 }
 
@@ -70,7 +87,7 @@ func TestSimplePrint(t *testing.T) {
 				program.OP_IPUSH, 01, 00, 00, 00, 00, 00, 00, 00,
 				program.OP_PRINT,
 			},
-			Constants: []core.Value{},
+			Resources: []program.Resource{},
 			Error:     "",
 		},
 	})
@@ -88,7 +105,7 @@ func TestCompositeExpr(t *testing.T) {
 				program.OP_ISUB,
 				program.OP_PRINT,
 			},
-			Constants: []core.Value{},
+			Resources: []program.Resource{},
 			Error:     "",
 		},
 	})
@@ -99,7 +116,7 @@ func TestFail(t *testing.T) {
 		Case: "fail",
 		Expected: CaseResult{
 			Instructions: []byte{program.OP_FAIL},
-			Constants:    []core.Value{},
+			Resources:    []program.Resource{},
 			Error:        "",
 		},
 	})
@@ -111,7 +128,7 @@ func TestConstant(t *testing.T) {
 		Case: "print @user:001",
 		Expected: CaseResult{
 			Instructions: []byte{program.OP_APUSH, 00, 00, program.OP_PRINT},
-			Constants:    []core.Value{user},
+			Resources:    []program.Resource{program.Constant{Inner: user}},
 			Error:        "",
 		},
 	})
@@ -129,8 +146,8 @@ func TestComments(t *testing.T) {
 		print $a
 		`,
 		Expected: CaseResult{
-			Instructions: []byte{program.OP_APUSH, 00, 128, program.OP_PRINT},
-			Constants:    []core.Value{},
+			Instructions: []byte{program.OP_APUSH, 00, 00, program.OP_PRINT},
+			Resources:    []program.Resource{program.Parameter{Typ: core.TYPE_ACCOUNT}},
 			Error:        "",
 		},
 	})
@@ -141,7 +158,7 @@ func TestUndeclaredVariable(t *testing.T) {
 		Case: "print $nope",
 		Expected: CaseResult{
 			Instructions: []byte{},
-			Constants:    []core.Value{},
+			Resources:    []program.Resource{},
 			Error:        "declared",
 		},
 	})
@@ -159,7 +176,7 @@ func TestInvalidTypeInSendValue(t *testing.T) {
 		)`,
 		Expected: CaseResult{
 			Instructions: []byte{},
-			Constants:    []core.Value{},
+			Resources:    []program.Resource{},
 			Error:        "wrong type",
 		},
 	})
@@ -177,7 +194,7 @@ func TestInvalidTypeInSource(t *testing.T) {
 		)`,
 		Expected: CaseResult{
 			Instructions: []byte{},
-			Constants:    []core.Value{},
+			Resources:    []program.Resource{},
 			Error:        "wrong type",
 		},
 	})
@@ -204,15 +221,15 @@ func TestAllocationFractions(t *testing.T) {
 				program.OP_APUSH, 04, 00,
 				program.OP_SEND,
 			},
-			Constants: []core.Value{
-				core.Monetary{
+			Resources: []program.Resource{
+				program.Constant{Inner: core.Monetary{
 					Asset:  "EUR/2",
 					Amount: core.NewAmountSpecific(43),
-				},
-				core.Account("foo"),
-				core.Allotment{*big.NewRat(1, 8), *big.NewRat(7, 8)},
-				core.Account("bar"),
-				core.Account("baz"),
+				}},
+				program.Constant{Inner: core.Account("foo")},
+				program.Constant{Inner: core.Allotment{*big.NewRat(1, 8), *big.NewRat(7, 8)}},
+				program.Constant{Inner: core.Account("bar")},
+				program.Constant{Inner: core.Account("baz")},
 			},
 			Error: "",
 		},
@@ -243,16 +260,16 @@ func TestAllocationPercentages(t *testing.T) {
 				program.OP_APUSH, 05, 00,
 				program.OP_SEND,
 			},
-			Constants: []core.Value{
-				core.Monetary{
+			Resources: []program.Resource{
+				program.Constant{Inner: core.Monetary{
 					Asset:  "EUR/2",
 					Amount: core.NewAmountSpecific(43),
-				},
-				core.Account("foo"),
-				core.Allotment{*big.NewRat(125, 1000), *big.NewRat(375, 1000), *big.NewRat(1, 2)},
-				core.Account("bar"),
-				core.Account("baz"),
-				core.Account("qux"),
+				}},
+				program.Constant{Inner: core.Account("foo")},
+				program.Constant{Inner: core.Allotment{*big.NewRat(125, 1000), *big.NewRat(375, 1000), *big.NewRat(1, 2)}},
+				program.Constant{Inner: core.Account("bar")},
+				program.Constant{Inner: core.Account("baz")},
+				program.Constant{Inner: core.Account("qux")},
 			},
 			Error: "",
 		},
@@ -274,7 +291,10 @@ func TestSend(t *testing.T) {
 				program.OP_IPUSH, 01, 00, 00, 00, 00, 00, 00, 00,
 				program.OP_APUSH, 02, 00,
 				program.OP_SEND,
-			}, Constants: []core.Value{core.Monetary{Asset: "EUR/2", Amount: core.NewAmountSpecific(99)}, alice, bob},
+			}, Resources: []program.Resource{
+				program.Constant{Inner: core.Monetary{Asset: "EUR/2", Amount: core.NewAmountSpecific(99)}},
+				program.Constant{Inner: alice},
+				program.Constant{Inner: bob}},
 			Error: "",
 		},
 	})
@@ -295,7 +315,10 @@ func TestSendAll(t *testing.T) {
 				program.OP_IPUSH, 01, 00, 00, 00, 00, 00, 00, 00,
 				program.OP_APUSH, 02, 00,
 				program.OP_SEND,
-			}, Constants: []core.Value{core.Monetary{Asset: "EUR/2", Amount: core.NewAmountAll()}, alice, bob},
+			}, Resources: []program.Resource{
+				program.Constant{Inner: core.Monetary{Asset: "EUR/2", Amount: core.NewAmountAll()}},
+				program.Constant{Inner: alice},
+				program.Constant{Inner: bob}},
 			Error: "",
 		},
 	})
@@ -306,7 +329,7 @@ func TestSyntaxError(t *testing.T) {
 		Case: "print fail",
 		Expected: CaseResult{
 			Instructions: nil,
-			Constants:    nil,
+			Resources:    nil,
 			Error:        "mismatched input",
 		},
 	})
@@ -320,7 +343,7 @@ func TestLogicError(t *testing.T) {
 		)`,
 		Expected: CaseResult{
 			Instructions: nil,
-			Constants:    nil,
+			Resources:    nil,
 			Error:        "expected",
 		},
 	})
@@ -334,7 +357,7 @@ func TestPreventTakeAllFromWorld(t *testing.T) {
 		)`,
 		Expected: CaseResult{
 			Instructions: nil,
-			Constants:    nil,
+			Resources:    nil,
 			Error:        "cannot",
 		},
 	})
@@ -352,7 +375,7 @@ func TestOverflowingAllocation(t *testing.T) {
 		)`,
 		Expected: CaseResult{
 			Instructions: nil,
-			Constants:    nil,
+			Resources:    nil,
 			Error:        "100%",
 		},
 	})
@@ -369,7 +392,7 @@ func TestOverflowingAllocation(t *testing.T) {
 		)`,
 		Expected: CaseResult{
 			Instructions: nil,
-			Constants:    nil,
+			Resources:    nil,
 			Error:        "100%",
 		},
 	})
@@ -386,7 +409,7 @@ func TestOverflowingAllocation(t *testing.T) {
 		)`,
 		Expected: CaseResult{
 			Instructions: nil,
-			Constants:    nil,
+			Resources:    nil,
 			Error:        "100%",
 		},
 	})
@@ -403,7 +426,7 @@ func TestOverflowingAllocation(t *testing.T) {
 		)`,
 		Expected: CaseResult{
 			Instructions: nil,
-			Constants:    nil,
+			Resources:    nil,
 			Error:        "`remaining` in the same",
 		},
 	})
@@ -424,7 +447,7 @@ func TestOverflowingAllocation(t *testing.T) {
 		)`,
 		Expected: CaseResult{
 			Instructions: nil,
-			Constants:    nil,
+			Resources:    nil,
 			Error:        "`remaining` in the same",
 		},
 	})
@@ -446,7 +469,7 @@ func TestOverflowingAllocation(t *testing.T) {
 		)`,
 		Expected: CaseResult{
 			Instructions: nil,
-			Constants:    nil,
+			Resources:    nil,
 			Error:        "100%",
 		},
 	})
@@ -466,7 +489,7 @@ func TestOverflowingAllocation(t *testing.T) {
 		)`,
 		Expected: CaseResult{
 			Instructions: nil,
-			Constants:    nil,
+			Resources:    nil,
 			Error:        "remaining",
 		},
 	})
@@ -480,7 +503,7 @@ func TestAllocationWrongDestination(t *testing.T) {
 		)`,
 		Expected: CaseResult{
 			Instructions: nil,
-			Constants:    nil,
+			Resources:    nil,
 			Error:        "account",
 		},
 	})
@@ -494,7 +517,7 @@ func TestAllocationWrongDestination(t *testing.T) {
 		)`,
 		Expected: CaseResult{
 			Instructions: nil,
-			Constants:    nil,
+			Resources:    nil,
 			Error:        "account",
 		},
 	})
@@ -515,7 +538,7 @@ func TestAllocationInvalidPortion(t *testing.T) {
 		)`,
 		Expected: CaseResult{
 			Instructions: nil,
-			Constants:    nil,
+			Resources:    nil,
 			Error:        "type",
 		},
 	})

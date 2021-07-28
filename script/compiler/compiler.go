@@ -15,37 +15,51 @@ import (
 type parseVisitor struct {
 	elistener       *ErrorListener
 	instructions    []byte
-	constants       []core.Value // must not exceed 32768 elements
-	variables       map[string]program.VarInfo
-	needed_balances map[core.Address]map[core.Address]struct{} // for each account, set of monetaries (for their assets)
+	resources       []program.Resource                         // must not exceed 65536 elements
+	var_idx         map[string]core.Address                    // maps name to resource index
+	needed_balances map[core.Address]map[core.Address]struct{} // for each account, set of assets needed
 }
 
 // Allocates constants if it hasn't already been,
 // and returns its resource address.
-func (p *parseVisitor) AllocateConstant(v core.Value) (core.Address, error) {
-	for i := 0; i < len(p.constants); i++ {
-		if p.constants[i] == v {
-			return core.Address(i), nil
+func (p *parseVisitor) findConstant(constant program.Constant) (*core.Address, bool) {
+	for i := 0; i < len(p.resources); i++ {
+		if c, ok := p.resources[i].(program.Constant); ok {
+			if c == constant {
+				addr := core.Address(i)
+				return &addr, true
+			}
 		}
 	}
-	if len(p.constants) >= 32768 {
-		return 0, errors.New("number of unique constants exceeded 32768")
+	return nil, false
+}
+
+func (p *parseVisitor) AllocateResource(res program.Resource) (*core.Address, error) {
+	if c, ok := res.(program.Constant); ok {
+		idx, ok := p.findConstant(c)
+		if ok {
+			return idx, nil
+		}
 	}
-	p.constants = append(p.constants, v)
-	return core.NewDataAddress(uint16(len(p.constants) - 1)), nil
+	if len(p.resources) >= 65536 {
+		return nil, errors.New("number of unique constants exceeded 65536")
+	}
+	p.resources = append(p.resources, res)
+	addr := core.NewAddress(uint16(len(p.resources) - 1))
+	return &addr, nil
 }
 
 func (p *parseVisitor) PushValue(val core.Value) (*core.Address, error) {
 	switch val := val.(type) {
 	case core.Account, core.Asset, core.Monetary, core.Allotment, core.Portion:
 		p.instructions = append(p.instructions, program.OP_APUSH)
-		addr, err := p.AllocateConstant(val)
+		addr, err := p.AllocateResource(program.Constant{Inner: val})
 		if err != nil {
 			return nil, err
 		}
 		bytes := addr.ToBytes()
 		p.instructions = append(p.instructions, bytes...)
-		return &addr, nil
+		return addr, nil
 	case core.Number:
 		p.instructions = append(p.instructions, program.OP_IPUSH)
 		bytes := make([]byte, 8)
@@ -58,10 +72,10 @@ func (p *parseVisitor) PushValue(val core.Value) (*core.Address, error) {
 }
 
 func (p *parseVisitor) isMonetaryAll(addr core.Address) bool {
-	if addr.IsConstant() {
-		idx := addr.ToIdx()
-		if idx < len(p.constants) {
-			if mon, ok := p.constants[idx].(core.Monetary); ok {
+	idx := int(addr)
+	if idx < len(p.resources) {
+		if c, ok := p.resources[idx].(program.Constant); ok {
+			if mon, ok := c.Inner.(core.Monetary); ok {
 				return mon.Amount.All
 			}
 		}
@@ -70,10 +84,10 @@ func (p *parseVisitor) isMonetaryAll(addr core.Address) bool {
 }
 
 func (p *parseVisitor) isWorld(addr core.Address) bool {
-	if addr.IsConstant() {
-		idx := addr.ToIdx()
-		if idx < len(p.constants) {
-			if acc, ok := p.constants[idx].(core.Account); ok {
+	idx := int(addr)
+	if idx < len(p.resources) {
+		if c, ok := p.resources[idx].(program.Constant); ok {
+			if acc, ok := c.Inner.(core.Account); ok {
 				if string(acc) == "world" {
 					return true
 				}
@@ -85,11 +99,12 @@ func (p *parseVisitor) isWorld(addr core.Address) bool {
 
 func (p *parseVisitor) VisitVariable(c parser.IVariableContext) (core.Type, *core.Address, *CompileError) {
 	name := c.GetText()[1:] // strip '$' prefix
-	if info, ok := p.variables[name]; ok {
+	if idx, ok := p.var_idx[name]; ok {
+		res := p.resources[idx]
 		p.instructions = append(p.instructions, program.OP_APUSH)
-		bytes := info.Addr.ToBytes()
+		bytes := idx.ToBytes()
 		p.instructions = append(p.instructions, bytes...)
-		return info.Ty, &info.Addr, nil
+		return res.GetType(), &idx, nil
 	} else {
 		return 0, nil, LogicError(c, errors.New("variable not declared"))
 	}
@@ -272,7 +287,7 @@ func (p *parseVisitor) VisitVars(c *parser.VarListDeclContext) *CompileError {
 	}
 	for _, v := range c.GetV() {
 		name := v.GetName().GetText()[1:]
-		if _, ok := p.variables[name]; ok {
+		if _, ok := p.var_idx[name]; ok {
 			return LogicError(c, errors.New("duplicate variable"))
 		}
 		var ty core.Type
@@ -290,11 +305,31 @@ func (p *parseVisitor) VisitVars(c *parser.VarListDeclContext) *CompileError {
 		default:
 			return InternalError(c)
 		}
-		addr := core.NewVarAddress(uint16(len(p.variables)))
-		p.variables[name] = program.VarInfo{
-			Ty:   ty,
-			Addr: addr,
+
+		var addr core.Address
+		c_orig := v.GetOrig()
+		if c_orig != nil {
+			ty, src, cerr := p.VisitExpr(c_orig.GetAcc())
+			if cerr != nil {
+				return cerr
+			}
+			if ty != core.TYPE_ACCOUNT {
+				return LogicError(c_orig, errors.New("wrong type: expected account"))
+			}
+			key := c_orig.GetKey().GetText()
+			a, err := p.AllocateResource(program.Metadata{SourceAccount: *src, Key: key, Typ: ty})
+			if err != nil {
+				return LogicError(c_orig, err)
+			}
+			addr = *a
+		} else {
+			a, err := p.AllocateResource(program.Parameter{Typ: ty, Name: name})
+			if err != nil {
+				return LogicError(c_orig, err)
+			}
+			addr = *a
 		}
+		p.var_idx[name] = addr
 	}
 	return nil
 }
@@ -366,8 +401,8 @@ func Compile(input string) (*program.Program, error) {
 	visitor := parseVisitor{
 		elistener:       elistener,
 		instructions:    make([]byte, 0),
-		constants:       make([]core.Value, 0),
-		variables:       make(map[string]program.VarInfo),
+		resources:       make([]program.Resource, 0),
+		var_idx:         make(map[string]core.Address),
 		needed_balances: make(map[core.Address]map[core.Address]struct{}),
 	}
 
@@ -383,8 +418,7 @@ func Compile(input string) (*program.Program, error) {
 
 	return &program.Program{
 		Instructions:   visitor.instructions,
-		Constants:      visitor.constants,
-		Variables:      visitor.variables,
+		Resources:      visitor.resources,
 		NeededBalances: visitor.needed_balances,
 	}, nil
 }

@@ -27,35 +27,32 @@ func NewMachine(p *program.Program) *Machine {
 	printc := make(chan core.Value)
 
 	m := Machine{
-		Program:    p,
-		Constants:  p.Constants,
-		print_chan: printc,
-		Printer:    StdOutPrinter,
+		Program:             p,
+		UnresolvedResources: p.Resources,
+		Resources:           nil,
+		print_chan:          printc,
+		Printer:             StdOutPrinter,
 	}
 
 	return &m
 }
 
 type Machine struct {
-	P          uint
-	Program    *program.Program
-	Constants  []core.Value // Constants and Variables
-	Variables  []core.Value // constitute the resources
-	Stack      []core.Value
-	Postings   []ledger.Posting             // accumulates postings throughout execution
-	Balances   map[string]map[string]uint64 // keeps tracks of balances througout execution
-	Printer    func(chan core.Value)
-	print_chan chan core.Value
+	P                   uint
+	Program             *program.Program
+	Vars                map[string]core.Value
+	UnresolvedResources []program.Resource
+	Resources           []core.Value // Constants and Variables
+	Stack               []core.Value
+	Postings            []ledger.Posting             // accumulates postings throughout execution
+	Balances            map[string]map[string]uint64 // keeps tracks of balances througout execution
+	Printer             func(chan core.Value)
+	print_chan          chan core.Value
 }
 
 func (m *Machine) getResource(addr core.Address) core.Value {
 	a := uint16(addr)
-	if a < (1 << 15) {
-		return m.Constants[a]
-	} else {
-		a -= (1 << 15)
-		return m.Variables[a]
-	}
+	return m.Resources[a]
 }
 
 func (m *Machine) getBalance(account core.Account, asset core.Asset) (uint64, error) {
@@ -333,8 +330,8 @@ func (m *Machine) Execute() (byte, error) {
 	go m.Printer(m.print_chan)
 	defer close(m.print_chan)
 
-	if m.Variables == nil {
-		return 0, errors.New("variables haven't been initialized")
+	if m.Resources == nil {
+		return 0, errors.New("resources haven't been initialized")
 	} else if m.Balances == nil {
 		return 0, errors.New("balances haven't been initialized")
 	}
@@ -388,17 +385,38 @@ func (m *Machine) SetBalances(balances map[string]map[string]uint64) error {
 							return fmt.Errorf("missing %v balance of %v", mon.Asset, account)
 						}
 					} else {
-						return errors.New("incorrect program")
+						return errors.New("incorrect program: needed balance which was not of an asset")
 					}
 				}
 			} else {
 				return fmt.Errorf("missing balances of %v", account)
 			}
 		} else {
-			return errors.New("incorrect program")
+			return errors.New("incorrect program: needed balance which was not of not an account")
 		}
 	}
 	m.Balances = balances
+	return nil
+}
+
+func (m *Machine) ResolveResources() error {
+	m.Resources = make([]core.Value, len(m.UnresolvedResources))
+	for i, res := range m.UnresolvedResources {
+		var val core.Value
+		switch res := res.(type) {
+		case program.Constant:
+			val = res.Inner
+		case program.Parameter:
+			var ok bool
+			val, ok = m.Vars[res.Name]
+			if !ok {
+				return fmt.Errorf("missing variable: %v", res.Name)
+			}
+		case program.Metadata:
+			panic("not yet supported")
+		}
+		m.Resources[i] = val
+	}
 	return nil
 }
 
@@ -407,7 +425,8 @@ func (m *Machine) SetVars(vars map[string]core.Value) error {
 	if err != nil {
 		return err
 	}
-	m.Variables = v
+	m.Vars = v
+	m.ResolveResources()
 	return nil
 }
 
@@ -416,6 +435,7 @@ func (m *Machine) SetVarsFromJSON(vars map[string]json.RawMessage) error {
 	if err != nil {
 		return err
 	}
-	m.Variables = v
+	m.Vars = v
+	m.ResolveResources()
 	return nil
 }

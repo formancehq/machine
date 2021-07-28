@@ -18,11 +18,13 @@ const (
 )
 
 type Value interface {
+	isValue()
 	GetType() Type
 }
 
 type Account string
 
+func (Account) isValue()      {}
 func (Account) GetType() Type { return TYPE_ACCOUNT }
 func (a Account) String() string {
 	return fmt.Sprintf("@%v", string(a))
@@ -30,6 +32,7 @@ func (a Account) String() string {
 
 type Asset string
 
+func (Asset) isValue()      {}
 func (Asset) GetType() Type { return TYPE_ASSET }
 func (a Asset) String() string {
 	return fmt.Sprintf("%v", string(a))
@@ -37,6 +40,7 @@ func (a Asset) String() string {
 
 type Number uint64
 
+func (Number) isValue()      {}
 func (Number) GetType() Type { return TYPE_NUMBER }
 func (n Number) String() string {
 	return fmt.Sprintf("%v", uint64(n))
@@ -47,15 +51,19 @@ type Monetary struct {
 	Amount Amount `json:"amount"`
 }
 
+func (Monetary) isValue()      {}
 func (Monetary) GetType() Type { return TYPE_MONETARY }
 func (a Monetary) String() string {
 	return fmt.Sprintf("[%v %v]", a.Asset, a.Amount)
 }
 
+func (Allotment) isValue()      {}
 func (Allotment) GetType() Type { return TYPE_ALLOTMENT }
 
+func (Amount) isValue()      {}
 func (Amount) GetType() Type { return TYPE_AMOUNT }
 
+func (Portion) isValue()      {}
 func (Portion) GetType() Type { return TYPE_PORTION }
 
 func ValueEquals(lhs, rhs Value) bool {

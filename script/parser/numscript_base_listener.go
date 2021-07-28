@@ -189,6 +189,12 @@ func (s *BaseNumScriptListener) EnterType_(ctx *Type_Context) {}
 // ExitType_ is called when production type_ is exited.
 func (s *BaseNumScriptListener) ExitType_(ctx *Type_Context) {}
 
+// EnterOrigin is called when production origin is entered.
+func (s *BaseNumScriptListener) EnterOrigin(ctx *OriginContext) {}
+
+// ExitOrigin is called when production origin is exited.
+func (s *BaseNumScriptListener) ExitOrigin(ctx *OriginContext) {}
+
 // EnterVarDecl is called when production varDecl is entered.
 func (s *BaseNumScriptListener) EnterVarDecl(ctx *VarDeclContext) {}
 

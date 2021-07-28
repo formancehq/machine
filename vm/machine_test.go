@@ -73,6 +73,8 @@ func testimpl(t *testing.T, code string, expected CaseResult, exec func(*Machine
 		return
 	}
 
+	fmt.Println(p)
+
 	printed := []core.Value{}
 
 	var wg sync.WaitGroup
