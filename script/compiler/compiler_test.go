@@ -50,12 +50,13 @@ func test(t *testing.T, c TestCase) {
 			fmt.Println(p.Instructions, "vs", c.Expected.Instructions)
 			return
 		} else if len(p.Resources) != len(c.Expected.Resources) {
-			t.Error(fmt.Errorf("unexpected program constants: %v", *p))
+			t.Error(fmt.Errorf("unexpected program resources (=/= lengths): %v", *p))
 			return
 		} else {
 			for i := range c.Expected.Resources {
-				if !ResourceEquals(p.Resources[i], c.Expected.Resources[i]) {
-					t.Error(fmt.Errorf("unexpected program constants: %v", *p))
+				if !checkResourceEquals(t, p.Resources[i], c.Expected.Resources[i]) {
+					t.Error(fmt.Errorf("%v is not %v", p.Resources[i], c.Expected.Resources[i]))
+					t.Error(fmt.Errorf("unexpected program resources: %v", *p))
 					return
 				}
 			}
@@ -63,17 +64,24 @@ func test(t *testing.T, c TestCase) {
 	}
 }
 
-func ResourceEquals(lhs program.Resource, rhs program.Resource) bool {
-	if reflect.TypeOf(lhs) != reflect.TypeOf(rhs) {
+func checkResourceEquals(t *testing.T, res program.Resource, expected program.Resource) bool {
+	if reflect.TypeOf(res) != reflect.TypeOf(expected) {
 		return false
 	}
-	switch lhs := lhs.(type) {
+	switch res := res.(type) {
 	case program.Constant:
-		return core.ValueEquals(lhs.Inner, rhs.(program.Constant).Inner)
+		if reflect.TypeOf(res.Inner).Kind() == reflect.Ptr {
+			t.Fatal("generated program contained a constant with a pointer value")
+		}
+		return core.ValueEquals(res.Inner, expected.(program.Constant).Inner)
 	case program.Parameter:
-		return lhs.Typ == rhs.(program.Parameter).Typ
+		e := expected.(program.Parameter)
+		return res.Typ == e.Typ && res.Name == e.Name
 	case program.Metadata:
-		return lhs.Typ == rhs.(program.Metadata).Typ
+		e := expected.(program.Metadata)
+		return res.SourceAccount == e.SourceAccount &&
+			res.Key == e.Key &&
+			res.Typ == e.Typ
 	default:
 		panic("invalid resource")
 	}
@@ -147,7 +155,7 @@ func TestComments(t *testing.T) {
 		`,
 		Expected: CaseResult{
 			Instructions: []byte{program.OP_APUSH, 00, 00, program.OP_PRINT},
-			Resources:    []program.Resource{program.Parameter{Typ: core.TYPE_ACCOUNT}},
+			Resources:    []program.Resource{program.Parameter{Typ: core.TYPE_ACCOUNT, Name: "a"}},
 			Error:        "",
 		},
 	})
@@ -319,6 +327,48 @@ func TestSendAll(t *testing.T) {
 				program.Constant{Inner: core.Monetary{Asset: "EUR/2", Amount: core.NewAmountAll()}},
 				program.Constant{Inner: alice},
 				program.Constant{Inner: bob}},
+			Error: "",
+		},
+	})
+}
+
+func TestMetadata(t *testing.T) {
+	test(t, TestCase{
+		Case: `
+		vars {
+			account $sale
+			account $seller = meta($sale, "seller")
+			portion $commission = meta($seller, "commission")
+		}
+		send [EUR/2 53] (
+			source = $sale
+			destination = {
+				remaining to $seller
+				$commission to @platform
+			}
+		)`,
+		Expected: CaseResult{
+			Instructions: []byte{
+				program.OP_APUSH, 03, 00,
+				program.OP_APUSH, 00, 00,
+				program.OP_IPUSH, 01, 00, 00, 00, 00, 00, 00, 00,
+				program.OP_APUSH, 02, 00,
+				program.OP_APUSH, 04, 00,
+				program.OP_IPUSH, 02, 00, 00, 00, 00, 00, 00, 00,
+				program.OP_MAKE_ALLOTMENT,
+				program.OP_ALLOC,
+				program.OP_APUSH, 01, 00,
+				program.OP_SEND,
+				program.OP_APUSH, 05, 00,
+				program.OP_SEND,
+			}, Resources: []program.Resource{
+				program.Parameter{Name: "sale", Typ: core.TYPE_ACCOUNT},
+				program.Metadata{SourceAccount: core.NewAddress(0), Key: "seller", Typ: core.TYPE_ACCOUNT},
+				program.Metadata{SourceAccount: core.NewAddress(1), Key: "commission", Typ: core.TYPE_PORTION},
+				program.Constant{Inner: core.Monetary{Asset: "EUR/2", Amount: core.NewAmountSpecific(53)}},
+				program.Constant{Inner: core.NewPortionRemaining()},
+				program.Constant{Inner: core.Account("platform")},
+			},
 			Error: "",
 		},
 	})

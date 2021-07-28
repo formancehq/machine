@@ -13,7 +13,7 @@ import (
 func (p *parseVisitor) VisitAllocation(c parser.IAllocationContext) *CompileError {
 	switch c := c.(type) {
 	case *parser.AllocAccountContext:
-		ty, _, err := p.VisitExpr(c.Expression())
+		ty, _, err := p.VisitExpr(c.Expression(), true)
 		if err != nil {
 			return err
 		}
@@ -54,7 +54,11 @@ func (p *parseVisitor) VisitAllocBlockConst(c parser.IAllocBlockConstContext) *C
 		c.GetStart()
 		return LogicError(c, err)
 	}
-	p.PushValue(*allotment)
+	addr, err := p.AllocateResource(program.Constant{Inner: *allotment})
+	if err != nil {
+		return LogicError(c, err)
+	}
+	p.PushAddress(addr)
 	p.instructions = append(p.instructions, program.OP_ALLOC)
 	return p.VisitAllocDestination(c.GetDests())
 }
@@ -74,9 +78,13 @@ func (p *parseVisitor) VisitAllocBlockDyn(c parser.IAllocBlockDynContext) *Compi
 			}
 			rat := big.Rat(*portion.Specific)
 			total.Add(&rat, total)
-			p.PushValue(core.Portion(*portion))
+			addr, err := p.AllocateResource(program.Constant{Inner: core.Portion(*portion)})
+			if err != nil {
+				return LogicError(c, err)
+			}
+			p.PushAddress(addr)
 		case *parser.AllocPartDynVarContext:
-			ty, _, err := p.VisitVariable(c.GetPor())
+			ty, _, err := p.VisitVariable(c.GetPor(), true)
 			if err != nil {
 				return err
 			}
@@ -91,7 +99,11 @@ func (p *parseVisitor) VisitAllocBlockDyn(c parser.IAllocBlockDynContext) *Compi
 					errors.New("two uses of `remaining` in the same allocation"),
 				)
 			}
-			p.PushValue(core.NewPortionRemaining())
+			addr, err := p.AllocateResource(program.Constant{Inner: core.NewPortionRemaining()})
+			if err != nil {
+				return LogicError(c, err)
+			}
+			p.PushAddress(addr)
 			has_remaining = true
 		}
 	}
@@ -100,7 +112,7 @@ func (p *parseVisitor) VisitAllocBlockDyn(c parser.IAllocBlockDynContext) *Compi
 			errors.New("allocation has variable portions but no 'remaining'"),
 		)
 	}
-	p.PushValue(core.Number(len(portions)))
+	p.PushInteger(core.Number(len(portions)))
 
 	if total.Cmp(big.NewRat(1, 1)) != -1 {
 		return LogicError(c,
@@ -116,7 +128,7 @@ func (p *parseVisitor) VisitAllocBlockDyn(c parser.IAllocBlockDynContext) *Compi
 
 func (p *parseVisitor) VisitAllocDestination(dests []parser.IExpressionContext) *CompileError {
 	for _, dest := range dests {
-		ty, _, err := p.VisitExpr(dest)
+		ty, _, err := p.VisitExpr(dest, true)
 		if err != nil {
 			return err
 		}

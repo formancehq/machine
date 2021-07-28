@@ -113,9 +113,9 @@ var parserATN = []uint16{
 	146, 151, 165, 172, 178, 182, 188, 193, 197, 203, 208, 214,
 }
 var literalNames = []string{
-	"", "'to'", "'metadata('", "','", "", "", "", "", "'vars'", "'print'",
-	"'fail'", "'send'", "'source'", "'destination'", "'allocate'", "'+'", "'-'",
-	"'('", "')'", "'['", "']'", "'{'", "'}'", "'*'", "'='", "'account'", "'asset'",
+	"", "'to'", "'meta('", "','", "", "", "", "", "'vars'", "'print'", "'fail'",
+	"'send'", "'source'", "'destination'", "'allocate'", "'+'", "'-'", "'('",
+	"')'", "'['", "']'", "'{'", "'}'", "'*'", "'='", "'account'", "'asset'",
 	"'number'", "'monetary'", "'portion'", "", "", "'remaining'", "", "'%'",
 }
 var symbolicNames = []string{

@@ -17,6 +17,27 @@ const (
 	TYPE_AMOUNT                     // either ALL or a SPECIFIC number
 )
 
+func (t Type) String() string {
+	switch t {
+	case TYPE_ACCOUNT:
+		return "ACCOUNT"
+	case TYPE_ASSET:
+		return "ASSET"
+	case TYPE_NUMBER:
+		return "NUMBER"
+	case TYPE_MONETARY:
+		return "MONETARY"
+	case TYPE_PORTION:
+		return "PORTION"
+	case TYPE_ALLOTMENT:
+		return "ALLOTMENT"
+	case TYPE_AMOUNT:
+		return "AMOUNT"
+	default:
+		return "unknown enum variant"
+	}
+}
+
 type Value interface {
 	isValue()
 	GetType() Type

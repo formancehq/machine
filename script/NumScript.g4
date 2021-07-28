@@ -97,7 +97,7 @@ statement
 type_: TY_ACCOUNT | TY_ASSET | TY_NUMBER | TY_MONETARY | TY_PORTION;
 
 origin
-  : 'metadata(' acc=expression ',' key=STRING ')'
+  : 'meta(' acc=expression ',' key=STRING ')'
   ;
 
 
