@@ -20,21 +20,21 @@ const (
 func (t Type) String() string {
 	switch t {
 	case TYPE_ACCOUNT:
-		return "ACCOUNT"
+		return "account"
 	case TYPE_ASSET:
-		return "ASSET"
+		return "asset"
 	case TYPE_NUMBER:
-		return "NUMBER"
+		return "number"
 	case TYPE_MONETARY:
-		return "MONETARY"
+		return "monetary"
 	case TYPE_PORTION:
-		return "PORTION"
+		return "portion"
 	case TYPE_ALLOTMENT:
-		return "ALLOTMENT"
+		return "allotment"
 	case TYPE_AMOUNT:
-		return "AMOUNT"
+		return "amount"
 	default:
-		return "unknown enum variant"
+		return "invalid type"
 	}
 }
 

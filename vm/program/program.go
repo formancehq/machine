@@ -3,7 +3,6 @@ package program
 import (
 	"encoding/binary"
 	"encoding/json"
-	"errors"
 	"fmt"
 
 	"github.com/numary/machine/core"
@@ -108,57 +107,11 @@ func (p *Program) ParseVariablesJSON(vars map[string]json.RawMessage) (map[strin
 			if !ok {
 				return nil, fmt.Errorf("missing variable: %q", param.Name)
 			}
-			var value core.Value
-			switch param.Typ {
-			case core.TYPE_ACCOUNT:
-				var account core.Account
-				err := json.Unmarshal(data, &account)
-				if err != nil {
-					return nil, err
-				}
-				value = account
-			case core.TYPE_ASSET:
-				var asset core.Asset
-				err := json.Unmarshal(data, &asset)
-				if err != nil {
-					return nil, err
-				}
-				value = asset
-			case core.TYPE_NUMBER:
-				var number core.Number
-				err := json.Unmarshal(data, &number)
-				if err != nil {
-					return nil, err
-				}
-				value = number
-			case core.TYPE_MONETARY:
-				var mon struct {
-					Asset  string `json:"asset"`
-					Amount uint64 `json:"amount"`
-				}
-				err := json.Unmarshal(data, &mon)
-				if err != nil {
-					return nil, err
-				}
-				value = core.Monetary{
-					Asset:  core.Asset(mon.Asset),
-					Amount: core.NewAmountSpecific(mon.Amount),
-				}
-			case core.TYPE_PORTION:
-				var s string
-				err := json.Unmarshal(data, &s)
-				if err != nil {
-					return nil, err
-				}
-				res, err := core.ParsePortionSpecific(s)
-				if err != nil {
-					return nil, err
-				}
-				value = *res
-			default:
-				return nil, errors.New("unexpected variable type in program")
+			value, err := core.NewValueFromJSON(param.Typ, data)
+			if err != nil {
+				return nil, fmt.Errorf("invalid json for variable of %v of type %v: %v", param.Name, param.Typ, err)
 			}
-			variables[param.Name] = value
+			variables[param.Name] = *value
 			delete(vars, param.Name)
 		}
 	}
