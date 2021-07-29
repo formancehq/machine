@@ -1,3 +1,12 @@
+/*
+	Provides `Machine`, which executes programs and outputs postings.
+	1: Create New Machine
+	2: Set Variables (with `core.Value`s or JSON)
+	3: Resolve Resources (listen for requests on channel and provide metadata)
+	4: Get Needed Balances
+	5: Set Balances of needed
+	6: Execute
+*/
 package vm
 
 import (
@@ -43,10 +52,11 @@ type Machine struct {
 	Vars                map[string]core.Value
 	UnresolvedResources []program.Resource
 	Resources           []core.Value // Constants and Variables
-	started_resolve     bool
-	Stack               []core.Value
-	Postings            []ledger.Posting             // accumulates postings throughout execution
+	resolve_called      bool
 	Balances            map[string]map[string]uint64 // keeps tracks of balances througout execution
+	set_balance_called  bool
+	Stack               []core.Value
+	Postings            []ledger.Posting // accumulates postings throughout execution
 	Printer             func(chan core.Value)
 	print_chan          chan core.Value
 }
@@ -351,80 +361,82 @@ func (m *Machine) Execute() (byte, error) {
 	}
 }
 
-func (m *Machine) GetNeededBalances() (map[string]map[string]struct{}, error) {
-	if len(m.Resources) != len(m.UnresolvedResources) {
-		fmt.Printf("mismatch: %v, %v\n", m.Resources, m.UnresolvedResources)
-		return nil, errors.New("tried to get needed balances but resources have not yet been resolved")
-	}
-	needed := map[string]map[string]struct{}{}
-	for addr, needed_assets := range m.Program.NeededBalances {
-		account, ok := m.getResource(addr)
-		if !ok {
-			return nil, errors.New("invalid program (needed balances: invalid address of account)")
-		}
-		if account, ok := (*account).(core.Account); ok {
-			if string(account) == "world" {
-				continue
-			}
-			needed[string(account)] = map[string]struct{}{}
-			for addr := range needed_assets {
-				mon, ok := m.getResource(addr)
-				if !ok {
-					return nil, errors.New("invalid program (needed balances: invalid address of monetary)")
-				}
-				if mon, ok := (*mon).(core.Monetary); ok {
-					needed[string(account)][string(mon.Asset)] = struct{}{}
-				} else {
-					return nil, errors.New("invalid program (needed balances: not a monetary)")
-				}
-			}
-		} else {
-			return nil, errors.New("incorrect program (needed balances: not an account)")
-		}
-	}
-	return needed, nil
+type BalanceRequest struct {
+	Account  string
+	Asset    string
+	Response chan uint64
+	Error    error
 }
 
-func (m *Machine) SetBalances(balances map[string]map[string]uint64) error {
+func (m *Machine) ResolveBalances() (chan BalanceRequest, error) {
 	if len(m.Resources) != len(m.UnresolvedResources) {
-		fmt.Printf("mismatch: %v, %v\n", m.Resources, m.UnresolvedResources)
-		return errors.New("tried to set balances but resources have not yet been resolved")
+		return nil, errors.New("tried to resolve balances before resources")
 	}
-
-	// for every account that we need balances of, check if it's there
-	for addr, needed_assets := range m.Program.NeededBalances {
-		account, ok := m.getResource(addr)
-		if !ok {
-			return errors.New("invalid program (set balances: invalid address of account)")
-		}
-		if account, ok := (*account).(core.Account); ok {
-			if string(account) == "world" {
-				continue
+	if m.set_balance_called {
+		return nil, errors.New("tried to call ResolveBalances twice")
+	}
+	m.set_balance_called = true
+	ch := make(chan BalanceRequest)
+	go func() {
+		defer close(ch)
+		m.Balances = make(map[string]map[string]uint64)
+		// for every account that we need balances of, check if it's there
+		for addr, needed_assets := range m.Program.NeededBalances {
+			account, ok := m.getResource(addr)
+			if !ok {
+				ch <- BalanceRequest{
+					Error: errors.New("invalid program (set balances: invalid address of account)"),
+				}
+				return
 			}
-			if b, ok := balances[string(account)]; ok {
-				// for every asset that we need balances of on that account
+			if account, ok := (*account).(core.Account); ok {
+				if string(account) == "world" {
+					continue
+				}
+				m.Balances[string(account)] = make(map[string]uint64)
+				// for every asset, send request
 				for addr := range needed_assets {
 					mon, ok := m.getResource(addr)
 					if !ok {
-						return errors.New("invalid program (set balances: invalid address of monetary)")
+						ch <- BalanceRequest{
+							Error: errors.New("invalid program (set balances: invalid address of monetary)"),
+						}
+						return
 					}
 					if mon, ok := (*mon).(core.Monetary); ok {
-						if _, ok := b[string(mon.Asset)]; !ok {
-							return fmt.Errorf("missing %v balance of %v", mon.Asset, account)
+						asset := mon.Asset
+						resp := make(chan uint64)
+						ch <- BalanceRequest{
+							Account:  string(account),
+							Asset:    string(asset),
+							Response: resp,
 						}
+						balance, ok := <-resp
+						close(resp)
+						if !ok {
+							ch <- BalanceRequest{
+								Error: errors.New("error on response channel"),
+							}
+							return
+						}
+						m.Balances[string(account)][string(asset)] = balance
 					} else {
-						return errors.New("invalid program (set balances: not a monetary)")
+						ch <- BalanceRequest{
+							Error: errors.New("invalid program (set balances: not a monetary)"),
+						}
+						return
 					}
 				}
 			} else {
-				return fmt.Errorf("missing balances of %v", account)
+				ch <- BalanceRequest{
+					Error: errors.New("incorrect program (set balances: not an account)"),
+				}
+				return
 			}
-		} else {
-			return errors.New("incorrect program (set balances: not an account)")
 		}
-	}
-	m.Balances = balances
-	return nil
+		fmt.Println(m.Balances)
+	}()
+	return ch, nil
 }
 
 type MetadataRequest struct {
@@ -434,12 +446,11 @@ type MetadataRequest struct {
 	Error    error
 }
 
-// returns account name, key, value pointer
 func (m *Machine) ResolveResources() (chan MetadataRequest, error) {
-	if m.started_resolve {
-		errors.New("tried to call ResolveResources twice")
+	if m.resolve_called {
+		return nil, errors.New("tried to call ResolveResources twice")
 	}
-	m.started_resolve = true
+	m.resolve_called = true
 	ch := make(chan MetadataRequest)
 	go func() {
 		defer close(ch)
@@ -460,7 +471,6 @@ func (m *Machine) ResolveResources() (chan MetadataRequest, error) {
 					return
 				}
 			case program.Metadata:
-				resp := make(chan core.Value)
 				source_account, ok := m.getResource(res.SourceAccount)
 				if !ok {
 					ch <- MetadataRequest{
@@ -475,12 +485,14 @@ func (m *Machine) ResolveResources() (chan MetadataRequest, error) {
 					return
 				}
 				account := (*source_account).(core.Account)
+				resp := make(chan core.Value)
 				ch <- MetadataRequest{
 					Account:  string(account),
 					Key:      res.Key,
 					Response: resp,
 				}
 				val = <-resp
+				close(resp)
 				if val == nil {
 					ch <- MetadataRequest{
 						Error: errors.New("tried to set nil as resource"),

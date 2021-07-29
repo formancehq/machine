@@ -8,7 +8,6 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	ledger "github.com/numary/ledger/core"
 	"github.com/numary/machine/core"
 	"github.com/numary/machine/script/compiler"
@@ -46,21 +45,31 @@ func test(
 		if err != nil {
 			return 0, err
 		}
-		ch, err := m.ResolveResources()
-		if err != nil {
-			return 0, err
-		}
-		for req := range ch {
-			val := meta[req.Account][req.Key]
-			if req.Error != nil {
-				panic(req.Error)
+		{
+			ch, err := m.ResolveResources()
+			if err != nil {
+				return 0, err
 			}
-			req.Response <- val
+			for req := range ch {
+				val := meta[req.Account][req.Key]
+				if req.Error != nil {
+					panic(req.Error)
+				}
+				req.Response <- val
+			}
 		}
-
-		err = m.SetBalances(balances)
-		if err != nil {
-			return 0, err
+		{
+			ch, err := m.ResolveBalances()
+			if err != nil {
+				return 0, err
+			}
+			for req := range ch {
+				val := balances[req.Account][req.Asset]
+				if req.Error != nil {
+					panic(req.Error)
+				}
+				req.Response <- val
+			}
 		}
 		return m.Execute()
 	})
@@ -84,21 +93,37 @@ func testJSON(
 		if err != nil {
 			return 0, err
 		}
-		ch, err := m.ResolveResources()
-		if err != nil {
-			return 0, err
-		}
-		for req := range ch {
-			val := meta[req.Account][req.Key]
-			if req.Error != nil {
-				panic(req.Error)
+		{
+			ch, err := m.ResolveResources()
+			if err != nil {
+				return 0, err
 			}
-			req.Response <- val
+			for req := range ch {
+				if req.Error != nil {
+					panic(req.Error)
+				}
+				val, ok := meta[req.Account][req.Key]
+				if !ok {
+					t.Fatalf("case error: missing metadata %q of %v", req.Key, req.Account)
+				}
+				req.Response <- val
+			}
 		}
-
-		err = m.SetBalances(balances)
-		if err != nil {
-			return 0, err
+		{
+			ch, err := m.ResolveBalances()
+			if err != nil {
+				return 0, err
+			}
+			for req := range ch {
+				if req.Error != nil {
+					panic(req.Error)
+				}
+				val, ok := balances[req.Account][req.Asset]
+				if !ok {
+					t.Fatalf("case error: missing %v balance of %v", req.Asset, req.Account)
+				}
+				req.Response <- val
+			}
 		}
 		return m.Execute()
 	})
@@ -570,56 +595,6 @@ send [GEM 16] (
 	)
 }
 
-func TestMissingBalance(t *testing.T) {
-	testJSON(t,
-		`send [GEM 15] (
-			source = @a
-			destination = @a
-		)`,
-		`{}`,
-		map[string]map[string]core.Value{},
-		map[string]map[string]uint64{
-			"users:001": {
-				"GEM": 3,
-			},
-			"payments:001": {
-				"USD/2": 564,
-			},
-		},
-		CaseResult{
-			Printed:  []core.Value{},
-			Postings: []ledger.Posting{},
-			ExitCode: 0,
-			Error:    "missing balance",
-		},
-	)
-}
-
-func TestMissingWorldBalance(t *testing.T) {
-	testJSON(t,
-		`send [GEM 15] (
-			source = @world
-			destination = @a
-		)`,
-		`{}`,
-		map[string]map[string]core.Value{},
-		map[string]map[string]uint64{},
-		CaseResult{
-			Printed: []core.Value{},
-			Postings: []ledger.Posting{
-				{
-					Asset:       "GEM",
-					Amount:      15,
-					Source:      "world",
-					Destination: "a",
-				},
-			},
-			ExitCode: 1,
-			Error:    "",
-		},
-	)
-}
-
 func TestWorldSource(t *testing.T) {
 	testJSON(t,
 		`send [GEM 15] (
@@ -808,7 +783,7 @@ func TestMetadata(t *testing.T) {
 	)
 }
 
-func TestGetNeededBalances(t *testing.T) {
+func TestNeededBalances(t *testing.T) {
 	p, err := compiler.Compile(`vars {
 		account $a
 	}
@@ -822,8 +797,7 @@ func TestGetNeededBalances(t *testing.T) {
 	)`)
 
 	if err != nil {
-		t.Errorf("did not expect error on Compile, got: %v", err)
-		return
+		t.Fatalf("did not expect error on Compile, got: %v", err)
 	}
 
 	m := NewMachine(p)
@@ -832,17 +806,16 @@ func TestGetNeededBalances(t *testing.T) {
 		"a": core.Account("a"),
 	})
 	if err != nil {
-		t.Errorf("did not expect error on SetVars, got: %v", err)
-		return
+		t.Fatalf("did not expect error on SetVars, got: %v", err)
 	}
-	ch, err := m.ResolveResources()
-	if err != nil {
-		t.Errorf("did not expect error on ResolveResources, got: %v", err)
-		return
-	}
-	for range ch {
-		t.Errorf("did not expect to need any metadata")
-		return
+	{
+		ch, err := m.ResolveResources()
+		if err != nil {
+			t.Fatalf("did not expect error on ResolveResources, got: %v", err)
+		}
+		for range ch {
+			t.Fatalf("did not expect to need any metadata")
+		}
 	}
 
 	expected := map[string]map[string]struct{}{
@@ -853,12 +826,27 @@ func TestGetNeededBalances(t *testing.T) {
 			"GEM": {},
 		},
 	}
-	actual, err := m.GetNeededBalances()
-	if err != nil {
-		t.Errorf("did not expect error on GetNeededBalances, got: %v", err)
-		return
+	{
+		ch, err := m.ResolveBalances()
+		if err != nil {
+			t.Fatalf("did not expect error on ResolveBalances, got: %v", err)
+		}
+		for req := range ch {
+			if req.Error != nil {
+				t.Fatalf("did not expect error in balance request: %v", req.Error)
+			}
+			if _, ok := expected[req.Account][req.Asset]; ok {
+				delete(expected[req.Account], req.Asset)
+				if len(expected[req.Account]) == 0 {
+					delete(expected, req.Account)
+				}
+				req.Response <- 0
+			} else {
+				t.Fatalf("did not expect to need %v balance of %v", req.Asset, req.Account)
+			}
+		}
 	}
-	if !cmp.Equal(actual, expected) {
-		t.Errorf("unexpected needed balances: %v", actual)
+	if len(expected) != 0 {
+		t.Fatalf("some balances were not requested: %v", expected)
 	}
 }
