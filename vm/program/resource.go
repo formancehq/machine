@@ -26,7 +26,7 @@ type Parameter struct {
 
 func (Parameter) isResource()          {}
 func (p Parameter) GetType() core.Type { return p.Typ }
-func (p Parameter) String() string     { return fmt.Sprintf("(%v %v)", p.Typ, p.Name) }
+func (p Parameter) String() string     { return fmt.Sprintf("<%v %v>", p.Typ, p.Name) }
 
 type Metadata struct {
 	SourceAccount core.Address
@@ -37,5 +37,5 @@ type Metadata struct {
 func (Metadata) isResource()          {}
 func (m Metadata) GetType() core.Type { return m.Typ }
 func (m Metadata) String() string {
-	return fmt.Sprintf("meta(%v, %v) %v", m.SourceAccount, m.Key, m.Typ)
+	return fmt.Sprintf("<%v meta(%v, %v)>", m.Typ, m.SourceAccount, m.Key)
 }

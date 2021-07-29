@@ -43,6 +43,7 @@ type Machine struct {
 	Vars                map[string]core.Value
 	UnresolvedResources []program.Resource
 	Resources           []core.Value // Constants and Variables
+	started_resolve     bool
 	Stack               []core.Value
 	Postings            []ledger.Posting             // accumulates postings throughout execution
 	Balances            map[string]map[string]uint64 // keeps tracks of balances througout execution
@@ -323,8 +324,6 @@ func (m *Machine) tick() (bool, byte) {
 		}
 	}
 
-	fmt.Println(m.Stack)
-
 	m.P += 1
 
 	if int(m.P) >= len(m.Program.Instructions) {
@@ -338,9 +337,7 @@ func (m *Machine) Execute() (byte, error) {
 	go m.Printer(m.print_chan)
 	defer close(m.print_chan)
 
-	fmt.Printf("RESOURCES AT START: %v\n", m.Resources)
-
-	if m.Resources == nil {
+	if len(m.Resources) != len(m.UnresolvedResources) {
 		return 0, errors.New("resources haven't been initialized")
 	} else if m.Balances == nil {
 		return 0, errors.New("balances haven't been initialized")
@@ -355,6 +352,10 @@ func (m *Machine) Execute() (byte, error) {
 }
 
 func (m *Machine) GetNeededBalances() (map[string]map[string]struct{}, error) {
+	if len(m.Resources) != len(m.UnresolvedResources) {
+		fmt.Printf("mismatch: %v, %v\n", m.Resources, m.UnresolvedResources)
+		return nil, errors.New("tried to get needed balances but resources have not yet been resolved")
+	}
 	needed := map[string]map[string]struct{}{}
 	for addr, needed_assets := range m.Program.NeededBalances {
 		account, ok := m.getResource(addr)
@@ -386,6 +387,7 @@ func (m *Machine) GetNeededBalances() (map[string]map[string]struct{}, error) {
 
 func (m *Machine) SetBalances(balances map[string]map[string]uint64) error {
 	if len(m.Resources) != len(m.UnresolvedResources) {
+		fmt.Printf("mismatch: %v, %v\n", m.Resources, m.UnresolvedResources)
 		return errors.New("tried to set balances but resources have not yet been resolved")
 	}
 
@@ -425,65 +427,6 @@ func (m *Machine) SetBalances(balances map[string]map[string]uint64) error {
 	return nil
 }
 
-// func (m *Machine) ResolveResources() error {
-// 	m.Resources = make([]core.Value, len(m.UnresolvedResources))
-// 	for i, res := range m.UnresolvedResources {
-// 		var val core.Value
-// 		switch res := res.(type) {
-// 		case program.Constant:
-// 			val = res.Inner
-// 		case program.Parameter:
-// 			var ok bool
-// 			val, ok = m.Vars[res.Name]
-// 			if !ok {
-// 				return fmt.Errorf("missing variable: %v", res.Name)
-// 			}
-// 		case program.Metadata:
-// 			panic("not yet supported")
-// 		}
-// 		m.Resources[i] = val
-// 	}
-// 	return nil
-// }
-
-// // returns account name, key, value pointer
-// func (m *Machine) NextResource() (string, string, error) {
-// 	for len(m.Resources) != len(m.UnresolvedResources) {
-// 		idx := len(m.Resources)
-// 		res := m.UnresolvedResources[idx]
-// 		var val core.Value
-// 		switch res := res.(type) {
-// 		case program.Constant:
-// 			val = res.Inner
-// 		case program.Parameter:
-// 			var ok bool
-// 			val, ok = m.Vars[res.Name]
-// 			if !ok {
-// 				return "", "", fmt.Errorf("missing variable: %v", res.Name)
-// 			}
-// 		case program.Metadata:
-// 			return res.SourceAccount, res.SourceAccount, &val
-// 		}
-// 		m.Resources[idx] = val
-// 	}
-// 	return nil, nil
-// }
-
-// func (m *Machine) SetNextResource(acc string, key string, val core.Value) error {
-// 	if len(m.Resources) >= len(m.UnresolvedResources) {
-// 		return errors.New("all resources have already been resolved")
-// 	}
-// 	idx := len(m.Resources)
-// 	res := m.UnresolvedResources[idx]
-// 	if meta, ok := res.(program.Metadata); ok {
-// 		if m.getResource(meta.SourceAccount) == acc && meta.Key == key {
-// 			m.Resources
-// 		}
-// 	} else {
-// 		return errors.New("next resources was not a metadata")
-// 	}
-// }
-
 type MetadataRequest struct {
 	Account  string
 	Key      string
@@ -492,7 +435,11 @@ type MetadataRequest struct {
 }
 
 // returns account name, key, value pointer
-func (m *Machine) ResolveResources() chan MetadataRequest {
+func (m *Machine) ResolveResources() (chan MetadataRequest, error) {
+	if m.started_resolve {
+		errors.New("tried to call ResolveResources twice")
+	}
+	m.started_resolve = true
 	ch := make(chan MetadataRequest)
 	go func() {
 		defer close(ch)
@@ -550,7 +497,7 @@ func (m *Machine) ResolveResources() chan MetadataRequest {
 			m.Resources = append(m.Resources, val)
 		}
 	}()
-	return ch
+	return ch, nil
 }
 
 func (m *Machine) SetVars(vars map[string]core.Value) error {
@@ -559,7 +506,6 @@ func (m *Machine) SetVars(vars map[string]core.Value) error {
 		return err
 	}
 	m.Vars = v
-	m.ResolveResources()
 	return nil
 }
 
@@ -569,6 +515,5 @@ func (m *Machine) SetVarsFromJSON(vars map[string]json.RawMessage) error {
 		return err
 	}
 	m.Vars = v
-	m.ResolveResources()
 	return nil
 }
