@@ -72,11 +72,12 @@ type Monetary struct {
 	Amount Amount `json:"amount"`
 }
 
-func (Monetary) isValue()      {}
-func (Monetary) GetType() Type { return TYPE_MONETARY }
 func (a Monetary) String() string {
 	return fmt.Sprintf("[%v %v]", a.Asset, a.Amount)
 }
+
+func (Monetary) isValue()      {}
+func (Monetary) GetType() Type { return TYPE_MONETARY }
 
 func (Allotment) isValue()      {}
 func (Allotment) GetType() Type { return TYPE_ALLOTMENT }

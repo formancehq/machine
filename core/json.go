@@ -3,19 +3,41 @@ package core
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 )
 
-func TypenameToType(name string) Type {
+func TypenameToType(name string) (Type, bool) {
 	switch name {
 	case "account":
-		return TYPE_ACCOUNT
+		return TYPE_ACCOUNT, true
 	case "portion":
-		return TYPE_PORTION
+		return TYPE_PORTION, true
 	case "monetary":
-		return TYPE_MONETARY
+		return TYPE_MONETARY, true
 	default:
-		return 0
+		return 0, false
 	}
+}
+
+func NewValueFromTypedJSON(raw_input json.RawMessage) (*Value, error) {
+	var input struct {
+		Type  string          `json:"type"`
+		Value json.RawMessage `json:"value"`
+	}
+
+	err := json.Unmarshal(raw_input, &input)
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Println(input.Type)
+
+	typ, ok := TypenameToType(input.Type)
+	if !ok {
+		return nil, fmt.Errorf("unknown type: %v", input.Type)
+	}
+
+	return NewValueFromJSON(typ, input.Value)
 }
 
 func NewValueFromJSON(typ Type, data json.RawMessage) (*Value, error) {
