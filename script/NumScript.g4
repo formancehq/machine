@@ -27,6 +27,7 @@ TY_ASSET: 'asset';
 TY_NUMBER: 'number';
 TY_MONETARY: 'monetary';
 TY_PORTION: 'portion';
+STRING: '"' [a-zA-Z0-9]* '"';
 PORTION:
   ( [0-9]+ [ ]? '/' [ ]? [0-9]+
   | [0-9]+     ('.'      [0-9]+)? '%'
@@ -95,7 +96,12 @@ statement
 
 type_: TY_ACCOUNT | TY_ASSET | TY_NUMBER | TY_MONETARY | TY_PORTION;
 
-varDecl: ty=type_ name=variable;
+origin
+  : 'meta(' acc=expression ',' key=STRING ')'
+  ;
+
+
+varDecl: ty=type_ name=variable (EQ orig=origin)?;
 
 varListDecl: VARS LBRACE NEWLINE+ (v+=varDecl NEWLINE+)+ RBRACE NEWLINE+;
 

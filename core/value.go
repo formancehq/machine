@@ -17,12 +17,35 @@ const (
 	TYPE_AMOUNT                     // either ALL or a SPECIFIC number
 )
 
+func (t Type) String() string {
+	switch t {
+	case TYPE_ACCOUNT:
+		return "account"
+	case TYPE_ASSET:
+		return "asset"
+	case TYPE_NUMBER:
+		return "number"
+	case TYPE_MONETARY:
+		return "monetary"
+	case TYPE_PORTION:
+		return "portion"
+	case TYPE_ALLOTMENT:
+		return "allotment"
+	case TYPE_AMOUNT:
+		return "amount"
+	default:
+		return "invalid type"
+	}
+}
+
 type Value interface {
+	isValue()
 	GetType() Type
 }
 
 type Account string
 
+func (Account) isValue()      {}
 func (Account) GetType() Type { return TYPE_ACCOUNT }
 func (a Account) String() string {
 	return fmt.Sprintf("@%v", string(a))
@@ -30,6 +53,7 @@ func (a Account) String() string {
 
 type Asset string
 
+func (Asset) isValue()      {}
 func (Asset) GetType() Type { return TYPE_ASSET }
 func (a Asset) String() string {
 	return fmt.Sprintf("%v", string(a))
@@ -37,6 +61,7 @@ func (a Asset) String() string {
 
 type Number uint64
 
+func (Number) isValue()      {}
 func (Number) GetType() Type { return TYPE_NUMBER }
 func (n Number) String() string {
 	return fmt.Sprintf("%v", uint64(n))
@@ -47,15 +72,20 @@ type Monetary struct {
 	Amount Amount `json:"amount"`
 }
 
-func (Monetary) GetType() Type { return TYPE_MONETARY }
 func (a Monetary) String() string {
 	return fmt.Sprintf("[%v %v]", a.Asset, a.Amount)
 }
 
+func (Monetary) isValue()      {}
+func (Monetary) GetType() Type { return TYPE_MONETARY }
+
+func (Allotment) isValue()      {}
 func (Allotment) GetType() Type { return TYPE_ALLOTMENT }
 
+func (Amount) isValue()      {}
 func (Amount) GetType() Type { return TYPE_AMOUNT }
 
+func (Portion) isValue()      {}
 func (Portion) GetType() Type { return TYPE_PORTION }
 
 func ValueEquals(lhs, rhs Value) bool {

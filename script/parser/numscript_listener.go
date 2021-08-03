@@ -92,6 +92,9 @@ type NumScriptListener interface {
 	// EnterType_ is called when entering the type_ production.
 	EnterType_(c *Type_Context)
 
+	// EnterOrigin is called when entering the origin production.
+	EnterOrigin(c *OriginContext)
+
 	// EnterVarDecl is called when entering the varDecl production.
 	EnterVarDecl(c *VarDeclContext)
 
@@ -184,6 +187,9 @@ type NumScriptListener interface {
 
 	// ExitType_ is called when exiting the type_ production.
 	ExitType_(c *Type_Context)
+
+	// ExitOrigin is called when exiting the origin production.
+	ExitOrigin(c *OriginContext)
 
 	// ExitVarDecl is called when exiting the varDecl production.
 	ExitVarDecl(c *VarDeclContext)

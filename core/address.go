@@ -6,28 +6,12 @@ import "encoding/binary"
 // constants (literals) and variables passed to the program
 type Address uint16
 
-func NewDataAddress(x uint16) Address {
+func NewAddress(x uint16) Address {
 	return Address(x)
-}
-
-func NewVarAddress(x uint16) Address {
-	return Address((1 << 15) + x)
 }
 
 func (a Address) ToBytes() []byte {
 	bytes := make([]byte, 2)
 	binary.LittleEndian.PutUint16(bytes, uint16(a))
 	return bytes
-}
-
-func (a Address) ToIdx() int {
-	return int(a) & 0x7FFF
-}
-
-func (a Address) IsConstant() bool {
-	return uint16(a) < (1 << 15)
-}
-
-func (a Address) IsVariable() bool {
-	return uint16(a) >= (1 << 15)
 }

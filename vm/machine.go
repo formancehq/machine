@@ -1,3 +1,12 @@
+/*
+	Provides `Machine`, which executes programs and outputs postings.
+	1: Create New Machine
+	2: Set Variables (with `core.Value`s or JSON)
+	3: Resolve Resources (listen for requests on channel and provide metadata)
+	4: Get Needed Balances
+	5: Set Balances of needed
+	6: Execute
+*/
 package vm
 
 import (
@@ -27,35 +36,37 @@ func NewMachine(p *program.Program) *Machine {
 	printc := make(chan core.Value)
 
 	m := Machine{
-		Program:    p,
-		Constants:  p.Constants,
-		print_chan: printc,
-		Printer:    StdOutPrinter,
+		Program:             p,
+		UnresolvedResources: p.Resources,
+		Resources:           make([]core.Value, 0),
+		print_chan:          printc,
+		Printer:             StdOutPrinter,
 	}
 
 	return &m
 }
 
 type Machine struct {
-	P          uint
-	Program    *program.Program
-	Constants  []core.Value // Constants and Variables
-	Variables  []core.Value // constitute the resources
-	Stack      []core.Value
-	Postings   []ledger.Posting             // accumulates postings throughout execution
-	Balances   map[string]map[string]uint64 // keeps tracks of balances througout execution
-	Printer    func(chan core.Value)
-	print_chan chan core.Value
+	P                   uint
+	Program             *program.Program
+	Vars                map[string]core.Value
+	UnresolvedResources []program.Resource
+	Resources           []core.Value // Constants and Variables
+	resolve_called      bool
+	Balances            map[string]map[string]uint64 // keeps tracks of balances througout execution
+	set_balance_called  bool
+	Stack               []core.Value
+	Postings            []ledger.Posting // accumulates postings throughout execution
+	Printer             func(chan core.Value)
+	print_chan          chan core.Value
 }
 
-func (m *Machine) getResource(addr core.Address) core.Value {
-	a := uint16(addr)
-	if a < (1 << 15) {
-		return m.Constants[a]
-	} else {
-		a -= (1 << 15)
-		return m.Variables[a]
+func (m *Machine) getResource(addr core.Address) (*core.Value, bool) {
+	a := int(addr)
+	if a >= len(m.Resources) {
+		return nil, false
 	}
+	return &m.Resources[a], true
 }
 
 func (m *Machine) getBalance(account core.Account, asset core.Asset) (uint64, error) {
@@ -123,8 +134,11 @@ func (m *Machine) tick() (bool, byte) {
 	switch op {
 	case program.OP_APUSH:
 		bytes := m.Program.Instructions[m.P+1 : m.P+3]
-		v := m.getResource(core.Address(binary.LittleEndian.Uint16(bytes)))
-		m.Stack = append(m.Stack, v)
+		v, ok := m.getResource(core.Address(binary.LittleEndian.Uint16(bytes)))
+		if !ok {
+			return true, EXIT_FAIL
+		}
+		m.Stack = append(m.Stack, *v)
 		m.P += 2
 	case program.OP_IPUSH:
 		bytes := m.Program.Instructions[m.P+1 : m.P+9]
@@ -333,8 +347,8 @@ func (m *Machine) Execute() (byte, error) {
 	go m.Printer(m.print_chan)
 	defer close(m.print_chan)
 
-	if m.Variables == nil {
-		return 0, errors.New("variables haven't been initialized")
+	if len(m.Resources) != len(m.UnresolvedResources) {
+		return 0, errors.New("resources haven't been initialized")
 	} else if m.Balances == nil {
 		return 0, errors.New("balances haven't been initialized")
 	}
@@ -347,59 +361,155 @@ func (m *Machine) Execute() (byte, error) {
 	}
 }
 
-func (m *Machine) GetNeededBalances() (map[string]map[string]struct{}, error) {
-	needed := map[string]map[string]struct{}{}
-	for addr, needed_assets := range m.Program.NeededBalances {
-		account := m.getResource(addr)
-		if account, ok := account.(core.Account); ok {
-			if string(account) == "world" {
-				continue
-			}
-			needed[string(account)] = map[string]struct{}{}
-			for addr := range needed_assets {
-				mon := m.getResource(addr)
-				if mon, ok := mon.(core.Monetary); ok {
-					needed[string(account)][string(mon.Asset)] = struct{}{}
-				} else {
-					return nil, errors.New("incorrect program")
-				}
-			}
-		} else {
-			return nil, errors.New("incorrect program")
-		}
-	}
-	return needed, nil
+type BalanceRequest struct {
+	Account  string
+	Asset    string
+	Response chan uint64
+	Error    error
 }
 
-func (m *Machine) SetBalances(balances map[string]map[string]uint64) error {
-	// for every account that we need balances of, check if it's there
-	for addr, needed_assets := range m.Program.NeededBalances {
-		account := m.getResource(addr)
-		if account, ok := account.(core.Account); ok {
-			if string(account) == "world" {
-				continue
+func (m *Machine) ResolveBalances() (chan BalanceRequest, error) {
+	if len(m.Resources) != len(m.UnresolvedResources) {
+		return nil, errors.New("tried to resolve balances before resources")
+	}
+	if m.set_balance_called {
+		return nil, errors.New("tried to call ResolveBalances twice")
+	}
+	m.set_balance_called = true
+	ch := make(chan BalanceRequest)
+	go func() {
+		defer close(ch)
+		m.Balances = make(map[string]map[string]uint64)
+		// for every account that we need balances of, check if it's there
+		for addr, needed_assets := range m.Program.NeededBalances {
+			account, ok := m.getResource(addr)
+			if !ok {
+				ch <- BalanceRequest{
+					Error: errors.New("invalid program (set balances: invalid address of account)"),
+				}
+				return
 			}
-			if b, ok := balances[string(account)]; ok {
-				// for every asset that we need balances of on that account
+			if account, ok := (*account).(core.Account); ok {
+				if string(account) == "world" {
+					continue
+				}
+				m.Balances[string(account)] = make(map[string]uint64)
+				// for every asset, send request
 				for addr := range needed_assets {
-					mon := m.getResource(addr)
-					if mon, ok := mon.(core.Monetary); ok {
-						if _, ok := b[string(mon.Asset)]; !ok {
-							return fmt.Errorf("missing %v balance of %v", mon.Asset, account)
+					mon, ok := m.getResource(addr)
+					if !ok {
+						ch <- BalanceRequest{
+							Error: errors.New("invalid program (set balances: invalid address of monetary)"),
 						}
+						return
+					}
+					if mon, ok := (*mon).(core.Monetary); ok {
+						asset := mon.Asset
+						resp := make(chan uint64)
+						ch <- BalanceRequest{
+							Account:  string(account),
+							Asset:    string(asset),
+							Response: resp,
+						}
+						balance, ok := <-resp
+						close(resp)
+						if !ok {
+							ch <- BalanceRequest{
+								Error: errors.New("error on response channel"),
+							}
+							return
+						}
+						m.Balances[string(account)][string(asset)] = balance
 					} else {
-						return errors.New("incorrect program")
+						ch <- BalanceRequest{
+							Error: errors.New("invalid program (set balances: not a monetary)"),
+						}
+						return
 					}
 				}
 			} else {
-				return fmt.Errorf("missing balances of %v", account)
+				ch <- BalanceRequest{
+					Error: errors.New("incorrect program (set balances: not an account)"),
+				}
+				return
 			}
-		} else {
-			return errors.New("incorrect program")
 		}
+		fmt.Println(m.Balances)
+	}()
+	return ch, nil
+}
+
+type MetadataRequest struct {
+	Account  string
+	Key      string
+	Response chan core.Value
+	Error    error
+}
+
+func (m *Machine) ResolveResources() (chan MetadataRequest, error) {
+	if m.resolve_called {
+		return nil, errors.New("tried to call ResolveResources twice")
 	}
-	m.Balances = balances
-	return nil
+	m.resolve_called = true
+	ch := make(chan MetadataRequest)
+	go func() {
+		defer close(ch)
+		for len(m.Resources) != len(m.UnresolvedResources) {
+			idx := len(m.Resources)
+			res := m.UnresolvedResources[idx]
+			var val core.Value
+			switch res := res.(type) {
+			case program.Constant:
+				val = res.Inner
+			case program.Parameter:
+				var ok bool
+				val, ok = m.Vars[res.Name]
+				if !ok {
+					ch <- MetadataRequest{
+						Error: fmt.Errorf("missing variable: %v", res.Name),
+					}
+					return
+				}
+			case program.Metadata:
+				source_account, ok := m.getResource(res.SourceAccount)
+				if !ok {
+					ch <- MetadataRequest{
+						Error: errors.New("tried to request metadata of an account which has not yet been solved"),
+					}
+					return
+				}
+				if (*source_account).GetType() != core.TYPE_ACCOUNT {
+					ch <- MetadataRequest{
+						Error: fmt.Errorf("tried to request metadata on wrong entity: %v instead of ACCOUNT", (*source_account).GetType()),
+					}
+					return
+				}
+				account := (*source_account).(core.Account)
+				resp := make(chan core.Value)
+				ch <- MetadataRequest{
+					Account:  string(account),
+					Key:      res.Key,
+					Response: resp,
+				}
+				val = <-resp
+				close(resp)
+				if val == nil {
+					ch <- MetadataRequest{
+						Error: errors.New("tried to set nil as resource"),
+					}
+					return
+				}
+				if val.GetType() != res.Typ {
+					ch <- MetadataRequest{
+						Error: fmt.Errorf("wrong type: expected %v, got %v", res.Typ, val.GetType()),
+					}
+					return
+				}
+			}
+			m.Resources = append(m.Resources, val)
+		}
+	}()
+	return ch, nil
 }
 
 func (m *Machine) SetVars(vars map[string]core.Value) error {
@@ -407,7 +517,7 @@ func (m *Machine) SetVars(vars map[string]core.Value) error {
 	if err != nil {
 		return err
 	}
-	m.Variables = v
+	m.Vars = v
 	return nil
 }
 
@@ -416,6 +526,6 @@ func (m *Machine) SetVarsFromJSON(vars map[string]json.RawMessage) error {
 	if err != nil {
 		return err
 	}
-	m.Variables = v
+	m.Vars = v
 	return nil
 }
