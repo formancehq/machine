@@ -204,42 +204,42 @@ func (p *parseVisitor) VisitLit(c parser.ILiteralContext, push bool) (core.Type,
 	}
 }
 
-// Returns the resource addresses of all the accounts,
-// and true if the source is bottomless (contains @world)
-func (p *parseVisitor) VisitSource(c parser.ISourceContext) ([]core.Address, bool, *CompileError) {
-	needed_accounts := []core.Address{}
-	bottomless := false
-	switch c := c.(type) {
-	case *parser.SrcAccountContext:
-		ty, addr, err := p.VisitExpr(c.Expression(), true)
-		if err != nil {
-			return nil, false, err
-		}
-		if ty != core.TYPE_ACCOUNT {
-			return nil, false, LogicError(c, errors.New("wrong type: expected account or allocation as destination"))
-		}
-		bottomless = bottomless || p.isWorld(*addr)
-		needed_accounts = append(needed_accounts, *addr)
-		p.PushInteger(core.Number(1))
-	case *parser.SrcBlockContext:
-		sources := c.SourceBlock().GetSources()
-		n := len(sources)
-		for i := n - 1; i >= 0; i-- {
-			ty, addr, err := p.VisitExpr(sources[i], true)
-			if err != nil {
-				return nil, false, err
-			}
-			if ty != core.TYPE_ACCOUNT {
-				return nil, false, LogicError(c, errors.New("wrong type: expected only accounts in sources"))
-			}
-			bottomless = bottomless || p.isWorld(*addr)
-			needed_accounts = append(needed_accounts, *addr)
-		}
-		p.PushInteger(core.Number(len(c.SourceBlock().GetSources())))
-		p.instructions = append(p.instructions, program.OP_SOURCE)
-	}
-	return needed_accounts, bottomless, nil
-}
+// // Returns the resource addresses of all the accounts,
+// // and true if the source is bottomless (contains @world)
+// func (p *parseVisitor) VisitSource(c parser.ISourceContext) ([]core.Address, bool, *CompileError) {
+// 	needed_accounts := []core.Address{}
+// 	bottomless := false
+// 	switch c := c.(type) {
+// 	case *parser.SrcAccountContext:
+// 		ty, addr, err := p.VisitExpr(c.Expression(), true)
+// 		if err != nil {
+// 			return nil, false, err
+// 		}
+// 		if ty != core.TYPE_ACCOUNT {
+// 			return nil, false, LogicError(c, errors.New("wrong type: expected account or allocation as destination"))
+// 		}
+// 		bottomless = bottomless || p.isWorld(*addr)
+// 		needed_accounts = append(needed_accounts, *addr)
+// 		p.PushInteger(core.Number(1))
+// 	case *parser.SrcBlockContext:
+// 		sources := c.SourceBlock().GetSources()
+// 		n := len(sources)
+// 		for i := n - 1; i >= 0; i-- {
+// 			ty, addr, err := p.VisitExpr(sources[i], true)
+// 			if err != nil {
+// 				return nil, false, err
+// 			}
+// 			if ty != core.TYPE_ACCOUNT {
+// 				return nil, false, LogicError(c, errors.New("wrong type: expected only accounts in sources"))
+// 			}
+// 			bottomless = bottomless || p.isWorld(*addr)
+// 			needed_accounts = append(needed_accounts, *addr)
+// 		}
+// 		p.PushInteger(core.Number(len(c.SourceBlock().GetSources())))
+// 		p.instructions = append(p.instructions, program.OP_SOURCE)
+// 	}
+// 	return needed_accounts, bottomless, nil
+// }
 
 // send statement
 func (p *parseVisitor) VisitSend(c *parser.SendContext) *CompileError {
@@ -267,7 +267,7 @@ func (p *parseVisitor) VisitSend(c *parser.SendContext) *CompileError {
 			}
 		}
 	}
-	err = p.VisitAllocation(c.GetDest())
+	err = p.VisitDestination(c.GetDest())
 	if err != nil {
 		return err
 	}

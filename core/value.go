@@ -12,9 +12,10 @@ const (
 	TYPE_ASSET                      // name of an asset
 	TYPE_NUMBER                     // 64bit unsigned integer
 	TYPE_MONETARY                   // [asset number]
-	TYPE_PORTION                    // rational number between 0 and 1 both exclusive
-	TYPE_ALLOTMENT                  // list of portions
+	TYPE_PORTION                    // rational number between 0 and 1 both exclusive, or 'remaining'
+	TYPE_ALLOTMENT                  // list of portions that sum to 1
 	TYPE_AMOUNT                     // either ALL or a SPECIFIC number
+	TYPE_SOURCE                     // thing you can take money out of
 )
 
 func (t Type) String() string {
@@ -87,6 +88,9 @@ func (Amount) GetType() Type { return TYPE_AMOUNT }
 
 func (Portion) isValue()      {}
 func (Portion) GetType() Type { return TYPE_PORTION }
+
+func (Source) isValue()      {}
+func (Source) GetType() Type { return TYPE_SOURCE }
 
 func ValueEquals(lhs, rhs Value) bool {
 	if reflect.TypeOf(lhs) != reflect.TypeOf(rhs) {

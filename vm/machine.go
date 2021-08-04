@@ -158,59 +158,72 @@ func (m *Machine) tick() (bool, byte) {
 		m.print_chan <- a
 	case program.OP_FAIL:
 		return true, EXIT_FAIL
-	case program.OP_SOURCE:
+	case program.OP_MAKE_SOURCE_IN_ORDER:
 		n := m.popNumber()
-		sources := make([]core.Account, n)
+		sources := make([]core.Source, n)
 		for i := uint64(0); i < n; i++ {
-			sources[i] = m.popAccount()
+			sources[i] = core.NewSource(m.popAccount())
 		}
-		mon := m.popMonetary()
-		asset := mon.Asset
-		target := mon.Amount
+		m.pushValue(core.NewSource(core.SourceInOrder(sources)))
 
-		type part struct {
-			mon core.Monetary
-			acc core.Account
+	case program.OP_MAKE_SOURCE_ALLOTMENT:
+		n := m.popNumber()
+		sources := make([]core.Source, n)
+		for i := uint64(0); i < n; i++ {
+			sources[i] = core.NewSource(m.popAccount())
 		}
-		result := []part{}
+		m.pushValue(core.NewSource(core.SourceInOrder(sources)))
 
-		var n_actual_src uint64
-		for _, src := range sources {
-			src_funds := m.Balances[string(src)][string(asset)]
-			var amt_to_withdraw uint64
-			if target.All {
-				if src == "world" {
-					return true, EXIT_FAIL
-				}
-				amt_to_withdraw = src_funds
-			} else {
-				if target.Specific == 0 {
-					break
-				}
-				if src_funds > target.Specific || src == "world" {
-					amt_to_withdraw = target.Specific
-				} else {
-					amt_to_withdraw = src_funds
-				}
-				target.Specific -= amt_to_withdraw
-			}
-			result = append(result, part{
-				mon: core.Monetary{
-					Asset:  asset,
-					Amount: core.NewAmountSpecific(amt_to_withdraw),
-				},
-				acc: src,
-			})
-			n_actual_src++
-		}
-		if !target.All && target.Specific != 0 {
-			return true, EXIT_FAIL
-		}
-		for i := len(result) - 1; i >= 0; i-- {
-			m.pushValue(result[i].mon)
-			m.pushValue(result[i].acc)
-		}
-		m.pushValue(core.Number(n_actual_src))
+		// case program.OP_MAKE_SOURCE_MAXED:
+
+		// mon := m.popMonetary()
+		// asset := mon.Asset
+		// target := mon.Amount
+
+		// type part struct {
+		// 	mon core.Monetary
+		// 	acc core.Account
+		// }
+		// result := []part{}
+
+		// var n_actual_src uint64
+		// for _, src := range sources {
+		// 	src_funds := m.Balances[string(src)][string(asset)]
+		// 	var amt_to_withdraw uint64
+		// 	if target.All {
+		// 		if src == "world" {
+		// 			return true, EXIT_FAIL
+		// 		}
+		// 		amt_to_withdraw = src_funds
+		// 	} else {
+		// 		if target.Specific == 0 {
+		// 			break
+		// 		}
+		// 		if src_funds > target.Specific || src == "world" {
+		// 			amt_to_withdraw = target.Specific
+		// 		} else {
+		// 			amt_to_withdraw = src_funds
+		// 		}
+		// 		target.Specific -= amt_to_withdraw
+		// 	}
+		// 	result = append(result, part{
+		// 		mon: core.Monetary{
+		// 			Asset:  asset,
+		// 			Amount: core.NewAmountSpecific(amt_to_withdraw),
+		// 		},
+		// 		acc: src,
+		// 	})
+		// 	n_actual_src++
+		// }
+		// if !target.All && target.Specific != 0 {
+		// 	return true, EXIT_FAIL
+		// }
+		// for i := len(result) - 1; i >= 0; i-- {
+		// 	m.pushValue(result[i].mon)
+		// 	m.pushValue(result[i].acc)
+		// }
+		// m.pushValue(core.Number(n_actual_src))
+
 	case program.OP_MAKE_ALLOTMENT:
 		n := m.popNumber()
 		portions := make([]core.Portion, n)

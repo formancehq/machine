@@ -49,6 +49,12 @@ func (p Program) String() string {
 			out += "OP_ALLOC\n"
 		case OP_MAKE_ALLOTMENT:
 			out += "OP_MAKE_ALLOTMENT\n"
+		case OP_MAKE_SOURCE_IN_ORDER:
+			out += "OP_MAKE_SOURCE_IN_ORDER\n"
+		case OP_MAKE_SOURCE_ALLOTMENT:
+			out += "OP_MAKE_SOURCE_ALLOTMENT\n"
+		case OP_MAKE_SOURCE_MAXED:
+			out += "OP_MAKE_SOURCE_MAXED\n"
 		default:
 			out += "Unknown opcode"
 		}

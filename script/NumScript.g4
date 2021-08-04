@@ -61,37 +61,34 @@ expression
   | var_=variable # ExprVariable
   ;
 
-allocPartConst
-  : PORTION # allocPartConstConst
-  | PORTION_REMAINING # allocPartConstRemaining;
-allocBlockConst: LBRACE NEWLINE (portions+=allocPartConst 'to' dests+=expression NEWLINE)+ RBRACE;
-
-allocPartDyn
-  : PORTION # allocPartDynConst
-  | por=variable # allocPartDynVar
-  | PORTION_REMAINING # allocPartDynRemaining
-  ;
-allocBlockDyn: LBRACE NEWLINE (portions+=allocPartDyn  'to' dests+=expression NEWLINE)+ RBRACE;
-
-allocation
-  : allocBlockConst # AllocConst
-  | allocBlockDyn # AllocDyn
-  | expression # AllocAccount
+allotmentPortion
+  : PORTION # allotmentPortionConst
+  | por=variable # allotmentPortionVar
+  | PORTION_REMAINING # allotmentPortionRemaining
   ;
 
-sourceBlock: LBRACE NEWLINE (sources+=expression NEWLINE)+ RBRACE;
+destinationAllotment: LBRACE NEWLINE (portions+=allotmentPortion  'to' dests+=expression NEWLINE)+ RBRACE;
+destination
+  : expression # DestAccount
+  | destinationAllotment # DestAllotment
+  ;
 
+sourceInOrder: LBRACE NEWLINE (srcs+=source NEWLINE)+ RBRACE;
+sourceAllotment: LBRACE NEWLINE (portions+=allotmentPortion 'from' srcs+=source NEWLINE)+ RBRACE;
+sourceLimited: 'max' max=expression 'from' src=source;
 source
-  : sourceBlock # SrcBlock
-  | expression # SrcAccount
+  : expression # SrcAccount
+  | sourceInOrder # SrcInOrder
+  | sourceAllotment # SrcAllotment
+  | sourceLimited # SrcLimited
   ;
 
 statement
   : PRINT expr=expression # Print
   | FAIL # Fail
   | SEND mon=expression LPAREN NEWLINE
-      ( SOURCE '=' src=source NEWLINE DESTINATION '=' dest=allocation
-      | DESTINATION '=' dest=allocation NEWLINE SOURCE '=' src=source) NEWLINE RPAREN # Send
+      ( SOURCE '=' src=source NEWLINE DESTINATION '=' dest=destination
+      | DESTINATION '=' dest=destination NEWLINE SOURCE '=' src=source) NEWLINE RPAREN # Send
   ;
 
 type_: TY_ACCOUNT | TY_ASSET | TY_NUMBER | TY_MONETARY | TY_PORTION;
