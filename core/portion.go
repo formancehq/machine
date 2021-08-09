@@ -29,6 +29,16 @@ func NewPortionSpecific(r big.Rat) (*Portion, error) {
 	}, nil
 }
 
+func (lhs *Portion) Equals(rhs *Portion) bool {
+	if lhs.Remaining != rhs.Remaining {
+		return false
+	}
+	if !lhs.Remaining && lhs.Specific.Cmp(rhs.Specific) != 0 {
+		return false
+	}
+	return true
+}
+
 func ParsePortionSpecific(input string) (*Portion, error) {
 	var res *big.Rat
 

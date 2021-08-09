@@ -20,7 +20,6 @@ LBRACK: '[';
 RBRACK: ']';
 LBRACE: '{';
 RBRACE: '}';
-ALL: '*';
 EQ: '=';
 TY_ACCOUNT: 'account';
 TY_ASSET: 'asset';
@@ -39,12 +38,9 @@ VARIABLE_NAME: '$' [a-z_]+ [a-z0-9_]*;
 ACCOUNT: '@' [a-z_]+ [a-z0-9_:]*;
 ASSET: [A-Z/0-9]+;
 
-amount
-  : num=NUMBER # AmountSpecific
-  | ALL # AmountAll
-  ;
+monetary: LBRACK asset=ASSET amt=NUMBER RBRACK;
 
-monetary: LBRACK asset=ASSET amt=amount RBRACK;
+monetaryAll: LBRACK asset=ASSET '*' RBRACK;
 
 literal
   : ACCOUNT # LitAccount
@@ -61,37 +57,32 @@ expression
   | var_=variable # ExprVariable
   ;
 
-allocPartConst
-  : PORTION # allocPartConstConst
-  | PORTION_REMAINING # allocPartConstRemaining;
-allocBlockConst: LBRACE NEWLINE (portions+=allocPartConst 'to' dests+=expression NEWLINE)+ RBRACE;
-
-allocPartDyn
-  : PORTION # allocPartDynConst
-  | por=variable # allocPartDynVar
-  | PORTION_REMAINING # allocPartDynRemaining
+allotmentPortion
+  : PORTION # allotmentPortionConst
+  | por=variable # allotmentPortionVar
+  | PORTION_REMAINING # allotmentPortionRemaining
   ;
-allocBlockDyn: LBRACE NEWLINE (portions+=allocPartDyn  'to' dests+=expression NEWLINE)+ RBRACE;
 
-allocation
-  : allocBlockConst # AllocConst
-  | allocBlockDyn # AllocDyn
-  | expression # AllocAccount
+destinationAllotment: LBRACE NEWLINE (portions+=allotmentPortion  'to' dests+=expression NEWLINE)+ RBRACE;
+destination
+  : expression # DestAccount
+  | destinationAllotment # DestAllotment
   ;
 
 sourceBlock: LBRACE NEWLINE (sources+=expression NEWLINE)+ RBRACE;
-
+sourceAllotment: LBRACE NEWLINE (portions+=allotmentPortion 'from' srcs+=source) RBRACE;
 source
   : sourceBlock # SrcBlock
   | expression # SrcAccount
+  | sourceAllotment #SrcAllotment
   ;
 
 statement
   : PRINT expr=expression # Print
   | FAIL # Fail
-  | SEND mon=expression LPAREN NEWLINE
-      ( SOURCE '=' src=source NEWLINE DESTINATION '=' dest=allocation
-      | DESTINATION '=' dest=allocation NEWLINE SOURCE '=' src=source) NEWLINE RPAREN # Send
+  | SEND (mon=expression | monAll=monetaryAll) LPAREN NEWLINE
+      ( SOURCE '=' src=source NEWLINE DESTINATION '=' dest=destination
+      | DESTINATION '=' dest=destination NEWLINE SOURCE '=' src=source) NEWLINE RPAREN # Send
   ;
 
 type_: TY_ACCOUNT | TY_ASSET | TY_NUMBER | TY_MONETARY | TY_PORTION;

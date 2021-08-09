@@ -590,7 +590,7 @@ send [GEM 16] (
 		CaseResult{
 			Printed:  []core.Value{},
 			Postings: []ledger.Posting{},
-			ExitCode: EXIT_FAIL,
+			ExitCode: EXIT_FAIL_INSUFFICIENT_FUNDS,
 		},
 	)
 }

@@ -15,6 +15,7 @@ const (
 	TYPE_PORTION                    // rational number between 0 and 1 both exclusive
 	TYPE_ALLOTMENT                  // list of portions
 	TYPE_AMOUNT                     // either ALL or a SPECIFIC number
+	TYPE_FUNDING                    // (asset, []{amount, account})
 )
 
 func (t Type) String() string {
@@ -69,7 +70,7 @@ func (n Number) String() string {
 
 type Monetary struct {
 	Asset  Asset  `json:"asset"`
-	Amount Amount `json:"amount"`
+	Amount uint64 `json:"amount"`
 }
 
 func (a Monetary) String() string {
@@ -82,11 +83,19 @@ func (Monetary) GetType() Type { return TYPE_MONETARY }
 func (Allotment) isValue()      {}
 func (Allotment) GetType() Type { return TYPE_ALLOTMENT }
 
-func (Amount) isValue()      {}
-func (Amount) GetType() Type { return TYPE_AMOUNT }
-
 func (Portion) isValue()      {}
 func (Portion) GetType() Type { return TYPE_PORTION }
+
+func (Funding) isValue()      {}
+func (Funding) GetType() Type { return TYPE_FUNDING }
+
+type HasAsset interface {
+	GetAsset() Asset
+}
+
+func (a Asset) GetAsset() Asset    { return a }
+func (m Monetary) GetAsset() Asset { return m.Asset }
+func (f Funding) GetAsset() Asset  { return f.Asset }
 
 func ValueEquals(lhs, rhs Value) bool {
 	if reflect.TypeOf(lhs) != reflect.TypeOf(rhs) {
@@ -102,6 +111,12 @@ func ValueEquals(lhs, rhs Value) bool {
 				return false
 			}
 		}
+	} else if lhsp, ok := lhs.(Portion); ok {
+		rhsp := rhs.(Portion)
+		return lhsp.Equals(&rhsp)
+	} else if lhsf, ok := lhs.(Funding); ok {
+		rhsf := rhs.(Funding)
+		return lhsf.Equals(&rhsf)
 	} else if lhs != rhs {
 		return false
 	}

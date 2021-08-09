@@ -33,7 +33,7 @@ func TestMonetaryTypedJSON(t *testing.T) {
 	}
 	if !ValueEquals(*value, Monetary{
 		Asset:  Asset("EUR/2"),
-		Amount: NewAmountSpecific(123456),
+		Amount: 123456,
 	}) {
 		t.Fatalf("unexpected value: %v", *value)
 	}

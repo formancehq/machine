@@ -10,9 +10,9 @@ import (
 	"github.com/numary/machine/vm/program"
 )
 
-func (p *parseVisitor) VisitAllocation(c parser.IAllocationContext) *CompileError {
+func (p *parseVisitor) VisitDestination(c parser.IDestinationContext) *CompileError {
 	switch c := c.(type) {
-	case *parser.AllocAccountContext:
+	case *parser.DestAccountContext:
 		ty, _, err := p.VisitExpr(c.Expression(), true)
 		if err != nil {
 			return err
@@ -23,55 +23,23 @@ func (p *parseVisitor) VisitAllocation(c parser.IAllocationContext) *CompileErro
 			)
 		}
 		p.instructions = append(p.instructions, program.OP_SEND)
-	case *parser.AllocConstContext:
-		err := p.VisitAllocBlockConst(c.AllocBlockConst())
-		return err
-	case *parser.AllocDynContext:
-		err := p.VisitAllocBlockDyn(c.AllocBlockDyn())
+	case *parser.DestAllotmentContext:
+		err := p.VisitDestinationAllotment(c.DestinationAllotment())
 		return err
 	}
 	return nil
 }
 
-func (p *parseVisitor) VisitAllocBlockConst(c parser.IAllocBlockConstContext) *CompileError {
-	// allocate
-	portions := []core.Portion{}
-	for _, c := range c.GetPortions() {
-		switch c := c.(type) {
-		case *parser.AllocPartConstConstContext:
-			portion, err := core.ParsePortionSpecific(c.GetText())
-			if err != nil {
-				return LogicError(c, err)
-			}
-			portions = append(portions, *portion)
-		case *parser.AllocPartConstRemainingContext:
-			portions = append(portions, core.NewPortionRemaining())
-			// presence of too many 'remaining' checked on allotment creation
-		}
-	}
-	allotment, err := core.NewAllotment(portions)
-	if err != nil {
-		c.GetStart()
-		return LogicError(c, err)
-	}
-	addr, err := p.AllocateResource(program.Constant{Inner: *allotment})
-	if err != nil {
-		return LogicError(c, err)
-	}
-	p.PushAddress(addr)
-	p.instructions = append(p.instructions, program.OP_ALLOC)
-	return p.VisitAllocDestination(c.GetDests())
-}
-
-func (p *parseVisitor) VisitAllocBlockDyn(c parser.IAllocBlockDynContext) *CompileError {
+func (p *parseVisitor) VisitDestinationAllotment(c parser.IDestinationAllotmentContext) *CompileError {
 	total := big.NewRat(0, 1)
 	// allocate
 	portions := c.GetPortions()
+	has_variable := false
 	has_remaining := false
 	for i := len(portions) - 1; i >= 0; i-- {
 		c := portions[i]
 		switch c := c.(type) {
-		case *parser.AllocPartDynConstContext:
+		case *parser.AllotmentPortionConstContext:
 			portion, err := core.ParsePortionSpecific(c.GetText())
 			if err != nil {
 				return LogicError(c, err)
@@ -82,8 +50,8 @@ func (p *parseVisitor) VisitAllocBlockDyn(c parser.IAllocBlockDynContext) *Compi
 			if err != nil {
 				return LogicError(c, err)
 			}
-			p.PushAddress(addr)
-		case *parser.AllocPartDynVarContext:
+			p.PushAddress(*addr)
+		case *parser.AllotmentPortionVarContext:
 			ty, _, err := p.VisitVariable(c.GetPor(), true)
 			if err != nil {
 				return err
@@ -93,7 +61,8 @@ func (p *parseVisitor) VisitAllocBlockDyn(c parser.IAllocBlockDynContext) *Compi
 					fmt.Errorf("wrong type: expected type portion for variable: %v", ty),
 				)
 			}
-		case *parser.AllocPartDynRemainingContext:
+			has_variable = true
+		case *parser.AllotmentPortionRemainingContext:
 			if has_remaining {
 				return LogicError(c,
 					errors.New("two uses of `remaining` in the same allocation"),
@@ -103,20 +72,25 @@ func (p *parseVisitor) VisitAllocBlockDyn(c parser.IAllocBlockDynContext) *Compi
 			if err != nil {
 				return LogicError(c, err)
 			}
-			p.PushAddress(addr)
+			p.PushAddress(*addr)
 			has_remaining = true
 		}
 	}
-	if !has_remaining {
+	if has_variable && !has_remaining {
 		return LogicError(c,
-			errors.New("allocation has variable portions but no 'remaining'"),
+			errors.New("allotment has variable portions but no 'remaining'"),
 		)
 	}
 	p.PushInteger(core.Number(len(portions)))
 
-	if total.Cmp(big.NewRat(1, 1)) != -1 {
+	if has_remaining && total.Cmp(big.NewRat(1, 1)) != -1 {
 		return LogicError(c,
-			errors.New("sum of known portions is already equal or is greater than 100%"),
+			errors.New("allotment has variable portions but sum of known portions is already equal or is greater than 100%"),
+		)
+	}
+	if !has_variable && !has_remaining && total.Cmp(big.NewRat(1, 1)) != 0 {
+		return LogicError(c,
+			errors.New("allotment has no variable or remaining portions but sum is not 100%"),
 		)
 	}
 	p.instructions = append(p.instructions, program.OP_MAKE_ALLOTMENT)

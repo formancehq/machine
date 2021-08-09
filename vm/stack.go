@@ -33,6 +33,22 @@ func (m *Machine) popMonetary() core.Monetary {
 	}
 }
 
+func (m *Machine) popAsset() core.Asset {
+	if v, ok := m.popValue().(core.Asset); ok {
+		return v
+	} else {
+		panic("unexpected type on stack")
+	}
+}
+
+func (m *Machine) popFunding() core.Funding {
+	if v, ok := m.popValue().(core.Funding); ok {
+		return v
+	} else {
+		panic("unexpected type on stack")
+	}
+}
+
 func (m *Machine) popAllotment() core.Allotment {
 	if m, ok := m.popValue().(core.Allotment); ok {
 		return m

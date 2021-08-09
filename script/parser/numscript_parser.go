@@ -16,120 +16,118 @@ var _ = reflect.Copy
 var _ = strconv.Itoa
 
 var parserATN = []uint16{
-	3, 24715, 42794, 33075, 47597, 16764, 15335, 30598, 22884, 3, 39, 220,
+	3, 24715, 42794, 33075, 47597, 16764, 15335, 30598, 22884, 3, 40, 213,
 	4, 2, 9, 2, 4, 3, 9, 3, 4, 4, 9, 4, 4, 5, 9, 5, 4, 6, 9, 6, 4, 7, 9, 7,
 	4, 8, 9, 8, 4, 9, 9, 9, 4, 10, 9, 10, 4, 11, 9, 11, 4, 12, 9, 12, 4, 13,
 	9, 13, 4, 14, 9, 14, 4, 15, 9, 15, 4, 16, 9, 16, 4, 17, 9, 17, 4, 18, 9,
-	18, 4, 19, 9, 19, 3, 2, 3, 2, 5, 2, 41, 10, 2, 3, 3, 3, 3, 3, 3, 3, 3,
-	3, 3, 3, 4, 3, 4, 3, 4, 3, 4, 5, 4, 52, 10, 4, 3, 5, 3, 5, 3, 6, 3, 6,
-	3, 6, 5, 6, 59, 10, 6, 3, 6, 3, 6, 3, 6, 7, 6, 64, 10, 6, 12, 6, 14, 6,
-	67, 11, 6, 3, 7, 3, 7, 5, 7, 71, 10, 7, 3, 8, 3, 8, 3, 8, 3, 8, 3, 8, 3,
-	8, 3, 8, 6, 8, 80, 10, 8, 13, 8, 14, 8, 81, 3, 8, 3, 8, 3, 9, 3, 9, 3,
-	9, 5, 9, 89, 10, 9, 3, 10, 3, 10, 3, 10, 3, 10, 3, 10, 3, 10, 3, 10, 6,
-	10, 98, 10, 10, 13, 10, 14, 10, 99, 3, 10, 3, 10, 3, 11, 3, 11, 3, 11,
-	5, 11, 107, 10, 11, 3, 12, 3, 12, 3, 12, 3, 12, 3, 12, 6, 12, 114, 10,
-	12, 13, 12, 14, 12, 115, 3, 12, 3, 12, 3, 13, 3, 13, 5, 13, 122, 10, 13,
-	3, 14, 3, 14, 3, 14, 3, 14, 3, 14, 3, 14, 3, 14, 3, 14, 3, 14, 3, 14, 3,
-	14, 3, 14, 3, 14, 3, 14, 3, 14, 3, 14, 3, 14, 3, 14, 3, 14, 3, 14, 3, 14,
-	3, 14, 3, 14, 5, 14, 147, 10, 14, 3, 14, 3, 14, 3, 14, 5, 14, 152, 10,
-	14, 3, 15, 3, 15, 3, 16, 3, 16, 3, 16, 3, 16, 3, 16, 3, 16, 3, 17, 3, 17,
-	3, 17, 3, 17, 5, 17, 166, 10, 17, 3, 18, 3, 18, 3, 18, 6, 18, 171, 10,
-	18, 13, 18, 14, 18, 172, 3, 18, 3, 18, 6, 18, 177, 10, 18, 13, 18, 14,
-	18, 178, 6, 18, 181, 10, 18, 13, 18, 14, 18, 182, 3, 18, 3, 18, 6, 18,
-	187, 10, 18, 13, 18, 14, 18, 188, 3, 19, 7, 19, 192, 10, 19, 12, 19, 14,
-	19, 195, 11, 19, 3, 19, 5, 19, 198, 10, 19, 3, 19, 3, 19, 6, 19, 202, 10,
-	19, 13, 19, 14, 19, 203, 3, 19, 7, 19, 207, 10, 19, 12, 19, 14, 19, 210,
-	11, 19, 3, 19, 7, 19, 213, 10, 19, 12, 19, 14, 19, 216, 11, 19, 3, 19,
-	3, 19, 3, 19, 2, 3, 10, 20, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24,
-	26, 28, 30, 32, 34, 36, 2, 4, 3, 2, 17, 18, 3, 2, 27, 31, 2, 229, 2, 40,
-	3, 2, 2, 2, 4, 42, 3, 2, 2, 2, 6, 51, 3, 2, 2, 2, 8, 53, 3, 2, 2, 2, 10,
-	58, 3, 2, 2, 2, 12, 70, 3, 2, 2, 2, 14, 72, 3, 2, 2, 2, 16, 88, 3, 2, 2,
-	2, 18, 90, 3, 2, 2, 2, 20, 106, 3, 2, 2, 2, 22, 108, 3, 2, 2, 2, 24, 121,
-	3, 2, 2, 2, 26, 151, 3, 2, 2, 2, 28, 153, 3, 2, 2, 2, 30, 155, 3, 2, 2,
-	2, 32, 161, 3, 2, 2, 2, 34, 167, 3, 2, 2, 2, 36, 193, 3, 2, 2, 2, 38, 41,
-	7, 35, 2, 2, 39, 41, 7, 25, 2, 2, 40, 38, 3, 2, 2, 2, 40, 39, 3, 2, 2,
-	2, 41, 3, 3, 2, 2, 2, 42, 43, 7, 21, 2, 2, 43, 44, 7, 39, 2, 2, 44, 45,
-	5, 2, 2, 2, 45, 46, 7, 22, 2, 2, 46, 5, 3, 2, 2, 2, 47, 52, 7, 38, 2, 2,
-	48, 52, 7, 39, 2, 2, 49, 52, 7, 35, 2, 2, 50, 52, 5, 4, 3, 2, 51, 47, 3,
-	2, 2, 2, 51, 48, 3, 2, 2, 2, 51, 49, 3, 2, 2, 2, 51, 50, 3, 2, 2, 2, 52,
-	7, 3, 2, 2, 2, 53, 54, 7, 37, 2, 2, 54, 9, 3, 2, 2, 2, 55, 56, 8, 6, 1,
-	2, 56, 59, 5, 6, 4, 2, 57, 59, 5, 8, 5, 2, 58, 55, 3, 2, 2, 2, 58, 57,
-	3, 2, 2, 2, 59, 65, 3, 2, 2, 2, 60, 61, 12, 5, 2, 2, 61, 62, 9, 2, 2, 2,
-	62, 64, 5, 10, 6, 6, 63, 60, 3, 2, 2, 2, 64, 67, 3, 2, 2, 2, 65, 63, 3,
-	2, 2, 2, 65, 66, 3, 2, 2, 2, 66, 11, 3, 2, 2, 2, 67, 65, 3, 2, 2, 2, 68,
-	71, 7, 33, 2, 2, 69, 71, 7, 34, 2, 2, 70, 68, 3, 2, 2, 2, 70, 69, 3, 2,
-	2, 2, 71, 13, 3, 2, 2, 2, 72, 73, 7, 23, 2, 2, 73, 79, 7, 6, 2, 2, 74,
-	75, 5, 12, 7, 2, 75, 76, 7, 3, 2, 2, 76, 77, 5, 10, 6, 2, 77, 78, 7, 6,
-	2, 2, 78, 80, 3, 2, 2, 2, 79, 74, 3, 2, 2, 2, 80, 81, 3, 2, 2, 2, 81, 79,
-	3, 2, 2, 2, 81, 82, 3, 2, 2, 2, 82, 83, 3, 2, 2, 2, 83, 84, 7, 24, 2, 2,
-	84, 15, 3, 2, 2, 2, 85, 89, 7, 33, 2, 2, 86, 89, 5, 8, 5, 2, 87, 89, 7,
-	34, 2, 2, 88, 85, 3, 2, 2, 2, 88, 86, 3, 2, 2, 2, 88, 87, 3, 2, 2, 2, 89,
-	17, 3, 2, 2, 2, 90, 91, 7, 23, 2, 2, 91, 97, 7, 6, 2, 2, 92, 93, 5, 16,
-	9, 2, 93, 94, 7, 3, 2, 2, 94, 95, 5, 10, 6, 2, 95, 96, 7, 6, 2, 2, 96,
-	98, 3, 2, 2, 2, 97, 92, 3, 2, 2, 2, 98, 99, 3, 2, 2, 2, 99, 97, 3, 2, 2,
-	2, 99, 100, 3, 2, 2, 2, 100, 101, 3, 2, 2, 2, 101, 102, 7, 24, 2, 2, 102,
-	19, 3, 2, 2, 2, 103, 107, 5, 14, 8, 2, 104, 107, 5, 18, 10, 2, 105, 107,
-	5, 10, 6, 2, 106, 103, 3, 2, 2, 2, 106, 104, 3, 2, 2, 2, 106, 105, 3, 2,
-	2, 2, 107, 21, 3, 2, 2, 2, 108, 109, 7, 23, 2, 2, 109, 113, 7, 6, 2, 2,
-	110, 111, 5, 10, 6, 2, 111, 112, 7, 6, 2, 2, 112, 114, 3, 2, 2, 2, 113,
-	110, 3, 2, 2, 2, 114, 115, 3, 2, 2, 2, 115, 113, 3, 2, 2, 2, 115, 116,
-	3, 2, 2, 2, 116, 117, 3, 2, 2, 2, 117, 118, 7, 24, 2, 2, 118, 23, 3, 2,
-	2, 2, 119, 122, 5, 22, 12, 2, 120, 122, 5, 10, 6, 2, 121, 119, 3, 2, 2,
-	2, 121, 120, 3, 2, 2, 2, 122, 25, 3, 2, 2, 2, 123, 124, 7, 11, 2, 2, 124,
-	152, 5, 10, 6, 2, 125, 152, 7, 12, 2, 2, 126, 127, 7, 13, 2, 2, 127, 128,
-	5, 10, 6, 2, 128, 129, 7, 19, 2, 2, 129, 146, 7, 6, 2, 2, 130, 131, 7,
-	14, 2, 2, 131, 132, 7, 26, 2, 2, 132, 133, 5, 24, 13, 2, 133, 134, 7, 6,
-	2, 2, 134, 135, 7, 15, 2, 2, 135, 136, 7, 26, 2, 2, 136, 137, 5, 20, 11,
-	2, 137, 147, 3, 2, 2, 2, 138, 139, 7, 15, 2, 2, 139, 140, 7, 26, 2, 2,
-	140, 141, 5, 20, 11, 2, 141, 142, 7, 6, 2, 2, 142, 143, 7, 14, 2, 2, 143,
-	144, 7, 26, 2, 2, 144, 145, 5, 24, 13, 2, 145, 147, 3, 2, 2, 2, 146, 130,
-	3, 2, 2, 2, 146, 138, 3, 2, 2, 2, 147, 148, 3, 2, 2, 2, 148, 149, 7, 6,
-	2, 2, 149, 150, 7, 20, 2, 2, 150, 152, 3, 2, 2, 2, 151, 123, 3, 2, 2, 2,
-	151, 125, 3, 2, 2, 2, 151, 126, 3, 2, 2, 2, 152, 27, 3, 2, 2, 2, 153, 154,
-	9, 3, 2, 2, 154, 29, 3, 2, 2, 2, 155, 156, 7, 4, 2, 2, 156, 157, 5, 10,
-	6, 2, 157, 158, 7, 5, 2, 2, 158, 159, 7, 32, 2, 2, 159, 160, 7, 20, 2,
-	2, 160, 31, 3, 2, 2, 2, 161, 162, 5, 28, 15, 2, 162, 165, 5, 8, 5, 2, 163,
-	164, 7, 26, 2, 2, 164, 166, 5, 30, 16, 2, 165, 163, 3, 2, 2, 2, 165, 166,
-	3, 2, 2, 2, 166, 33, 3, 2, 2, 2, 167, 168, 7, 10, 2, 2, 168, 170, 7, 23,
-	2, 2, 169, 171, 7, 6, 2, 2, 170, 169, 3, 2, 2, 2, 171, 172, 3, 2, 2, 2,
-	172, 170, 3, 2, 2, 2, 172, 173, 3, 2, 2, 2, 173, 180, 3, 2, 2, 2, 174,
-	176, 5, 32, 17, 2, 175, 177, 7, 6, 2, 2, 176, 175, 3, 2, 2, 2, 177, 178,
-	3, 2, 2, 2, 178, 176, 3, 2, 2, 2, 178, 179, 3, 2, 2, 2, 179, 181, 3, 2,
-	2, 2, 180, 174, 3, 2, 2, 2, 181, 182, 3, 2, 2, 2, 182, 180, 3, 2, 2, 2,
-	182, 183, 3, 2, 2, 2, 183, 184, 3, 2, 2, 2, 184, 186, 7, 24, 2, 2, 185,
-	187, 7, 6, 2, 2, 186, 185, 3, 2, 2, 2, 187, 188, 3, 2, 2, 2, 188, 186,
-	3, 2, 2, 2, 188, 189, 3, 2, 2, 2, 189, 35, 3, 2, 2, 2, 190, 192, 7, 6,
-	2, 2, 191, 190, 3, 2, 2, 2, 192, 195, 3, 2, 2, 2, 193, 191, 3, 2, 2, 2,
-	193, 194, 3, 2, 2, 2, 194, 197, 3, 2, 2, 2, 195, 193, 3, 2, 2, 2, 196,
-	198, 5, 34, 18, 2, 197, 196, 3, 2, 2, 2, 197, 198, 3, 2, 2, 2, 198, 199,
-	3, 2, 2, 2, 199, 208, 5, 26, 14, 2, 200, 202, 7, 6, 2, 2, 201, 200, 3,
-	2, 2, 2, 202, 203, 3, 2, 2, 2, 203, 201, 3, 2, 2, 2, 203, 204, 3, 2, 2,
-	2, 204, 205, 3, 2, 2, 2, 205, 207, 5, 26, 14, 2, 206, 201, 3, 2, 2, 2,
-	207, 210, 3, 2, 2, 2, 208, 206, 3, 2, 2, 2, 208, 209, 3, 2, 2, 2, 209,
-	214, 3, 2, 2, 2, 210, 208, 3, 2, 2, 2, 211, 213, 7, 6, 2, 2, 212, 211,
-	3, 2, 2, 2, 213, 216, 3, 2, 2, 2, 214, 212, 3, 2, 2, 2, 214, 215, 3, 2,
-	2, 2, 215, 217, 3, 2, 2, 2, 216, 214, 3, 2, 2, 2, 217, 218, 7, 2, 2, 3,
-	218, 37, 3, 2, 2, 2, 25, 40, 51, 58, 65, 70, 81, 88, 99, 106, 115, 121,
-	146, 151, 165, 172, 178, 182, 188, 193, 197, 203, 208, 214,
+	18, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 3,
+	4, 3, 4, 3, 4, 5, 4, 51, 10, 4, 3, 5, 3, 5, 3, 6, 3, 6, 3, 6, 5, 6, 58,
+	10, 6, 3, 6, 3, 6, 3, 6, 7, 6, 63, 10, 6, 12, 6, 14, 6, 66, 11, 6, 3, 7,
+	3, 7, 3, 7, 5, 7, 71, 10, 7, 3, 8, 3, 8, 3, 8, 3, 8, 3, 8, 3, 8, 3, 8,
+	6, 8, 80, 10, 8, 13, 8, 14, 8, 81, 3, 8, 3, 8, 3, 9, 3, 9, 5, 9, 88, 10,
+	9, 3, 10, 3, 10, 3, 10, 3, 10, 3, 10, 6, 10, 95, 10, 10, 13, 10, 14, 10,
+	96, 3, 10, 3, 10, 3, 11, 3, 11, 3, 11, 3, 11, 3, 11, 3, 11, 3, 11, 3, 11,
+	3, 12, 3, 12, 3, 12, 5, 12, 112, 10, 12, 3, 13, 3, 13, 3, 13, 3, 13, 3,
+	13, 3, 13, 5, 13, 120, 10, 13, 3, 13, 3, 13, 3, 13, 3, 13, 3, 13, 3, 13,
+	3, 13, 3, 13, 3, 13, 3, 13, 3, 13, 3, 13, 3, 13, 3, 13, 3, 13, 3, 13, 3,
+	13, 3, 13, 5, 13, 140, 10, 13, 3, 13, 3, 13, 3, 13, 5, 13, 145, 10, 13,
+	3, 14, 3, 14, 3, 15, 3, 15, 3, 15, 3, 15, 3, 15, 3, 15, 3, 16, 3, 16, 3,
+	16, 3, 16, 5, 16, 159, 10, 16, 3, 17, 3, 17, 3, 17, 6, 17, 164, 10, 17,
+	13, 17, 14, 17, 165, 3, 17, 3, 17, 6, 17, 170, 10, 17, 13, 17, 14, 17,
+	171, 6, 17, 174, 10, 17, 13, 17, 14, 17, 175, 3, 17, 3, 17, 6, 17, 180,
+	10, 17, 13, 17, 14, 17, 181, 3, 18, 7, 18, 185, 10, 18, 12, 18, 14, 18,
+	188, 11, 18, 3, 18, 5, 18, 191, 10, 18, 3, 18, 3, 18, 6, 18, 195, 10, 18,
+	13, 18, 14, 18, 196, 3, 18, 7, 18, 200, 10, 18, 12, 18, 14, 18, 203, 11,
+	18, 3, 18, 7, 18, 206, 10, 18, 12, 18, 14, 18, 209, 11, 18, 3, 18, 3, 18,
+	3, 18, 2, 3, 10, 19, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28,
+	30, 32, 34, 2, 4, 3, 2, 19, 20, 3, 2, 28, 32, 2, 221, 2, 36, 3, 2, 2, 2,
+	4, 41, 3, 2, 2, 2, 6, 50, 3, 2, 2, 2, 8, 52, 3, 2, 2, 2, 10, 57, 3, 2,
+	2, 2, 12, 70, 3, 2, 2, 2, 14, 72, 3, 2, 2, 2, 16, 87, 3, 2, 2, 2, 18, 89,
+	3, 2, 2, 2, 20, 100, 3, 2, 2, 2, 22, 111, 3, 2, 2, 2, 24, 144, 3, 2, 2,
+	2, 26, 146, 3, 2, 2, 2, 28, 148, 3, 2, 2, 2, 30, 154, 3, 2, 2, 2, 32, 160,
+	3, 2, 2, 2, 34, 186, 3, 2, 2, 2, 36, 37, 7, 23, 2, 2, 37, 38, 7, 40, 2,
+	2, 38, 39, 7, 36, 2, 2, 39, 40, 7, 24, 2, 2, 40, 3, 3, 2, 2, 2, 41, 42,
+	7, 23, 2, 2, 42, 43, 7, 40, 2, 2, 43, 44, 7, 3, 2, 2, 44, 45, 7, 24, 2,
+	2, 45, 5, 3, 2, 2, 2, 46, 51, 7, 39, 2, 2, 47, 51, 7, 40, 2, 2, 48, 51,
+	7, 36, 2, 2, 49, 51, 5, 2, 2, 2, 50, 46, 3, 2, 2, 2, 50, 47, 3, 2, 2, 2,
+	50, 48, 3, 2, 2, 2, 50, 49, 3, 2, 2, 2, 51, 7, 3, 2, 2, 2, 52, 53, 7, 38,
+	2, 2, 53, 9, 3, 2, 2, 2, 54, 55, 8, 6, 1, 2, 55, 58, 5, 6, 4, 2, 56, 58,
+	5, 8, 5, 2, 57, 54, 3, 2, 2, 2, 57, 56, 3, 2, 2, 2, 58, 64, 3, 2, 2, 2,
+	59, 60, 12, 5, 2, 2, 60, 61, 9, 2, 2, 2, 61, 63, 5, 10, 6, 6, 62, 59, 3,
+	2, 2, 2, 63, 66, 3, 2, 2, 2, 64, 62, 3, 2, 2, 2, 64, 65, 3, 2, 2, 2, 65,
+	11, 3, 2, 2, 2, 66, 64, 3, 2, 2, 2, 67, 71, 7, 34, 2, 2, 68, 71, 5, 8,
+	5, 2, 69, 71, 7, 35, 2, 2, 70, 67, 3, 2, 2, 2, 70, 68, 3, 2, 2, 2, 70,
+	69, 3, 2, 2, 2, 71, 13, 3, 2, 2, 2, 72, 73, 7, 25, 2, 2, 73, 79, 7, 8,
+	2, 2, 74, 75, 5, 12, 7, 2, 75, 76, 7, 4, 2, 2, 76, 77, 5, 10, 6, 2, 77,
+	78, 7, 8, 2, 2, 78, 80, 3, 2, 2, 2, 79, 74, 3, 2, 2, 2, 80, 81, 3, 2, 2,
+	2, 81, 79, 3, 2, 2, 2, 81, 82, 3, 2, 2, 2, 82, 83, 3, 2, 2, 2, 83, 84,
+	7, 26, 2, 2, 84, 15, 3, 2, 2, 2, 85, 88, 5, 10, 6, 2, 86, 88, 5, 14, 8,
+	2, 87, 85, 3, 2, 2, 2, 87, 86, 3, 2, 2, 2, 88, 17, 3, 2, 2, 2, 89, 90,
+	7, 25, 2, 2, 90, 94, 7, 8, 2, 2, 91, 92, 5, 10, 6, 2, 92, 93, 7, 8, 2,
+	2, 93, 95, 3, 2, 2, 2, 94, 91, 3, 2, 2, 2, 95, 96, 3, 2, 2, 2, 96, 94,
+	3, 2, 2, 2, 96, 97, 3, 2, 2, 2, 97, 98, 3, 2, 2, 2, 98, 99, 7, 26, 2, 2,
+	99, 19, 3, 2, 2, 2, 100, 101, 7, 25, 2, 2, 101, 102, 7, 8, 2, 2, 102, 103,
+	5, 12, 7, 2, 103, 104, 7, 5, 2, 2, 104, 105, 5, 22, 12, 2, 105, 106, 3,
+	2, 2, 2, 106, 107, 7, 26, 2, 2, 107, 21, 3, 2, 2, 2, 108, 112, 5, 18, 10,
+	2, 109, 112, 5, 10, 6, 2, 110, 112, 5, 20, 11, 2, 111, 108, 3, 2, 2, 2,
+	111, 109, 3, 2, 2, 2, 111, 110, 3, 2, 2, 2, 112, 23, 3, 2, 2, 2, 113, 114,
+	7, 13, 2, 2, 114, 145, 5, 10, 6, 2, 115, 145, 7, 14, 2, 2, 116, 119, 7,
+	15, 2, 2, 117, 120, 5, 10, 6, 2, 118, 120, 5, 4, 3, 2, 119, 117, 3, 2,
+	2, 2, 119, 118, 3, 2, 2, 2, 120, 121, 3, 2, 2, 2, 121, 122, 7, 21, 2, 2,
+	122, 139, 7, 8, 2, 2, 123, 124, 7, 16, 2, 2, 124, 125, 7, 27, 2, 2, 125,
+	126, 5, 22, 12, 2, 126, 127, 7, 8, 2, 2, 127, 128, 7, 17, 2, 2, 128, 129,
+	7, 27, 2, 2, 129, 130, 5, 16, 9, 2, 130, 140, 3, 2, 2, 2, 131, 132, 7,
+	17, 2, 2, 132, 133, 7, 27, 2, 2, 133, 134, 5, 16, 9, 2, 134, 135, 7, 8,
+	2, 2, 135, 136, 7, 16, 2, 2, 136, 137, 7, 27, 2, 2, 137, 138, 5, 22, 12,
+	2, 138, 140, 3, 2, 2, 2, 139, 123, 3, 2, 2, 2, 139, 131, 3, 2, 2, 2, 140,
+	141, 3, 2, 2, 2, 141, 142, 7, 8, 2, 2, 142, 143, 7, 22, 2, 2, 143, 145,
+	3, 2, 2, 2, 144, 113, 3, 2, 2, 2, 144, 115, 3, 2, 2, 2, 144, 116, 3, 2,
+	2, 2, 145, 25, 3, 2, 2, 2, 146, 147, 9, 3, 2, 2, 147, 27, 3, 2, 2, 2, 148,
+	149, 7, 6, 2, 2, 149, 150, 5, 10, 6, 2, 150, 151, 7, 7, 2, 2, 151, 152,
+	7, 33, 2, 2, 152, 153, 7, 22, 2, 2, 153, 29, 3, 2, 2, 2, 154, 155, 5, 26,
+	14, 2, 155, 158, 5, 8, 5, 2, 156, 157, 7, 27, 2, 2, 157, 159, 5, 28, 15,
+	2, 158, 156, 3, 2, 2, 2, 158, 159, 3, 2, 2, 2, 159, 31, 3, 2, 2, 2, 160,
+	161, 7, 12, 2, 2, 161, 163, 7, 25, 2, 2, 162, 164, 7, 8, 2, 2, 163, 162,
+	3, 2, 2, 2, 164, 165, 3, 2, 2, 2, 165, 163, 3, 2, 2, 2, 165, 166, 3, 2,
+	2, 2, 166, 173, 3, 2, 2, 2, 167, 169, 5, 30, 16, 2, 168, 170, 7, 8, 2,
+	2, 169, 168, 3, 2, 2, 2, 170, 171, 3, 2, 2, 2, 171, 169, 3, 2, 2, 2, 171,
+	172, 3, 2, 2, 2, 172, 174, 3, 2, 2, 2, 173, 167, 3, 2, 2, 2, 174, 175,
+	3, 2, 2, 2, 175, 173, 3, 2, 2, 2, 175, 176, 3, 2, 2, 2, 176, 177, 3, 2,
+	2, 2, 177, 179, 7, 26, 2, 2, 178, 180, 7, 8, 2, 2, 179, 178, 3, 2, 2, 2,
+	180, 181, 3, 2, 2, 2, 181, 179, 3, 2, 2, 2, 181, 182, 3, 2, 2, 2, 182,
+	33, 3, 2, 2, 2, 183, 185, 7, 8, 2, 2, 184, 183, 3, 2, 2, 2, 185, 188, 3,
+	2, 2, 2, 186, 184, 3, 2, 2, 2, 186, 187, 3, 2, 2, 2, 187, 190, 3, 2, 2,
+	2, 188, 186, 3, 2, 2, 2, 189, 191, 5, 32, 17, 2, 190, 189, 3, 2, 2, 2,
+	190, 191, 3, 2, 2, 2, 191, 192, 3, 2, 2, 2, 192, 201, 5, 24, 13, 2, 193,
+	195, 7, 8, 2, 2, 194, 193, 3, 2, 2, 2, 195, 196, 3, 2, 2, 2, 196, 194,
+	3, 2, 2, 2, 196, 197, 3, 2, 2, 2, 197, 198, 3, 2, 2, 2, 198, 200, 5, 24,
+	13, 2, 199, 194, 3, 2, 2, 2, 200, 203, 3, 2, 2, 2, 201, 199, 3, 2, 2, 2,
+	201, 202, 3, 2, 2, 2, 202, 207, 3, 2, 2, 2, 203, 201, 3, 2, 2, 2, 204,
+	206, 7, 8, 2, 2, 205, 204, 3, 2, 2, 2, 206, 209, 3, 2, 2, 2, 207, 205,
+	3, 2, 2, 2, 207, 208, 3, 2, 2, 2, 208, 210, 3, 2, 2, 2, 209, 207, 3, 2,
+	2, 2, 210, 211, 7, 2, 2, 3, 211, 35, 3, 2, 2, 2, 23, 50, 57, 64, 70, 81,
+	87, 96, 111, 119, 139, 144, 158, 165, 171, 175, 181, 186, 190, 196, 201,
+	207,
 }
 var literalNames = []string{
-	"", "'to'", "'meta('", "','", "", "", "", "", "'vars'", "'print'", "'fail'",
-	"'send'", "'source'", "'destination'", "'allocate'", "'+'", "'-'", "'('",
-	"')'", "'['", "']'", "'{'", "'}'", "'*'", "'='", "'account'", "'asset'",
-	"'number'", "'monetary'", "'portion'", "", "", "'remaining'", "", "'%'",
+	"", "'*'", "'to'", "'from'", "'meta('", "','", "", "", "", "", "'vars'",
+	"'print'", "'fail'", "'send'", "'source'", "'destination'", "'allocate'",
+	"'+'", "'-'", "'('", "')'", "'['", "']'", "'{'", "'}'", "'='", "'account'",
+	"'asset'", "'number'", "'monetary'", "'portion'", "", "", "'remaining'",
+	"", "'%'",
 }
 var symbolicNames = []string{
-	"", "", "", "", "NEWLINE", "WHITESPACE", "MULTILINE_COMMENT", "LINE_COMMENT",
+	"", "", "", "", "", "", "NEWLINE", "WHITESPACE", "MULTILINE_COMMENT", "LINE_COMMENT",
 	"VARS", "PRINT", "FAIL", "SEND", "SOURCE", "DESTINATION", "ALLOCATE", "OP_ADD",
-	"OP_SUB", "LPAREN", "RPAREN", "LBRACK", "RBRACK", "LBRACE", "RBRACE", "ALL",
-	"EQ", "TY_ACCOUNT", "TY_ASSET", "TY_NUMBER", "TY_MONETARY", "TY_PORTION",
-	"STRING", "PORTION", "PORTION_REMAINING", "NUMBER", "PERCENT", "VARIABLE_NAME",
-	"ACCOUNT", "ASSET",
+	"OP_SUB", "LPAREN", "RPAREN", "LBRACK", "RBRACK", "LBRACE", "RBRACE", "EQ",
+	"TY_ACCOUNT", "TY_ASSET", "TY_NUMBER", "TY_MONETARY", "TY_PORTION", "STRING",
+	"PORTION", "PORTION_REMAINING", "NUMBER", "PERCENT", "VARIABLE_NAME", "ACCOUNT",
+	"ASSET",
 }
 
 var ruleNames = []string{
-	"amount", "monetary", "literal", "variable", "expression", "allocPartConst",
-	"allocBlockConst", "allocPartDyn", "allocBlockDyn", "allocation", "sourceBlock",
+	"monetary", "monetaryAll", "literal", "variable", "expression", "allotmentPortion",
+	"destinationAllotment", "destination", "sourceBlock", "sourceAllotment",
 	"source", "statement", "type_", "origin", "varDecl", "varListDecl", "script",
 }
 
@@ -168,236 +166,63 @@ const (
 	NumScriptParserT__0              = 1
 	NumScriptParserT__1              = 2
 	NumScriptParserT__2              = 3
-	NumScriptParserNEWLINE           = 4
-	NumScriptParserWHITESPACE        = 5
-	NumScriptParserMULTILINE_COMMENT = 6
-	NumScriptParserLINE_COMMENT      = 7
-	NumScriptParserVARS              = 8
-	NumScriptParserPRINT             = 9
-	NumScriptParserFAIL              = 10
-	NumScriptParserSEND              = 11
-	NumScriptParserSOURCE            = 12
-	NumScriptParserDESTINATION       = 13
-	NumScriptParserALLOCATE          = 14
-	NumScriptParserOP_ADD            = 15
-	NumScriptParserOP_SUB            = 16
-	NumScriptParserLPAREN            = 17
-	NumScriptParserRPAREN            = 18
-	NumScriptParserLBRACK            = 19
-	NumScriptParserRBRACK            = 20
-	NumScriptParserLBRACE            = 21
-	NumScriptParserRBRACE            = 22
-	NumScriptParserALL               = 23
-	NumScriptParserEQ                = 24
-	NumScriptParserTY_ACCOUNT        = 25
-	NumScriptParserTY_ASSET          = 26
-	NumScriptParserTY_NUMBER         = 27
-	NumScriptParserTY_MONETARY       = 28
-	NumScriptParserTY_PORTION        = 29
-	NumScriptParserSTRING            = 30
-	NumScriptParserPORTION           = 31
-	NumScriptParserPORTION_REMAINING = 32
-	NumScriptParserNUMBER            = 33
-	NumScriptParserPERCENT           = 34
-	NumScriptParserVARIABLE_NAME     = 35
-	NumScriptParserACCOUNT           = 36
-	NumScriptParserASSET             = 37
+	NumScriptParserT__3              = 4
+	NumScriptParserT__4              = 5
+	NumScriptParserNEWLINE           = 6
+	NumScriptParserWHITESPACE        = 7
+	NumScriptParserMULTILINE_COMMENT = 8
+	NumScriptParserLINE_COMMENT      = 9
+	NumScriptParserVARS              = 10
+	NumScriptParserPRINT             = 11
+	NumScriptParserFAIL              = 12
+	NumScriptParserSEND              = 13
+	NumScriptParserSOURCE            = 14
+	NumScriptParserDESTINATION       = 15
+	NumScriptParserALLOCATE          = 16
+	NumScriptParserOP_ADD            = 17
+	NumScriptParserOP_SUB            = 18
+	NumScriptParserLPAREN            = 19
+	NumScriptParserRPAREN            = 20
+	NumScriptParserLBRACK            = 21
+	NumScriptParserRBRACK            = 22
+	NumScriptParserLBRACE            = 23
+	NumScriptParserRBRACE            = 24
+	NumScriptParserEQ                = 25
+	NumScriptParserTY_ACCOUNT        = 26
+	NumScriptParserTY_ASSET          = 27
+	NumScriptParserTY_NUMBER         = 28
+	NumScriptParserTY_MONETARY       = 29
+	NumScriptParserTY_PORTION        = 30
+	NumScriptParserSTRING            = 31
+	NumScriptParserPORTION           = 32
+	NumScriptParserPORTION_REMAINING = 33
+	NumScriptParserNUMBER            = 34
+	NumScriptParserPERCENT           = 35
+	NumScriptParserVARIABLE_NAME     = 36
+	NumScriptParserACCOUNT           = 37
+	NumScriptParserASSET             = 38
 )
 
 // NumScriptParser rules.
 const (
-	NumScriptParserRULE_amount          = 0
-	NumScriptParserRULE_monetary        = 1
-	NumScriptParserRULE_literal         = 2
-	NumScriptParserRULE_variable        = 3
-	NumScriptParserRULE_expression      = 4
-	NumScriptParserRULE_allocPartConst  = 5
-	NumScriptParserRULE_allocBlockConst = 6
-	NumScriptParserRULE_allocPartDyn    = 7
-	NumScriptParserRULE_allocBlockDyn   = 8
-	NumScriptParserRULE_allocation      = 9
-	NumScriptParserRULE_sourceBlock     = 10
-	NumScriptParserRULE_source          = 11
-	NumScriptParserRULE_statement       = 12
-	NumScriptParserRULE_type_           = 13
-	NumScriptParserRULE_origin          = 14
-	NumScriptParserRULE_varDecl         = 15
-	NumScriptParserRULE_varListDecl     = 16
-	NumScriptParserRULE_script          = 17
+	NumScriptParserRULE_monetary             = 0
+	NumScriptParserRULE_monetaryAll          = 1
+	NumScriptParserRULE_literal              = 2
+	NumScriptParserRULE_variable             = 3
+	NumScriptParserRULE_expression           = 4
+	NumScriptParserRULE_allotmentPortion     = 5
+	NumScriptParserRULE_destinationAllotment = 6
+	NumScriptParserRULE_destination          = 7
+	NumScriptParserRULE_sourceBlock          = 8
+	NumScriptParserRULE_sourceAllotment      = 9
+	NumScriptParserRULE_source               = 10
+	NumScriptParserRULE_statement            = 11
+	NumScriptParserRULE_type_                = 12
+	NumScriptParserRULE_origin               = 13
+	NumScriptParserRULE_varDecl              = 14
+	NumScriptParserRULE_varListDecl          = 15
+	NumScriptParserRULE_script               = 16
 )
-
-// IAmountContext is an interface to support dynamic dispatch.
-type IAmountContext interface {
-	antlr.ParserRuleContext
-
-	// GetParser returns the parser.
-	GetParser() antlr.Parser
-
-	// IsAmountContext differentiates from other interfaces.
-	IsAmountContext()
-}
-
-type AmountContext struct {
-	*antlr.BaseParserRuleContext
-	parser antlr.Parser
-}
-
-func NewEmptyAmountContext() *AmountContext {
-	var p = new(AmountContext)
-	p.BaseParserRuleContext = antlr.NewBaseParserRuleContext(nil, -1)
-	p.RuleIndex = NumScriptParserRULE_amount
-	return p
-}
-
-func (*AmountContext) IsAmountContext() {}
-
-func NewAmountContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokingState int) *AmountContext {
-	var p = new(AmountContext)
-
-	p.BaseParserRuleContext = antlr.NewBaseParserRuleContext(parent, invokingState)
-
-	p.parser = parser
-	p.RuleIndex = NumScriptParserRULE_amount
-
-	return p
-}
-
-func (s *AmountContext) GetParser() antlr.Parser { return s.parser }
-
-func (s *AmountContext) CopyFrom(ctx *AmountContext) {
-	s.BaseParserRuleContext.CopyFrom(ctx.BaseParserRuleContext)
-}
-
-func (s *AmountContext) GetRuleContext() antlr.RuleContext {
-	return s
-}
-
-func (s *AmountContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
-	return antlr.TreesStringTree(s, ruleNames, recog)
-}
-
-type AmountAllContext struct {
-	*AmountContext
-}
-
-func NewAmountAllContext(parser antlr.Parser, ctx antlr.ParserRuleContext) *AmountAllContext {
-	var p = new(AmountAllContext)
-
-	p.AmountContext = NewEmptyAmountContext()
-	p.parser = parser
-	p.CopyFrom(ctx.(*AmountContext))
-
-	return p
-}
-
-func (s *AmountAllContext) GetRuleContext() antlr.RuleContext {
-	return s
-}
-
-func (s *AmountAllContext) ALL() antlr.TerminalNode {
-	return s.GetToken(NumScriptParserALL, 0)
-}
-
-func (s *AmountAllContext) EnterRule(listener antlr.ParseTreeListener) {
-	if listenerT, ok := listener.(NumScriptListener); ok {
-		listenerT.EnterAmountAll(s)
-	}
-}
-
-func (s *AmountAllContext) ExitRule(listener antlr.ParseTreeListener) {
-	if listenerT, ok := listener.(NumScriptListener); ok {
-		listenerT.ExitAmountAll(s)
-	}
-}
-
-type AmountSpecificContext struct {
-	*AmountContext
-	num antlr.Token
-}
-
-func NewAmountSpecificContext(parser antlr.Parser, ctx antlr.ParserRuleContext) *AmountSpecificContext {
-	var p = new(AmountSpecificContext)
-
-	p.AmountContext = NewEmptyAmountContext()
-	p.parser = parser
-	p.CopyFrom(ctx.(*AmountContext))
-
-	return p
-}
-
-func (s *AmountSpecificContext) GetNum() antlr.Token { return s.num }
-
-func (s *AmountSpecificContext) SetNum(v antlr.Token) { s.num = v }
-
-func (s *AmountSpecificContext) GetRuleContext() antlr.RuleContext {
-	return s
-}
-
-func (s *AmountSpecificContext) NUMBER() antlr.TerminalNode {
-	return s.GetToken(NumScriptParserNUMBER, 0)
-}
-
-func (s *AmountSpecificContext) EnterRule(listener antlr.ParseTreeListener) {
-	if listenerT, ok := listener.(NumScriptListener); ok {
-		listenerT.EnterAmountSpecific(s)
-	}
-}
-
-func (s *AmountSpecificContext) ExitRule(listener antlr.ParseTreeListener) {
-	if listenerT, ok := listener.(NumScriptListener); ok {
-		listenerT.ExitAmountSpecific(s)
-	}
-}
-
-func (p *NumScriptParser) Amount() (localctx IAmountContext) {
-	localctx = NewAmountContext(p, p.GetParserRuleContext(), p.GetState())
-	p.EnterRule(localctx, 0, NumScriptParserRULE_amount)
-
-	defer func() {
-		p.ExitRule()
-	}()
-
-	defer func() {
-		if err := recover(); err != nil {
-			if v, ok := err.(antlr.RecognitionException); ok {
-				localctx.SetException(v)
-				p.GetErrorHandler().ReportError(p, v)
-				p.GetErrorHandler().Recover(p, v)
-			} else {
-				panic(err)
-			}
-		}
-	}()
-
-	p.SetState(38)
-	p.GetErrorHandler().Sync(p)
-
-	switch p.GetTokenStream().LA(1) {
-	case NumScriptParserNUMBER:
-		localctx = NewAmountSpecificContext(p, localctx)
-		p.EnterOuterAlt(localctx, 1)
-		{
-			p.SetState(36)
-
-			var _m = p.Match(NumScriptParserNUMBER)
-
-			localctx.(*AmountSpecificContext).num = _m
-		}
-
-	case NumScriptParserALL:
-		localctx = NewAmountAllContext(p, localctx)
-		p.EnterOuterAlt(localctx, 2)
-		{
-			p.SetState(37)
-			p.Match(NumScriptParserALL)
-		}
-
-	default:
-		panic(antlr.NewNoViableAltException(p, nil, nil, nil, nil, nil))
-	}
-
-	return localctx
-}
 
 // IMonetaryContext is an interface to support dynamic dispatch.
 type IMonetaryContext interface {
@@ -409,14 +234,14 @@ type IMonetaryContext interface {
 	// GetAsset returns the asset token.
 	GetAsset() antlr.Token
 
+	// GetAmt returns the amt token.
+	GetAmt() antlr.Token
+
 	// SetAsset sets the asset token.
 	SetAsset(antlr.Token)
 
-	// GetAmt returns the amt rule contexts.
-	GetAmt() IAmountContext
-
-	// SetAmt sets the amt rule contexts.
-	SetAmt(IAmountContext)
+	// SetAmt sets the amt token.
+	SetAmt(antlr.Token)
 
 	// IsMonetaryContext differentiates from other interfaces.
 	IsMonetaryContext()
@@ -426,7 +251,7 @@ type MonetaryContext struct {
 	*antlr.BaseParserRuleContext
 	parser antlr.Parser
 	asset  antlr.Token
-	amt    IAmountContext
+	amt    antlr.Token
 }
 
 func NewEmptyMonetaryContext() *MonetaryContext {
@@ -453,11 +278,11 @@ func (s *MonetaryContext) GetParser() antlr.Parser { return s.parser }
 
 func (s *MonetaryContext) GetAsset() antlr.Token { return s.asset }
 
+func (s *MonetaryContext) GetAmt() antlr.Token { return s.amt }
+
 func (s *MonetaryContext) SetAsset(v antlr.Token) { s.asset = v }
 
-func (s *MonetaryContext) GetAmt() IAmountContext { return s.amt }
-
-func (s *MonetaryContext) SetAmt(v IAmountContext) { s.amt = v }
+func (s *MonetaryContext) SetAmt(v antlr.Token) { s.amt = v }
 
 func (s *MonetaryContext) LBRACK() antlr.TerminalNode {
 	return s.GetToken(NumScriptParserLBRACK, 0)
@@ -471,14 +296,8 @@ func (s *MonetaryContext) ASSET() antlr.TerminalNode {
 	return s.GetToken(NumScriptParserASSET, 0)
 }
 
-func (s *MonetaryContext) Amount() IAmountContext {
-	var t = s.GetTypedRuleContext(reflect.TypeOf((*IAmountContext)(nil)).Elem(), 0)
-
-	if t == nil {
-		return nil
-	}
-
-	return t.(IAmountContext)
+func (s *MonetaryContext) NUMBER() antlr.TerminalNode {
+	return s.GetToken(NumScriptParserNUMBER, 0)
 }
 
 func (s *MonetaryContext) GetRuleContext() antlr.RuleContext {
@@ -503,7 +322,7 @@ func (s *MonetaryContext) ExitRule(listener antlr.ParseTreeListener) {
 
 func (p *NumScriptParser) Monetary() (localctx IMonetaryContext) {
 	localctx = NewMonetaryContext(p, p.GetParserRuleContext(), p.GetState())
-	p.EnterRule(localctx, 2, NumScriptParserRULE_monetary)
+	p.EnterRule(localctx, 0, NumScriptParserRULE_monetary)
 
 	defer func() {
 		p.ExitRule()
@@ -523,25 +342,150 @@ func (p *NumScriptParser) Monetary() (localctx IMonetaryContext) {
 
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(40)
+		p.SetState(34)
 		p.Match(NumScriptParserLBRACK)
 	}
 	{
-		p.SetState(41)
+		p.SetState(35)
 
 		var _m = p.Match(NumScriptParserASSET)
 
 		localctx.(*MonetaryContext).asset = _m
 	}
 	{
-		p.SetState(42)
+		p.SetState(36)
 
-		var _x = p.Amount()
+		var _m = p.Match(NumScriptParserNUMBER)
 
-		localctx.(*MonetaryContext).amt = _x
+		localctx.(*MonetaryContext).amt = _m
 	}
 	{
-		p.SetState(43)
+		p.SetState(37)
+		p.Match(NumScriptParserRBRACK)
+	}
+
+	return localctx
+}
+
+// IMonetaryAllContext is an interface to support dynamic dispatch.
+type IMonetaryAllContext interface {
+	antlr.ParserRuleContext
+
+	// GetParser returns the parser.
+	GetParser() antlr.Parser
+
+	// GetAsset returns the asset token.
+	GetAsset() antlr.Token
+
+	// SetAsset sets the asset token.
+	SetAsset(antlr.Token)
+
+	// IsMonetaryAllContext differentiates from other interfaces.
+	IsMonetaryAllContext()
+}
+
+type MonetaryAllContext struct {
+	*antlr.BaseParserRuleContext
+	parser antlr.Parser
+	asset  antlr.Token
+}
+
+func NewEmptyMonetaryAllContext() *MonetaryAllContext {
+	var p = new(MonetaryAllContext)
+	p.BaseParserRuleContext = antlr.NewBaseParserRuleContext(nil, -1)
+	p.RuleIndex = NumScriptParserRULE_monetaryAll
+	return p
+}
+
+func (*MonetaryAllContext) IsMonetaryAllContext() {}
+
+func NewMonetaryAllContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokingState int) *MonetaryAllContext {
+	var p = new(MonetaryAllContext)
+
+	p.BaseParserRuleContext = antlr.NewBaseParserRuleContext(parent, invokingState)
+
+	p.parser = parser
+	p.RuleIndex = NumScriptParserRULE_monetaryAll
+
+	return p
+}
+
+func (s *MonetaryAllContext) GetParser() antlr.Parser { return s.parser }
+
+func (s *MonetaryAllContext) GetAsset() antlr.Token { return s.asset }
+
+func (s *MonetaryAllContext) SetAsset(v antlr.Token) { s.asset = v }
+
+func (s *MonetaryAllContext) LBRACK() antlr.TerminalNode {
+	return s.GetToken(NumScriptParserLBRACK, 0)
+}
+
+func (s *MonetaryAllContext) RBRACK() antlr.TerminalNode {
+	return s.GetToken(NumScriptParserRBRACK, 0)
+}
+
+func (s *MonetaryAllContext) ASSET() antlr.TerminalNode {
+	return s.GetToken(NumScriptParserASSET, 0)
+}
+
+func (s *MonetaryAllContext) GetRuleContext() antlr.RuleContext {
+	return s
+}
+
+func (s *MonetaryAllContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
+	return antlr.TreesStringTree(s, ruleNames, recog)
+}
+
+func (s *MonetaryAllContext) EnterRule(listener antlr.ParseTreeListener) {
+	if listenerT, ok := listener.(NumScriptListener); ok {
+		listenerT.EnterMonetaryAll(s)
+	}
+}
+
+func (s *MonetaryAllContext) ExitRule(listener antlr.ParseTreeListener) {
+	if listenerT, ok := listener.(NumScriptListener); ok {
+		listenerT.ExitMonetaryAll(s)
+	}
+}
+
+func (p *NumScriptParser) MonetaryAll() (localctx IMonetaryAllContext) {
+	localctx = NewMonetaryAllContext(p, p.GetParserRuleContext(), p.GetState())
+	p.EnterRule(localctx, 2, NumScriptParserRULE_monetaryAll)
+
+	defer func() {
+		p.ExitRule()
+	}()
+
+	defer func() {
+		if err := recover(); err != nil {
+			if v, ok := err.(antlr.RecognitionException); ok {
+				localctx.SetException(v)
+				p.GetErrorHandler().ReportError(p, v)
+				p.GetErrorHandler().Recover(p, v)
+			} else {
+				panic(err)
+			}
+		}
+	}()
+
+	p.EnterOuterAlt(localctx, 1)
+	{
+		p.SetState(39)
+		p.Match(NumScriptParserLBRACK)
+	}
+	{
+		p.SetState(40)
+
+		var _m = p.Match(NumScriptParserASSET)
+
+		localctx.(*MonetaryAllContext).asset = _m
+	}
+	{
+		p.SetState(41)
+		p.Match(NumScriptParserT__0)
+	}
+	{
+		p.SetState(42)
 		p.Match(NumScriptParserRBRACK)
 	}
 
@@ -760,7 +704,7 @@ func (p *NumScriptParser) Literal() (localctx ILiteralContext) {
 		}
 	}()
 
-	p.SetState(49)
+	p.SetState(48)
 	p.GetErrorHandler().Sync(p)
 
 	switch p.GetTokenStream().LA(1) {
@@ -768,7 +712,7 @@ func (p *NumScriptParser) Literal() (localctx ILiteralContext) {
 		localctx = NewLitAccountContext(p, localctx)
 		p.EnterOuterAlt(localctx, 1)
 		{
-			p.SetState(45)
+			p.SetState(44)
 			p.Match(NumScriptParserACCOUNT)
 		}
 
@@ -776,7 +720,7 @@ func (p *NumScriptParser) Literal() (localctx ILiteralContext) {
 		localctx = NewLitAssetContext(p, localctx)
 		p.EnterOuterAlt(localctx, 2)
 		{
-			p.SetState(46)
+			p.SetState(45)
 			p.Match(NumScriptParserASSET)
 		}
 
@@ -784,7 +728,7 @@ func (p *NumScriptParser) Literal() (localctx ILiteralContext) {
 		localctx = NewLitNumberContext(p, localctx)
 		p.EnterOuterAlt(localctx, 3)
 		{
-			p.SetState(47)
+			p.SetState(46)
 			p.Match(NumScriptParserNUMBER)
 		}
 
@@ -792,7 +736,7 @@ func (p *NumScriptParser) Literal() (localctx ILiteralContext) {
 		localctx = NewLitMonetaryContext(p, localctx)
 		p.EnterOuterAlt(localctx, 4)
 		{
-			p.SetState(48)
+			p.SetState(47)
 			p.Monetary()
 		}
 
@@ -887,7 +831,7 @@ func (p *NumScriptParser) Variable() (localctx IVariableContext) {
 
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(51)
+		p.SetState(50)
 		p.Match(NumScriptParserVARIABLE_NAME)
 	}
 
@@ -1143,7 +1087,7 @@ func (p *NumScriptParser) expression(_p int) (localctx IExpressionContext) {
 	var _alt int
 
 	p.EnterOuterAlt(localctx, 1)
-	p.SetState(56)
+	p.SetState(55)
 	p.GetErrorHandler().Sync(p)
 
 	switch p.GetTokenStream().LA(1) {
@@ -1153,7 +1097,7 @@ func (p *NumScriptParser) expression(_p int) (localctx IExpressionContext) {
 		_prevctx = localctx
 
 		{
-			p.SetState(54)
+			p.SetState(53)
 
 			var _x = p.Literal()
 
@@ -1165,7 +1109,7 @@ func (p *NumScriptParser) expression(_p int) (localctx IExpressionContext) {
 		p.SetParserRuleContext(localctx)
 		_prevctx = localctx
 		{
-			p.SetState(55)
+			p.SetState(54)
 
 			var _x = p.Variable()
 
@@ -1176,9 +1120,9 @@ func (p *NumScriptParser) expression(_p int) (localctx IExpressionContext) {
 		panic(antlr.NewNoViableAltException(p, nil, nil, nil, nil, nil))
 	}
 	p.GetParserRuleContext().SetStop(p.GetTokenStream().LT(-1))
-	p.SetState(63)
+	p.SetState(62)
 	p.GetErrorHandler().Sync(p)
-	_alt = p.GetInterpreter().AdaptivePredict(p.GetTokenStream(), 3, p.GetParserRuleContext())
+	_alt = p.GetInterpreter().AdaptivePredict(p.GetTokenStream(), 2, p.GetParserRuleContext())
 
 	for _alt != 2 && _alt != antlr.ATNInvalidAltNumber {
 		if _alt == 1 {
@@ -1190,13 +1134,13 @@ func (p *NumScriptParser) expression(_p int) (localctx IExpressionContext) {
 			localctx.(*ExprAddSubContext).lhs = _prevctx
 
 			p.PushNewRecursionContext(localctx, _startState, NumScriptParserRULE_expression)
-			p.SetState(58)
+			p.SetState(57)
 
 			if !(p.Precpred(p.GetParserRuleContext(), 3)) {
 				panic(antlr.NewFailedPredicateException(p, "p.Precpred(p.GetParserRuleContext(), 3)", ""))
 			}
 			{
-				p.SetState(59)
+				p.SetState(58)
 
 				var _lt = p.GetTokenStream().LT(1)
 
@@ -1214,7 +1158,7 @@ func (p *NumScriptParser) expression(_p int) (localctx IExpressionContext) {
 				}
 			}
 			{
-				p.SetState(60)
+				p.SetState(59)
 
 				var _x = p.expression(4)
 
@@ -1222,135 +1166,180 @@ func (p *NumScriptParser) expression(_p int) (localctx IExpressionContext) {
 			}
 
 		}
-		p.SetState(65)
+		p.SetState(64)
 		p.GetErrorHandler().Sync(p)
-		_alt = p.GetInterpreter().AdaptivePredict(p.GetTokenStream(), 3, p.GetParserRuleContext())
+		_alt = p.GetInterpreter().AdaptivePredict(p.GetTokenStream(), 2, p.GetParserRuleContext())
 	}
 
 	return localctx
 }
 
-// IAllocPartConstContext is an interface to support dynamic dispatch.
-type IAllocPartConstContext interface {
+// IAllotmentPortionContext is an interface to support dynamic dispatch.
+type IAllotmentPortionContext interface {
 	antlr.ParserRuleContext
 
 	// GetParser returns the parser.
 	GetParser() antlr.Parser
 
-	// IsAllocPartConstContext differentiates from other interfaces.
-	IsAllocPartConstContext()
+	// IsAllotmentPortionContext differentiates from other interfaces.
+	IsAllotmentPortionContext()
 }
 
-type AllocPartConstContext struct {
+type AllotmentPortionContext struct {
 	*antlr.BaseParserRuleContext
 	parser antlr.Parser
 }
 
-func NewEmptyAllocPartConstContext() *AllocPartConstContext {
-	var p = new(AllocPartConstContext)
+func NewEmptyAllotmentPortionContext() *AllotmentPortionContext {
+	var p = new(AllotmentPortionContext)
 	p.BaseParserRuleContext = antlr.NewBaseParserRuleContext(nil, -1)
-	p.RuleIndex = NumScriptParserRULE_allocPartConst
+	p.RuleIndex = NumScriptParserRULE_allotmentPortion
 	return p
 }
 
-func (*AllocPartConstContext) IsAllocPartConstContext() {}
+func (*AllotmentPortionContext) IsAllotmentPortionContext() {}
 
-func NewAllocPartConstContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokingState int) *AllocPartConstContext {
-	var p = new(AllocPartConstContext)
+func NewAllotmentPortionContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokingState int) *AllotmentPortionContext {
+	var p = new(AllotmentPortionContext)
 
 	p.BaseParserRuleContext = antlr.NewBaseParserRuleContext(parent, invokingState)
 
 	p.parser = parser
-	p.RuleIndex = NumScriptParserRULE_allocPartConst
+	p.RuleIndex = NumScriptParserRULE_allotmentPortion
 
 	return p
 }
 
-func (s *AllocPartConstContext) GetParser() antlr.Parser { return s.parser }
+func (s *AllotmentPortionContext) GetParser() antlr.Parser { return s.parser }
 
-func (s *AllocPartConstContext) CopyFrom(ctx *AllocPartConstContext) {
+func (s *AllotmentPortionContext) CopyFrom(ctx *AllotmentPortionContext) {
 	s.BaseParserRuleContext.CopyFrom(ctx.BaseParserRuleContext)
 }
 
-func (s *AllocPartConstContext) GetRuleContext() antlr.RuleContext {
+func (s *AllotmentPortionContext) GetRuleContext() antlr.RuleContext {
 	return s
 }
 
-func (s *AllocPartConstContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
+func (s *AllotmentPortionContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
 	return antlr.TreesStringTree(s, ruleNames, recog)
 }
 
-type AllocPartConstRemainingContext struct {
-	*AllocPartConstContext
+type AllotmentPortionRemainingContext struct {
+	*AllotmentPortionContext
 }
 
-func NewAllocPartConstRemainingContext(parser antlr.Parser, ctx antlr.ParserRuleContext) *AllocPartConstRemainingContext {
-	var p = new(AllocPartConstRemainingContext)
+func NewAllotmentPortionRemainingContext(parser antlr.Parser, ctx antlr.ParserRuleContext) *AllotmentPortionRemainingContext {
+	var p = new(AllotmentPortionRemainingContext)
 
-	p.AllocPartConstContext = NewEmptyAllocPartConstContext()
+	p.AllotmentPortionContext = NewEmptyAllotmentPortionContext()
 	p.parser = parser
-	p.CopyFrom(ctx.(*AllocPartConstContext))
+	p.CopyFrom(ctx.(*AllotmentPortionContext))
 
 	return p
 }
 
-func (s *AllocPartConstRemainingContext) GetRuleContext() antlr.RuleContext {
+func (s *AllotmentPortionRemainingContext) GetRuleContext() antlr.RuleContext {
 	return s
 }
 
-func (s *AllocPartConstRemainingContext) PORTION_REMAINING() antlr.TerminalNode {
+func (s *AllotmentPortionRemainingContext) PORTION_REMAINING() antlr.TerminalNode {
 	return s.GetToken(NumScriptParserPORTION_REMAINING, 0)
 }
 
-func (s *AllocPartConstRemainingContext) EnterRule(listener antlr.ParseTreeListener) {
+func (s *AllotmentPortionRemainingContext) EnterRule(listener antlr.ParseTreeListener) {
 	if listenerT, ok := listener.(NumScriptListener); ok {
-		listenerT.EnterAllocPartConstRemaining(s)
+		listenerT.EnterAllotmentPortionRemaining(s)
 	}
 }
 
-func (s *AllocPartConstRemainingContext) ExitRule(listener antlr.ParseTreeListener) {
+func (s *AllotmentPortionRemainingContext) ExitRule(listener antlr.ParseTreeListener) {
 	if listenerT, ok := listener.(NumScriptListener); ok {
-		listenerT.ExitAllocPartConstRemaining(s)
+		listenerT.ExitAllotmentPortionRemaining(s)
 	}
 }
 
-type AllocPartConstConstContext struct {
-	*AllocPartConstContext
+type AllotmentPortionConstContext struct {
+	*AllotmentPortionContext
 }
 
-func NewAllocPartConstConstContext(parser antlr.Parser, ctx antlr.ParserRuleContext) *AllocPartConstConstContext {
-	var p = new(AllocPartConstConstContext)
+func NewAllotmentPortionConstContext(parser antlr.Parser, ctx antlr.ParserRuleContext) *AllotmentPortionConstContext {
+	var p = new(AllotmentPortionConstContext)
 
-	p.AllocPartConstContext = NewEmptyAllocPartConstContext()
+	p.AllotmentPortionContext = NewEmptyAllotmentPortionContext()
 	p.parser = parser
-	p.CopyFrom(ctx.(*AllocPartConstContext))
+	p.CopyFrom(ctx.(*AllotmentPortionContext))
 
 	return p
 }
 
-func (s *AllocPartConstConstContext) GetRuleContext() antlr.RuleContext {
+func (s *AllotmentPortionConstContext) GetRuleContext() antlr.RuleContext {
 	return s
 }
 
-func (s *AllocPartConstConstContext) PORTION() antlr.TerminalNode {
+func (s *AllotmentPortionConstContext) PORTION() antlr.TerminalNode {
 	return s.GetToken(NumScriptParserPORTION, 0)
 }
 
-func (s *AllocPartConstConstContext) EnterRule(listener antlr.ParseTreeListener) {
+func (s *AllotmentPortionConstContext) EnterRule(listener antlr.ParseTreeListener) {
 	if listenerT, ok := listener.(NumScriptListener); ok {
-		listenerT.EnterAllocPartConstConst(s)
+		listenerT.EnterAllotmentPortionConst(s)
 	}
 }
 
-func (s *AllocPartConstConstContext) ExitRule(listener antlr.ParseTreeListener) {
+func (s *AllotmentPortionConstContext) ExitRule(listener antlr.ParseTreeListener) {
 	if listenerT, ok := listener.(NumScriptListener); ok {
-		listenerT.ExitAllocPartConstConst(s)
+		listenerT.ExitAllotmentPortionConst(s)
 	}
 }
 
-func (p *NumScriptParser) AllocPartConst() (localctx IAllocPartConstContext) {
-	localctx = NewAllocPartConstContext(p, p.GetParserRuleContext(), p.GetState())
-	p.EnterRule(localctx, 10, NumScriptParserRULE_allocPartConst)
+type AllotmentPortionVarContext struct {
+	*AllotmentPortionContext
+	por IVariableContext
+}
+
+func NewAllotmentPortionVarContext(parser antlr.Parser, ctx antlr.ParserRuleContext) *AllotmentPortionVarContext {
+	var p = new(AllotmentPortionVarContext)
+
+	p.AllotmentPortionContext = NewEmptyAllotmentPortionContext()
+	p.parser = parser
+	p.CopyFrom(ctx.(*AllotmentPortionContext))
+
+	return p
+}
+
+func (s *AllotmentPortionVarContext) GetPor() IVariableContext { return s.por }
+
+func (s *AllotmentPortionVarContext) SetPor(v IVariableContext) { s.por = v }
+
+func (s *AllotmentPortionVarContext) GetRuleContext() antlr.RuleContext {
+	return s
+}
+
+func (s *AllotmentPortionVarContext) Variable() IVariableContext {
+	var t = s.GetTypedRuleContext(reflect.TypeOf((*IVariableContext)(nil)).Elem(), 0)
+
+	if t == nil {
+		return nil
+	}
+
+	return t.(IVariableContext)
+}
+
+func (s *AllotmentPortionVarContext) EnterRule(listener antlr.ParseTreeListener) {
+	if listenerT, ok := listener.(NumScriptListener); ok {
+		listenerT.EnterAllotmentPortionVar(s)
+	}
+}
+
+func (s *AllotmentPortionVarContext) ExitRule(listener antlr.ParseTreeListener) {
+	if listenerT, ok := listener.(NumScriptListener); ok {
+		listenerT.ExitAllotmentPortionVar(s)
+	}
+}
+
+func (p *NumScriptParser) AllotmentPortion() (localctx IAllotmentPortionContext) {
+	localctx = NewAllotmentPortionContext(p, p.GetParserRuleContext(), p.GetState())
+	p.EnterRule(localctx, 10, NumScriptParserRULE_allotmentPortion)
 
 	defer func() {
 		p.ExitRule()
@@ -1373,16 +1362,27 @@ func (p *NumScriptParser) AllocPartConst() (localctx IAllocPartConstContext) {
 
 	switch p.GetTokenStream().LA(1) {
 	case NumScriptParserPORTION:
-		localctx = NewAllocPartConstConstContext(p, localctx)
+		localctx = NewAllotmentPortionConstContext(p, localctx)
 		p.EnterOuterAlt(localctx, 1)
 		{
-			p.SetState(66)
+			p.SetState(65)
 			p.Match(NumScriptParserPORTION)
 		}
 
-	case NumScriptParserPORTION_REMAINING:
-		localctx = NewAllocPartConstRemainingContext(p, localctx)
+	case NumScriptParserVARIABLE_NAME:
+		localctx = NewAllotmentPortionVarContext(p, localctx)
 		p.EnterOuterAlt(localctx, 2)
+		{
+			p.SetState(66)
+
+			var _x = p.Variable()
+
+			localctx.(*AllotmentPortionVarContext).por = _x
+		}
+
+	case NumScriptParserPORTION_REMAINING:
+		localctx = NewAllotmentPortionRemainingContext(p, localctx)
+		p.EnterOuterAlt(localctx, 3)
 		{
 			p.SetState(67)
 			p.Match(NumScriptParserPORTION_REMAINING)
@@ -1395,130 +1395,132 @@ func (p *NumScriptParser) AllocPartConst() (localctx IAllocPartConstContext) {
 	return localctx
 }
 
-// IAllocBlockConstContext is an interface to support dynamic dispatch.
-type IAllocBlockConstContext interface {
+// IDestinationAllotmentContext is an interface to support dynamic dispatch.
+type IDestinationAllotmentContext interface {
 	antlr.ParserRuleContext
 
 	// GetParser returns the parser.
 	GetParser() antlr.Parser
 
-	// Get_allocPartConst returns the _allocPartConst rule contexts.
-	Get_allocPartConst() IAllocPartConstContext
+	// Get_allotmentPortion returns the _allotmentPortion rule contexts.
+	Get_allotmentPortion() IAllotmentPortionContext
 
 	// Get_expression returns the _expression rule contexts.
 	Get_expression() IExpressionContext
 
-	// Set_allocPartConst sets the _allocPartConst rule contexts.
-	Set_allocPartConst(IAllocPartConstContext)
+	// Set_allotmentPortion sets the _allotmentPortion rule contexts.
+	Set_allotmentPortion(IAllotmentPortionContext)
 
 	// Set_expression sets the _expression rule contexts.
 	Set_expression(IExpressionContext)
 
 	// GetPortions returns the portions rule context list.
-	GetPortions() []IAllocPartConstContext
+	GetPortions() []IAllotmentPortionContext
 
 	// GetDests returns the dests rule context list.
 	GetDests() []IExpressionContext
 
 	// SetPortions sets the portions rule context list.
-	SetPortions([]IAllocPartConstContext)
+	SetPortions([]IAllotmentPortionContext)
 
 	// SetDests sets the dests rule context list.
 	SetDests([]IExpressionContext)
 
-	// IsAllocBlockConstContext differentiates from other interfaces.
-	IsAllocBlockConstContext()
+	// IsDestinationAllotmentContext differentiates from other interfaces.
+	IsDestinationAllotmentContext()
 }
 
-type AllocBlockConstContext struct {
+type DestinationAllotmentContext struct {
 	*antlr.BaseParserRuleContext
-	parser          antlr.Parser
-	_allocPartConst IAllocPartConstContext
-	portions        []IAllocPartConstContext
-	_expression     IExpressionContext
-	dests           []IExpressionContext
+	parser            antlr.Parser
+	_allotmentPortion IAllotmentPortionContext
+	portions          []IAllotmentPortionContext
+	_expression       IExpressionContext
+	dests             []IExpressionContext
 }
 
-func NewEmptyAllocBlockConstContext() *AllocBlockConstContext {
-	var p = new(AllocBlockConstContext)
+func NewEmptyDestinationAllotmentContext() *DestinationAllotmentContext {
+	var p = new(DestinationAllotmentContext)
 	p.BaseParserRuleContext = antlr.NewBaseParserRuleContext(nil, -1)
-	p.RuleIndex = NumScriptParserRULE_allocBlockConst
+	p.RuleIndex = NumScriptParserRULE_destinationAllotment
 	return p
 }
 
-func (*AllocBlockConstContext) IsAllocBlockConstContext() {}
+func (*DestinationAllotmentContext) IsDestinationAllotmentContext() {}
 
-func NewAllocBlockConstContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokingState int) *AllocBlockConstContext {
-	var p = new(AllocBlockConstContext)
+func NewDestinationAllotmentContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokingState int) *DestinationAllotmentContext {
+	var p = new(DestinationAllotmentContext)
 
 	p.BaseParserRuleContext = antlr.NewBaseParserRuleContext(parent, invokingState)
 
 	p.parser = parser
-	p.RuleIndex = NumScriptParserRULE_allocBlockConst
+	p.RuleIndex = NumScriptParserRULE_destinationAllotment
 
 	return p
 }
 
-func (s *AllocBlockConstContext) GetParser() antlr.Parser { return s.parser }
+func (s *DestinationAllotmentContext) GetParser() antlr.Parser { return s.parser }
 
-func (s *AllocBlockConstContext) Get_allocPartConst() IAllocPartConstContext {
-	return s._allocPartConst
+func (s *DestinationAllotmentContext) Get_allotmentPortion() IAllotmentPortionContext {
+	return s._allotmentPortion
 }
 
-func (s *AllocBlockConstContext) Get_expression() IExpressionContext { return s._expression }
+func (s *DestinationAllotmentContext) Get_expression() IExpressionContext { return s._expression }
 
-func (s *AllocBlockConstContext) Set_allocPartConst(v IAllocPartConstContext) { s._allocPartConst = v }
+func (s *DestinationAllotmentContext) Set_allotmentPortion(v IAllotmentPortionContext) {
+	s._allotmentPortion = v
+}
 
-func (s *AllocBlockConstContext) Set_expression(v IExpressionContext) { s._expression = v }
+func (s *DestinationAllotmentContext) Set_expression(v IExpressionContext) { s._expression = v }
 
-func (s *AllocBlockConstContext) GetPortions() []IAllocPartConstContext { return s.portions }
+func (s *DestinationAllotmentContext) GetPortions() []IAllotmentPortionContext { return s.portions }
 
-func (s *AllocBlockConstContext) GetDests() []IExpressionContext { return s.dests }
+func (s *DestinationAllotmentContext) GetDests() []IExpressionContext { return s.dests }
 
-func (s *AllocBlockConstContext) SetPortions(v []IAllocPartConstContext) { s.portions = v }
+func (s *DestinationAllotmentContext) SetPortions(v []IAllotmentPortionContext) { s.portions = v }
 
-func (s *AllocBlockConstContext) SetDests(v []IExpressionContext) { s.dests = v }
+func (s *DestinationAllotmentContext) SetDests(v []IExpressionContext) { s.dests = v }
 
-func (s *AllocBlockConstContext) LBRACE() antlr.TerminalNode {
+func (s *DestinationAllotmentContext) LBRACE() antlr.TerminalNode {
 	return s.GetToken(NumScriptParserLBRACE, 0)
 }
 
-func (s *AllocBlockConstContext) AllNEWLINE() []antlr.TerminalNode {
+func (s *DestinationAllotmentContext) AllNEWLINE() []antlr.TerminalNode {
 	return s.GetTokens(NumScriptParserNEWLINE)
 }
 
-func (s *AllocBlockConstContext) NEWLINE(i int) antlr.TerminalNode {
+func (s *DestinationAllotmentContext) NEWLINE(i int) antlr.TerminalNode {
 	return s.GetToken(NumScriptParserNEWLINE, i)
 }
 
-func (s *AllocBlockConstContext) RBRACE() antlr.TerminalNode {
+func (s *DestinationAllotmentContext) RBRACE() antlr.TerminalNode {
 	return s.GetToken(NumScriptParserRBRACE, 0)
 }
 
-func (s *AllocBlockConstContext) AllAllocPartConst() []IAllocPartConstContext {
-	var ts = s.GetTypedRuleContexts(reflect.TypeOf((*IAllocPartConstContext)(nil)).Elem())
-	var tst = make([]IAllocPartConstContext, len(ts))
+func (s *DestinationAllotmentContext) AllAllotmentPortion() []IAllotmentPortionContext {
+	var ts = s.GetTypedRuleContexts(reflect.TypeOf((*IAllotmentPortionContext)(nil)).Elem())
+	var tst = make([]IAllotmentPortionContext, len(ts))
 
 	for i, t := range ts {
 		if t != nil {
-			tst[i] = t.(IAllocPartConstContext)
+			tst[i] = t.(IAllotmentPortionContext)
 		}
 	}
 
 	return tst
 }
 
-func (s *AllocBlockConstContext) AllocPartConst(i int) IAllocPartConstContext {
-	var t = s.GetTypedRuleContext(reflect.TypeOf((*IAllocPartConstContext)(nil)).Elem(), i)
+func (s *DestinationAllotmentContext) AllotmentPortion(i int) IAllotmentPortionContext {
+	var t = s.GetTypedRuleContext(reflect.TypeOf((*IAllotmentPortionContext)(nil)).Elem(), i)
 
 	if t == nil {
 		return nil
 	}
 
-	return t.(IAllocPartConstContext)
+	return t.(IAllotmentPortionContext)
 }
 
-func (s *AllocBlockConstContext) AllExpression() []IExpressionContext {
+func (s *DestinationAllotmentContext) AllExpression() []IExpressionContext {
 	var ts = s.GetTypedRuleContexts(reflect.TypeOf((*IExpressionContext)(nil)).Elem())
 	var tst = make([]IExpressionContext, len(ts))
 
@@ -1531,7 +1533,7 @@ func (s *AllocBlockConstContext) AllExpression() []IExpressionContext {
 	return tst
 }
 
-func (s *AllocBlockConstContext) Expression(i int) IExpressionContext {
+func (s *DestinationAllotmentContext) Expression(i int) IExpressionContext {
 	var t = s.GetTypedRuleContext(reflect.TypeOf((*IExpressionContext)(nil)).Elem(), i)
 
 	if t == nil {
@@ -1541,29 +1543,29 @@ func (s *AllocBlockConstContext) Expression(i int) IExpressionContext {
 	return t.(IExpressionContext)
 }
 
-func (s *AllocBlockConstContext) GetRuleContext() antlr.RuleContext {
+func (s *DestinationAllotmentContext) GetRuleContext() antlr.RuleContext {
 	return s
 }
 
-func (s *AllocBlockConstContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
+func (s *DestinationAllotmentContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
 	return antlr.TreesStringTree(s, ruleNames, recog)
 }
 
-func (s *AllocBlockConstContext) EnterRule(listener antlr.ParseTreeListener) {
+func (s *DestinationAllotmentContext) EnterRule(listener antlr.ParseTreeListener) {
 	if listenerT, ok := listener.(NumScriptListener); ok {
-		listenerT.EnterAllocBlockConst(s)
+		listenerT.EnterDestinationAllotment(s)
 	}
 }
 
-func (s *AllocBlockConstContext) ExitRule(listener antlr.ParseTreeListener) {
+func (s *DestinationAllotmentContext) ExitRule(listener antlr.ParseTreeListener) {
 	if listenerT, ok := listener.(NumScriptListener); ok {
-		listenerT.ExitAllocBlockConst(s)
+		listenerT.ExitDestinationAllotment(s)
 	}
 }
 
-func (p *NumScriptParser) AllocBlockConst() (localctx IAllocBlockConstContext) {
-	localctx = NewAllocBlockConstContext(p, p.GetParserRuleContext(), p.GetState())
-	p.EnterRule(localctx, 12, NumScriptParserRULE_allocBlockConst)
+func (p *NumScriptParser) DestinationAllotment() (localctx IDestinationAllotmentContext) {
+	localctx = NewDestinationAllotmentContext(p, p.GetParserRuleContext(), p.GetState())
+	p.EnterRule(localctx, 12, NumScriptParserRULE_destinationAllotment)
 	var _la int
 
 	defer func() {
@@ -1595,27 +1597,27 @@ func (p *NumScriptParser) AllocBlockConst() (localctx IAllocBlockConstContext) {
 	p.GetErrorHandler().Sync(p)
 	_la = p.GetTokenStream().LA(1)
 
-	for ok := true; ok; ok = _la == NumScriptParserPORTION || _la == NumScriptParserPORTION_REMAINING {
+	for ok := true; ok; ok = (((_la-32)&-(0x1f+1)) == 0 && ((1<<uint((_la-32)))&((1<<(NumScriptParserPORTION-32))|(1<<(NumScriptParserPORTION_REMAINING-32))|(1<<(NumScriptParserVARIABLE_NAME-32)))) != 0) {
 		{
 			p.SetState(72)
 
-			var _x = p.AllocPartConst()
+			var _x = p.AllotmentPortion()
 
-			localctx.(*AllocBlockConstContext)._allocPartConst = _x
+			localctx.(*DestinationAllotmentContext)._allotmentPortion = _x
 		}
-		localctx.(*AllocBlockConstContext).portions = append(localctx.(*AllocBlockConstContext).portions, localctx.(*AllocBlockConstContext)._allocPartConst)
+		localctx.(*DestinationAllotmentContext).portions = append(localctx.(*DestinationAllotmentContext).portions, localctx.(*DestinationAllotmentContext)._allotmentPortion)
 		{
 			p.SetState(73)
-			p.Match(NumScriptParserT__0)
+			p.Match(NumScriptParserT__1)
 		}
 		{
 			p.SetState(74)
 
 			var _x = p.expression(0)
 
-			localctx.(*AllocBlockConstContext)._expression = _x
+			localctx.(*DestinationAllotmentContext)._expression = _x
 		}
-		localctx.(*AllocBlockConstContext).dests = append(localctx.(*AllocBlockConstContext).dests, localctx.(*AllocBlockConstContext)._expression)
+		localctx.(*DestinationAllotmentContext).dests = append(localctx.(*DestinationAllotmentContext).dests, localctx.(*DestinationAllotmentContext)._expression)
 		{
 			p.SetState(75)
 			p.Match(NumScriptParserNEWLINE)
@@ -1633,572 +1635,75 @@ func (p *NumScriptParser) AllocBlockConst() (localctx IAllocBlockConstContext) {
 	return localctx
 }
 
-// IAllocPartDynContext is an interface to support dynamic dispatch.
-type IAllocPartDynContext interface {
+// IDestinationContext is an interface to support dynamic dispatch.
+type IDestinationContext interface {
 	antlr.ParserRuleContext
 
 	// GetParser returns the parser.
 	GetParser() antlr.Parser
 
-	// IsAllocPartDynContext differentiates from other interfaces.
-	IsAllocPartDynContext()
+	// IsDestinationContext differentiates from other interfaces.
+	IsDestinationContext()
 }
 
-type AllocPartDynContext struct {
+type DestinationContext struct {
 	*antlr.BaseParserRuleContext
 	parser antlr.Parser
 }
 
-func NewEmptyAllocPartDynContext() *AllocPartDynContext {
-	var p = new(AllocPartDynContext)
+func NewEmptyDestinationContext() *DestinationContext {
+	var p = new(DestinationContext)
 	p.BaseParserRuleContext = antlr.NewBaseParserRuleContext(nil, -1)
-	p.RuleIndex = NumScriptParserRULE_allocPartDyn
+	p.RuleIndex = NumScriptParserRULE_destination
 	return p
 }
 
-func (*AllocPartDynContext) IsAllocPartDynContext() {}
+func (*DestinationContext) IsDestinationContext() {}
 
-func NewAllocPartDynContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokingState int) *AllocPartDynContext {
-	var p = new(AllocPartDynContext)
+func NewDestinationContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokingState int) *DestinationContext {
+	var p = new(DestinationContext)
 
 	p.BaseParserRuleContext = antlr.NewBaseParserRuleContext(parent, invokingState)
 
 	p.parser = parser
-	p.RuleIndex = NumScriptParserRULE_allocPartDyn
+	p.RuleIndex = NumScriptParserRULE_destination
 
 	return p
 }
 
-func (s *AllocPartDynContext) GetParser() antlr.Parser { return s.parser }
+func (s *DestinationContext) GetParser() antlr.Parser { return s.parser }
 
-func (s *AllocPartDynContext) CopyFrom(ctx *AllocPartDynContext) {
+func (s *DestinationContext) CopyFrom(ctx *DestinationContext) {
 	s.BaseParserRuleContext.CopyFrom(ctx.BaseParserRuleContext)
 }
 
-func (s *AllocPartDynContext) GetRuleContext() antlr.RuleContext {
+func (s *DestinationContext) GetRuleContext() antlr.RuleContext {
 	return s
 }
 
-func (s *AllocPartDynContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
+func (s *DestinationContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
 	return antlr.TreesStringTree(s, ruleNames, recog)
 }
 
-type AllocPartDynVarContext struct {
-	*AllocPartDynContext
-	por IVariableContext
+type DestAccountContext struct {
+	*DestinationContext
 }
 
-func NewAllocPartDynVarContext(parser antlr.Parser, ctx antlr.ParserRuleContext) *AllocPartDynVarContext {
-	var p = new(AllocPartDynVarContext)
+func NewDestAccountContext(parser antlr.Parser, ctx antlr.ParserRuleContext) *DestAccountContext {
+	var p = new(DestAccountContext)
 
-	p.AllocPartDynContext = NewEmptyAllocPartDynContext()
+	p.DestinationContext = NewEmptyDestinationContext()
 	p.parser = parser
-	p.CopyFrom(ctx.(*AllocPartDynContext))
+	p.CopyFrom(ctx.(*DestinationContext))
 
 	return p
 }
 
-func (s *AllocPartDynVarContext) GetPor() IVariableContext { return s.por }
-
-func (s *AllocPartDynVarContext) SetPor(v IVariableContext) { s.por = v }
-
-func (s *AllocPartDynVarContext) GetRuleContext() antlr.RuleContext {
+func (s *DestAccountContext) GetRuleContext() antlr.RuleContext {
 	return s
 }
 
-func (s *AllocPartDynVarContext) Variable() IVariableContext {
-	var t = s.GetTypedRuleContext(reflect.TypeOf((*IVariableContext)(nil)).Elem(), 0)
-
-	if t == nil {
-		return nil
-	}
-
-	return t.(IVariableContext)
-}
-
-func (s *AllocPartDynVarContext) EnterRule(listener antlr.ParseTreeListener) {
-	if listenerT, ok := listener.(NumScriptListener); ok {
-		listenerT.EnterAllocPartDynVar(s)
-	}
-}
-
-func (s *AllocPartDynVarContext) ExitRule(listener antlr.ParseTreeListener) {
-	if listenerT, ok := listener.(NumScriptListener); ok {
-		listenerT.ExitAllocPartDynVar(s)
-	}
-}
-
-type AllocPartDynConstContext struct {
-	*AllocPartDynContext
-}
-
-func NewAllocPartDynConstContext(parser antlr.Parser, ctx antlr.ParserRuleContext) *AllocPartDynConstContext {
-	var p = new(AllocPartDynConstContext)
-
-	p.AllocPartDynContext = NewEmptyAllocPartDynContext()
-	p.parser = parser
-	p.CopyFrom(ctx.(*AllocPartDynContext))
-
-	return p
-}
-
-func (s *AllocPartDynConstContext) GetRuleContext() antlr.RuleContext {
-	return s
-}
-
-func (s *AllocPartDynConstContext) PORTION() antlr.TerminalNode {
-	return s.GetToken(NumScriptParserPORTION, 0)
-}
-
-func (s *AllocPartDynConstContext) EnterRule(listener antlr.ParseTreeListener) {
-	if listenerT, ok := listener.(NumScriptListener); ok {
-		listenerT.EnterAllocPartDynConst(s)
-	}
-}
-
-func (s *AllocPartDynConstContext) ExitRule(listener antlr.ParseTreeListener) {
-	if listenerT, ok := listener.(NumScriptListener); ok {
-		listenerT.ExitAllocPartDynConst(s)
-	}
-}
-
-type AllocPartDynRemainingContext struct {
-	*AllocPartDynContext
-}
-
-func NewAllocPartDynRemainingContext(parser antlr.Parser, ctx antlr.ParserRuleContext) *AllocPartDynRemainingContext {
-	var p = new(AllocPartDynRemainingContext)
-
-	p.AllocPartDynContext = NewEmptyAllocPartDynContext()
-	p.parser = parser
-	p.CopyFrom(ctx.(*AllocPartDynContext))
-
-	return p
-}
-
-func (s *AllocPartDynRemainingContext) GetRuleContext() antlr.RuleContext {
-	return s
-}
-
-func (s *AllocPartDynRemainingContext) PORTION_REMAINING() antlr.TerminalNode {
-	return s.GetToken(NumScriptParserPORTION_REMAINING, 0)
-}
-
-func (s *AllocPartDynRemainingContext) EnterRule(listener antlr.ParseTreeListener) {
-	if listenerT, ok := listener.(NumScriptListener); ok {
-		listenerT.EnterAllocPartDynRemaining(s)
-	}
-}
-
-func (s *AllocPartDynRemainingContext) ExitRule(listener antlr.ParseTreeListener) {
-	if listenerT, ok := listener.(NumScriptListener); ok {
-		listenerT.ExitAllocPartDynRemaining(s)
-	}
-}
-
-func (p *NumScriptParser) AllocPartDyn() (localctx IAllocPartDynContext) {
-	localctx = NewAllocPartDynContext(p, p.GetParserRuleContext(), p.GetState())
-	p.EnterRule(localctx, 14, NumScriptParserRULE_allocPartDyn)
-
-	defer func() {
-		p.ExitRule()
-	}()
-
-	defer func() {
-		if err := recover(); err != nil {
-			if v, ok := err.(antlr.RecognitionException); ok {
-				localctx.SetException(v)
-				p.GetErrorHandler().ReportError(p, v)
-				p.GetErrorHandler().Recover(p, v)
-			} else {
-				panic(err)
-			}
-		}
-	}()
-
-	p.SetState(86)
-	p.GetErrorHandler().Sync(p)
-
-	switch p.GetTokenStream().LA(1) {
-	case NumScriptParserPORTION:
-		localctx = NewAllocPartDynConstContext(p, localctx)
-		p.EnterOuterAlt(localctx, 1)
-		{
-			p.SetState(83)
-			p.Match(NumScriptParserPORTION)
-		}
-
-	case NumScriptParserVARIABLE_NAME:
-		localctx = NewAllocPartDynVarContext(p, localctx)
-		p.EnterOuterAlt(localctx, 2)
-		{
-			p.SetState(84)
-
-			var _x = p.Variable()
-
-			localctx.(*AllocPartDynVarContext).por = _x
-		}
-
-	case NumScriptParserPORTION_REMAINING:
-		localctx = NewAllocPartDynRemainingContext(p, localctx)
-		p.EnterOuterAlt(localctx, 3)
-		{
-			p.SetState(85)
-			p.Match(NumScriptParserPORTION_REMAINING)
-		}
-
-	default:
-		panic(antlr.NewNoViableAltException(p, nil, nil, nil, nil, nil))
-	}
-
-	return localctx
-}
-
-// IAllocBlockDynContext is an interface to support dynamic dispatch.
-type IAllocBlockDynContext interface {
-	antlr.ParserRuleContext
-
-	// GetParser returns the parser.
-	GetParser() antlr.Parser
-
-	// Get_allocPartDyn returns the _allocPartDyn rule contexts.
-	Get_allocPartDyn() IAllocPartDynContext
-
-	// Get_expression returns the _expression rule contexts.
-	Get_expression() IExpressionContext
-
-	// Set_allocPartDyn sets the _allocPartDyn rule contexts.
-	Set_allocPartDyn(IAllocPartDynContext)
-
-	// Set_expression sets the _expression rule contexts.
-	Set_expression(IExpressionContext)
-
-	// GetPortions returns the portions rule context list.
-	GetPortions() []IAllocPartDynContext
-
-	// GetDests returns the dests rule context list.
-	GetDests() []IExpressionContext
-
-	// SetPortions sets the portions rule context list.
-	SetPortions([]IAllocPartDynContext)
-
-	// SetDests sets the dests rule context list.
-	SetDests([]IExpressionContext)
-
-	// IsAllocBlockDynContext differentiates from other interfaces.
-	IsAllocBlockDynContext()
-}
-
-type AllocBlockDynContext struct {
-	*antlr.BaseParserRuleContext
-	parser        antlr.Parser
-	_allocPartDyn IAllocPartDynContext
-	portions      []IAllocPartDynContext
-	_expression   IExpressionContext
-	dests         []IExpressionContext
-}
-
-func NewEmptyAllocBlockDynContext() *AllocBlockDynContext {
-	var p = new(AllocBlockDynContext)
-	p.BaseParserRuleContext = antlr.NewBaseParserRuleContext(nil, -1)
-	p.RuleIndex = NumScriptParserRULE_allocBlockDyn
-	return p
-}
-
-func (*AllocBlockDynContext) IsAllocBlockDynContext() {}
-
-func NewAllocBlockDynContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokingState int) *AllocBlockDynContext {
-	var p = new(AllocBlockDynContext)
-
-	p.BaseParserRuleContext = antlr.NewBaseParserRuleContext(parent, invokingState)
-
-	p.parser = parser
-	p.RuleIndex = NumScriptParserRULE_allocBlockDyn
-
-	return p
-}
-
-func (s *AllocBlockDynContext) GetParser() antlr.Parser { return s.parser }
-
-func (s *AllocBlockDynContext) Get_allocPartDyn() IAllocPartDynContext { return s._allocPartDyn }
-
-func (s *AllocBlockDynContext) Get_expression() IExpressionContext { return s._expression }
-
-func (s *AllocBlockDynContext) Set_allocPartDyn(v IAllocPartDynContext) { s._allocPartDyn = v }
-
-func (s *AllocBlockDynContext) Set_expression(v IExpressionContext) { s._expression = v }
-
-func (s *AllocBlockDynContext) GetPortions() []IAllocPartDynContext { return s.portions }
-
-func (s *AllocBlockDynContext) GetDests() []IExpressionContext { return s.dests }
-
-func (s *AllocBlockDynContext) SetPortions(v []IAllocPartDynContext) { s.portions = v }
-
-func (s *AllocBlockDynContext) SetDests(v []IExpressionContext) { s.dests = v }
-
-func (s *AllocBlockDynContext) LBRACE() antlr.TerminalNode {
-	return s.GetToken(NumScriptParserLBRACE, 0)
-}
-
-func (s *AllocBlockDynContext) AllNEWLINE() []antlr.TerminalNode {
-	return s.GetTokens(NumScriptParserNEWLINE)
-}
-
-func (s *AllocBlockDynContext) NEWLINE(i int) antlr.TerminalNode {
-	return s.GetToken(NumScriptParserNEWLINE, i)
-}
-
-func (s *AllocBlockDynContext) RBRACE() antlr.TerminalNode {
-	return s.GetToken(NumScriptParserRBRACE, 0)
-}
-
-func (s *AllocBlockDynContext) AllAllocPartDyn() []IAllocPartDynContext {
-	var ts = s.GetTypedRuleContexts(reflect.TypeOf((*IAllocPartDynContext)(nil)).Elem())
-	var tst = make([]IAllocPartDynContext, len(ts))
-
-	for i, t := range ts {
-		if t != nil {
-			tst[i] = t.(IAllocPartDynContext)
-		}
-	}
-
-	return tst
-}
-
-func (s *AllocBlockDynContext) AllocPartDyn(i int) IAllocPartDynContext {
-	var t = s.GetTypedRuleContext(reflect.TypeOf((*IAllocPartDynContext)(nil)).Elem(), i)
-
-	if t == nil {
-		return nil
-	}
-
-	return t.(IAllocPartDynContext)
-}
-
-func (s *AllocBlockDynContext) AllExpression() []IExpressionContext {
-	var ts = s.GetTypedRuleContexts(reflect.TypeOf((*IExpressionContext)(nil)).Elem())
-	var tst = make([]IExpressionContext, len(ts))
-
-	for i, t := range ts {
-		if t != nil {
-			tst[i] = t.(IExpressionContext)
-		}
-	}
-
-	return tst
-}
-
-func (s *AllocBlockDynContext) Expression(i int) IExpressionContext {
-	var t = s.GetTypedRuleContext(reflect.TypeOf((*IExpressionContext)(nil)).Elem(), i)
-
-	if t == nil {
-		return nil
-	}
-
-	return t.(IExpressionContext)
-}
-
-func (s *AllocBlockDynContext) GetRuleContext() antlr.RuleContext {
-	return s
-}
-
-func (s *AllocBlockDynContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
-	return antlr.TreesStringTree(s, ruleNames, recog)
-}
-
-func (s *AllocBlockDynContext) EnterRule(listener antlr.ParseTreeListener) {
-	if listenerT, ok := listener.(NumScriptListener); ok {
-		listenerT.EnterAllocBlockDyn(s)
-	}
-}
-
-func (s *AllocBlockDynContext) ExitRule(listener antlr.ParseTreeListener) {
-	if listenerT, ok := listener.(NumScriptListener); ok {
-		listenerT.ExitAllocBlockDyn(s)
-	}
-}
-
-func (p *NumScriptParser) AllocBlockDyn() (localctx IAllocBlockDynContext) {
-	localctx = NewAllocBlockDynContext(p, p.GetParserRuleContext(), p.GetState())
-	p.EnterRule(localctx, 16, NumScriptParserRULE_allocBlockDyn)
-	var _la int
-
-	defer func() {
-		p.ExitRule()
-	}()
-
-	defer func() {
-		if err := recover(); err != nil {
-			if v, ok := err.(antlr.RecognitionException); ok {
-				localctx.SetException(v)
-				p.GetErrorHandler().ReportError(p, v)
-				p.GetErrorHandler().Recover(p, v)
-			} else {
-				panic(err)
-			}
-		}
-	}()
-
-	p.EnterOuterAlt(localctx, 1)
-	{
-		p.SetState(88)
-		p.Match(NumScriptParserLBRACE)
-	}
-	{
-		p.SetState(89)
-		p.Match(NumScriptParserNEWLINE)
-	}
-	p.SetState(95)
-	p.GetErrorHandler().Sync(p)
-	_la = p.GetTokenStream().LA(1)
-
-	for ok := true; ok; ok = (((_la-31)&-(0x1f+1)) == 0 && ((1<<uint((_la-31)))&((1<<(NumScriptParserPORTION-31))|(1<<(NumScriptParserPORTION_REMAINING-31))|(1<<(NumScriptParserVARIABLE_NAME-31)))) != 0) {
-		{
-			p.SetState(90)
-
-			var _x = p.AllocPartDyn()
-
-			localctx.(*AllocBlockDynContext)._allocPartDyn = _x
-		}
-		localctx.(*AllocBlockDynContext).portions = append(localctx.(*AllocBlockDynContext).portions, localctx.(*AllocBlockDynContext)._allocPartDyn)
-		{
-			p.SetState(91)
-			p.Match(NumScriptParserT__0)
-		}
-		{
-			p.SetState(92)
-
-			var _x = p.expression(0)
-
-			localctx.(*AllocBlockDynContext)._expression = _x
-		}
-		localctx.(*AllocBlockDynContext).dests = append(localctx.(*AllocBlockDynContext).dests, localctx.(*AllocBlockDynContext)._expression)
-		{
-			p.SetState(93)
-			p.Match(NumScriptParserNEWLINE)
-		}
-
-		p.SetState(97)
-		p.GetErrorHandler().Sync(p)
-		_la = p.GetTokenStream().LA(1)
-	}
-	{
-		p.SetState(99)
-		p.Match(NumScriptParserRBRACE)
-	}
-
-	return localctx
-}
-
-// IAllocationContext is an interface to support dynamic dispatch.
-type IAllocationContext interface {
-	antlr.ParserRuleContext
-
-	// GetParser returns the parser.
-	GetParser() antlr.Parser
-
-	// IsAllocationContext differentiates from other interfaces.
-	IsAllocationContext()
-}
-
-type AllocationContext struct {
-	*antlr.BaseParserRuleContext
-	parser antlr.Parser
-}
-
-func NewEmptyAllocationContext() *AllocationContext {
-	var p = new(AllocationContext)
-	p.BaseParserRuleContext = antlr.NewBaseParserRuleContext(nil, -1)
-	p.RuleIndex = NumScriptParserRULE_allocation
-	return p
-}
-
-func (*AllocationContext) IsAllocationContext() {}
-
-func NewAllocationContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokingState int) *AllocationContext {
-	var p = new(AllocationContext)
-
-	p.BaseParserRuleContext = antlr.NewBaseParserRuleContext(parent, invokingState)
-
-	p.parser = parser
-	p.RuleIndex = NumScriptParserRULE_allocation
-
-	return p
-}
-
-func (s *AllocationContext) GetParser() antlr.Parser { return s.parser }
-
-func (s *AllocationContext) CopyFrom(ctx *AllocationContext) {
-	s.BaseParserRuleContext.CopyFrom(ctx.BaseParserRuleContext)
-}
-
-func (s *AllocationContext) GetRuleContext() antlr.RuleContext {
-	return s
-}
-
-func (s *AllocationContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
-	return antlr.TreesStringTree(s, ruleNames, recog)
-}
-
-type AllocConstContext struct {
-	*AllocationContext
-}
-
-func NewAllocConstContext(parser antlr.Parser, ctx antlr.ParserRuleContext) *AllocConstContext {
-	var p = new(AllocConstContext)
-
-	p.AllocationContext = NewEmptyAllocationContext()
-	p.parser = parser
-	p.CopyFrom(ctx.(*AllocationContext))
-
-	return p
-}
-
-func (s *AllocConstContext) GetRuleContext() antlr.RuleContext {
-	return s
-}
-
-func (s *AllocConstContext) AllocBlockConst() IAllocBlockConstContext {
-	var t = s.GetTypedRuleContext(reflect.TypeOf((*IAllocBlockConstContext)(nil)).Elem(), 0)
-
-	if t == nil {
-		return nil
-	}
-
-	return t.(IAllocBlockConstContext)
-}
-
-func (s *AllocConstContext) EnterRule(listener antlr.ParseTreeListener) {
-	if listenerT, ok := listener.(NumScriptListener); ok {
-		listenerT.EnterAllocConst(s)
-	}
-}
-
-func (s *AllocConstContext) ExitRule(listener antlr.ParseTreeListener) {
-	if listenerT, ok := listener.(NumScriptListener); ok {
-		listenerT.ExitAllocConst(s)
-	}
-}
-
-type AllocAccountContext struct {
-	*AllocationContext
-}
-
-func NewAllocAccountContext(parser antlr.Parser, ctx antlr.ParserRuleContext) *AllocAccountContext {
-	var p = new(AllocAccountContext)
-
-	p.AllocationContext = NewEmptyAllocationContext()
-	p.parser = parser
-	p.CopyFrom(ctx.(*AllocationContext))
-
-	return p
-}
-
-func (s *AllocAccountContext) GetRuleContext() antlr.RuleContext {
-	return s
-}
-
-func (s *AllocAccountContext) Expression() IExpressionContext {
+func (s *DestAccountContext) Expression() IExpressionContext {
 	var t = s.GetTypedRuleContext(reflect.TypeOf((*IExpressionContext)(nil)).Elem(), 0)
 
 	if t == nil {
@@ -2208,61 +1713,61 @@ func (s *AllocAccountContext) Expression() IExpressionContext {
 	return t.(IExpressionContext)
 }
 
-func (s *AllocAccountContext) EnterRule(listener antlr.ParseTreeListener) {
+func (s *DestAccountContext) EnterRule(listener antlr.ParseTreeListener) {
 	if listenerT, ok := listener.(NumScriptListener); ok {
-		listenerT.EnterAllocAccount(s)
+		listenerT.EnterDestAccount(s)
 	}
 }
 
-func (s *AllocAccountContext) ExitRule(listener antlr.ParseTreeListener) {
+func (s *DestAccountContext) ExitRule(listener antlr.ParseTreeListener) {
 	if listenerT, ok := listener.(NumScriptListener); ok {
-		listenerT.ExitAllocAccount(s)
+		listenerT.ExitDestAccount(s)
 	}
 }
 
-type AllocDynContext struct {
-	*AllocationContext
+type DestAllotmentContext struct {
+	*DestinationContext
 }
 
-func NewAllocDynContext(parser antlr.Parser, ctx antlr.ParserRuleContext) *AllocDynContext {
-	var p = new(AllocDynContext)
+func NewDestAllotmentContext(parser antlr.Parser, ctx antlr.ParserRuleContext) *DestAllotmentContext {
+	var p = new(DestAllotmentContext)
 
-	p.AllocationContext = NewEmptyAllocationContext()
+	p.DestinationContext = NewEmptyDestinationContext()
 	p.parser = parser
-	p.CopyFrom(ctx.(*AllocationContext))
+	p.CopyFrom(ctx.(*DestinationContext))
 
 	return p
 }
 
-func (s *AllocDynContext) GetRuleContext() antlr.RuleContext {
+func (s *DestAllotmentContext) GetRuleContext() antlr.RuleContext {
 	return s
 }
 
-func (s *AllocDynContext) AllocBlockDyn() IAllocBlockDynContext {
-	var t = s.GetTypedRuleContext(reflect.TypeOf((*IAllocBlockDynContext)(nil)).Elem(), 0)
+func (s *DestAllotmentContext) DestinationAllotment() IDestinationAllotmentContext {
+	var t = s.GetTypedRuleContext(reflect.TypeOf((*IDestinationAllotmentContext)(nil)).Elem(), 0)
 
 	if t == nil {
 		return nil
 	}
 
-	return t.(IAllocBlockDynContext)
+	return t.(IDestinationAllotmentContext)
 }
 
-func (s *AllocDynContext) EnterRule(listener antlr.ParseTreeListener) {
+func (s *DestAllotmentContext) EnterRule(listener antlr.ParseTreeListener) {
 	if listenerT, ok := listener.(NumScriptListener); ok {
-		listenerT.EnterAllocDyn(s)
+		listenerT.EnterDestAllotment(s)
 	}
 }
 
-func (s *AllocDynContext) ExitRule(listener antlr.ParseTreeListener) {
+func (s *DestAllotmentContext) ExitRule(listener antlr.ParseTreeListener) {
 	if listenerT, ok := listener.(NumScriptListener); ok {
-		listenerT.ExitAllocDyn(s)
+		listenerT.ExitDestAllotment(s)
 	}
 }
 
-func (p *NumScriptParser) Allocation() (localctx IAllocationContext) {
-	localctx = NewAllocationContext(p, p.GetParserRuleContext(), p.GetState())
-	p.EnterRule(localctx, 18, NumScriptParserRULE_allocation)
+func (p *NumScriptParser) Destination() (localctx IDestinationContext) {
+	localctx = NewDestinationContext(p, p.GetParserRuleContext(), p.GetState())
+	p.EnterRule(localctx, 14, NumScriptParserRULE_destination)
 
 	defer func() {
 		p.ExitRule()
@@ -2280,33 +1785,28 @@ func (p *NumScriptParser) Allocation() (localctx IAllocationContext) {
 		}
 	}()
 
-	p.SetState(104)
+	p.SetState(85)
 	p.GetErrorHandler().Sync(p)
-	switch p.GetInterpreter().AdaptivePredict(p.GetTokenStream(), 8, p.GetParserRuleContext()) {
-	case 1:
-		localctx = NewAllocConstContext(p, localctx)
+
+	switch p.GetTokenStream().LA(1) {
+	case NumScriptParserLBRACK, NumScriptParserNUMBER, NumScriptParserVARIABLE_NAME, NumScriptParserACCOUNT, NumScriptParserASSET:
+		localctx = NewDestAccountContext(p, localctx)
 		p.EnterOuterAlt(localctx, 1)
 		{
-			p.SetState(101)
-			p.AllocBlockConst()
-		}
-
-	case 2:
-		localctx = NewAllocDynContext(p, localctx)
-		p.EnterOuterAlt(localctx, 2)
-		{
-			p.SetState(102)
-			p.AllocBlockDyn()
-		}
-
-	case 3:
-		localctx = NewAllocAccountContext(p, localctx)
-		p.EnterOuterAlt(localctx, 3)
-		{
-			p.SetState(103)
+			p.SetState(83)
 			p.expression(0)
 		}
 
+	case NumScriptParserLBRACE:
+		localctx = NewDestAllotmentContext(p, localctx)
+		p.EnterOuterAlt(localctx, 2)
+		{
+			p.SetState(84)
+			p.DestinationAllotment()
+		}
+
+	default:
+		panic(antlr.NewNoViableAltException(p, nil, nil, nil, nil, nil))
 	}
 
 	return localctx
@@ -2433,7 +1933,7 @@ func (s *SourceBlockContext) ExitRule(listener antlr.ParseTreeListener) {
 
 func (p *NumScriptParser) SourceBlock() (localctx ISourceBlockContext) {
 	localctx = NewSourceBlockContext(p, p.GetParserRuleContext(), p.GetState())
-	p.EnterRule(localctx, 20, NumScriptParserRULE_sourceBlock)
+	p.EnterRule(localctx, 16, NumScriptParserRULE_sourceBlock)
 	var _la int
 
 	defer func() {
@@ -2454,20 +1954,20 @@ func (p *NumScriptParser) SourceBlock() (localctx ISourceBlockContext) {
 
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(106)
+		p.SetState(87)
 		p.Match(NumScriptParserLBRACE)
 	}
 	{
-		p.SetState(107)
+		p.SetState(88)
 		p.Match(NumScriptParserNEWLINE)
 	}
-	p.SetState(111)
+	p.SetState(92)
 	p.GetErrorHandler().Sync(p)
 	_la = p.GetTokenStream().LA(1)
 
-	for ok := true; ok; ok = (((_la-19)&-(0x1f+1)) == 0 && ((1<<uint((_la-19)))&((1<<(NumScriptParserLBRACK-19))|(1<<(NumScriptParserNUMBER-19))|(1<<(NumScriptParserVARIABLE_NAME-19))|(1<<(NumScriptParserACCOUNT-19))|(1<<(NumScriptParserASSET-19)))) != 0) {
+	for ok := true; ok; ok = (((_la-21)&-(0x1f+1)) == 0 && ((1<<uint((_la-21)))&((1<<(NumScriptParserLBRACK-21))|(1<<(NumScriptParserNUMBER-21))|(1<<(NumScriptParserVARIABLE_NAME-21))|(1<<(NumScriptParserACCOUNT-21))|(1<<(NumScriptParserASSET-21)))) != 0) {
 		{
-			p.SetState(108)
+			p.SetState(89)
 
 			var _x = p.expression(0)
 
@@ -2475,16 +1975,213 @@ func (p *NumScriptParser) SourceBlock() (localctx ISourceBlockContext) {
 		}
 		localctx.(*SourceBlockContext).sources = append(localctx.(*SourceBlockContext).sources, localctx.(*SourceBlockContext)._expression)
 		{
-			p.SetState(109)
+			p.SetState(90)
 			p.Match(NumScriptParserNEWLINE)
 		}
 
-		p.SetState(113)
+		p.SetState(94)
 		p.GetErrorHandler().Sync(p)
 		_la = p.GetTokenStream().LA(1)
 	}
 	{
-		p.SetState(115)
+		p.SetState(96)
+		p.Match(NumScriptParserRBRACE)
+	}
+
+	return localctx
+}
+
+// ISourceAllotmentContext is an interface to support dynamic dispatch.
+type ISourceAllotmentContext interface {
+	antlr.ParserRuleContext
+
+	// GetParser returns the parser.
+	GetParser() antlr.Parser
+
+	// Get_allotmentPortion returns the _allotmentPortion rule contexts.
+	Get_allotmentPortion() IAllotmentPortionContext
+
+	// Get_source returns the _source rule contexts.
+	Get_source() ISourceContext
+
+	// Set_allotmentPortion sets the _allotmentPortion rule contexts.
+	Set_allotmentPortion(IAllotmentPortionContext)
+
+	// Set_source sets the _source rule contexts.
+	Set_source(ISourceContext)
+
+	// GetPortions returns the portions rule context list.
+	GetPortions() []IAllotmentPortionContext
+
+	// GetSrcs returns the srcs rule context list.
+	GetSrcs() []ISourceContext
+
+	// SetPortions sets the portions rule context list.
+	SetPortions([]IAllotmentPortionContext)
+
+	// SetSrcs sets the srcs rule context list.
+	SetSrcs([]ISourceContext)
+
+	// IsSourceAllotmentContext differentiates from other interfaces.
+	IsSourceAllotmentContext()
+}
+
+type SourceAllotmentContext struct {
+	*antlr.BaseParserRuleContext
+	parser            antlr.Parser
+	_allotmentPortion IAllotmentPortionContext
+	portions          []IAllotmentPortionContext
+	_source           ISourceContext
+	srcs              []ISourceContext
+}
+
+func NewEmptySourceAllotmentContext() *SourceAllotmentContext {
+	var p = new(SourceAllotmentContext)
+	p.BaseParserRuleContext = antlr.NewBaseParserRuleContext(nil, -1)
+	p.RuleIndex = NumScriptParserRULE_sourceAllotment
+	return p
+}
+
+func (*SourceAllotmentContext) IsSourceAllotmentContext() {}
+
+func NewSourceAllotmentContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokingState int) *SourceAllotmentContext {
+	var p = new(SourceAllotmentContext)
+
+	p.BaseParserRuleContext = antlr.NewBaseParserRuleContext(parent, invokingState)
+
+	p.parser = parser
+	p.RuleIndex = NumScriptParserRULE_sourceAllotment
+
+	return p
+}
+
+func (s *SourceAllotmentContext) GetParser() antlr.Parser { return s.parser }
+
+func (s *SourceAllotmentContext) Get_allotmentPortion() IAllotmentPortionContext {
+	return s._allotmentPortion
+}
+
+func (s *SourceAllotmentContext) Get_source() ISourceContext { return s._source }
+
+func (s *SourceAllotmentContext) Set_allotmentPortion(v IAllotmentPortionContext) {
+	s._allotmentPortion = v
+}
+
+func (s *SourceAllotmentContext) Set_source(v ISourceContext) { s._source = v }
+
+func (s *SourceAllotmentContext) GetPortions() []IAllotmentPortionContext { return s.portions }
+
+func (s *SourceAllotmentContext) GetSrcs() []ISourceContext { return s.srcs }
+
+func (s *SourceAllotmentContext) SetPortions(v []IAllotmentPortionContext) { s.portions = v }
+
+func (s *SourceAllotmentContext) SetSrcs(v []ISourceContext) { s.srcs = v }
+
+func (s *SourceAllotmentContext) LBRACE() antlr.TerminalNode {
+	return s.GetToken(NumScriptParserLBRACE, 0)
+}
+
+func (s *SourceAllotmentContext) NEWLINE() antlr.TerminalNode {
+	return s.GetToken(NumScriptParserNEWLINE, 0)
+}
+
+func (s *SourceAllotmentContext) RBRACE() antlr.TerminalNode {
+	return s.GetToken(NumScriptParserRBRACE, 0)
+}
+
+func (s *SourceAllotmentContext) AllotmentPortion() IAllotmentPortionContext {
+	var t = s.GetTypedRuleContext(reflect.TypeOf((*IAllotmentPortionContext)(nil)).Elem(), 0)
+
+	if t == nil {
+		return nil
+	}
+
+	return t.(IAllotmentPortionContext)
+}
+
+func (s *SourceAllotmentContext) Source() ISourceContext {
+	var t = s.GetTypedRuleContext(reflect.TypeOf((*ISourceContext)(nil)).Elem(), 0)
+
+	if t == nil {
+		return nil
+	}
+
+	return t.(ISourceContext)
+}
+
+func (s *SourceAllotmentContext) GetRuleContext() antlr.RuleContext {
+	return s
+}
+
+func (s *SourceAllotmentContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
+	return antlr.TreesStringTree(s, ruleNames, recog)
+}
+
+func (s *SourceAllotmentContext) EnterRule(listener antlr.ParseTreeListener) {
+	if listenerT, ok := listener.(NumScriptListener); ok {
+		listenerT.EnterSourceAllotment(s)
+	}
+}
+
+func (s *SourceAllotmentContext) ExitRule(listener antlr.ParseTreeListener) {
+	if listenerT, ok := listener.(NumScriptListener); ok {
+		listenerT.ExitSourceAllotment(s)
+	}
+}
+
+func (p *NumScriptParser) SourceAllotment() (localctx ISourceAllotmentContext) {
+	localctx = NewSourceAllotmentContext(p, p.GetParserRuleContext(), p.GetState())
+	p.EnterRule(localctx, 18, NumScriptParserRULE_sourceAllotment)
+
+	defer func() {
+		p.ExitRule()
+	}()
+
+	defer func() {
+		if err := recover(); err != nil {
+			if v, ok := err.(antlr.RecognitionException); ok {
+				localctx.SetException(v)
+				p.GetErrorHandler().ReportError(p, v)
+				p.GetErrorHandler().Recover(p, v)
+			} else {
+				panic(err)
+			}
+		}
+	}()
+
+	p.EnterOuterAlt(localctx, 1)
+	{
+		p.SetState(98)
+		p.Match(NumScriptParserLBRACE)
+	}
+	{
+		p.SetState(99)
+		p.Match(NumScriptParserNEWLINE)
+	}
+
+	{
+		p.SetState(100)
+
+		var _x = p.AllotmentPortion()
+
+		localctx.(*SourceAllotmentContext)._allotmentPortion = _x
+	}
+	localctx.(*SourceAllotmentContext).portions = append(localctx.(*SourceAllotmentContext).portions, localctx.(*SourceAllotmentContext)._allotmentPortion)
+	{
+		p.SetState(101)
+		p.Match(NumScriptParserT__2)
+	}
+	{
+		p.SetState(102)
+
+		var _x = p.Source()
+
+		localctx.(*SourceAllotmentContext)._source = _x
+	}
+	localctx.(*SourceAllotmentContext).srcs = append(localctx.(*SourceAllotmentContext).srcs, localctx.(*SourceAllotmentContext)._source)
+
+	{
+		p.SetState(104)
 		p.Match(NumScriptParserRBRACE)
 	}
 
@@ -2621,9 +2318,49 @@ func (s *SrcBlockContext) ExitRule(listener antlr.ParseTreeListener) {
 	}
 }
 
+type SrcAllotmentContext struct {
+	*SourceContext
+}
+
+func NewSrcAllotmentContext(parser antlr.Parser, ctx antlr.ParserRuleContext) *SrcAllotmentContext {
+	var p = new(SrcAllotmentContext)
+
+	p.SourceContext = NewEmptySourceContext()
+	p.parser = parser
+	p.CopyFrom(ctx.(*SourceContext))
+
+	return p
+}
+
+func (s *SrcAllotmentContext) GetRuleContext() antlr.RuleContext {
+	return s
+}
+
+func (s *SrcAllotmentContext) SourceAllotment() ISourceAllotmentContext {
+	var t = s.GetTypedRuleContext(reflect.TypeOf((*ISourceAllotmentContext)(nil)).Elem(), 0)
+
+	if t == nil {
+		return nil
+	}
+
+	return t.(ISourceAllotmentContext)
+}
+
+func (s *SrcAllotmentContext) EnterRule(listener antlr.ParseTreeListener) {
+	if listenerT, ok := listener.(NumScriptListener); ok {
+		listenerT.EnterSrcAllotment(s)
+	}
+}
+
+func (s *SrcAllotmentContext) ExitRule(listener antlr.ParseTreeListener) {
+	if listenerT, ok := listener.(NumScriptListener); ok {
+		listenerT.ExitSrcAllotment(s)
+	}
+}
+
 func (p *NumScriptParser) Source() (localctx ISourceContext) {
 	localctx = NewSourceContext(p, p.GetParserRuleContext(), p.GetState())
-	p.EnterRule(localctx, 22, NumScriptParserRULE_source)
+	p.EnterRule(localctx, 20, NumScriptParserRULE_source)
 
 	defer func() {
 		p.ExitRule()
@@ -2641,28 +2378,33 @@ func (p *NumScriptParser) Source() (localctx ISourceContext) {
 		}
 	}()
 
-	p.SetState(119)
+	p.SetState(109)
 	p.GetErrorHandler().Sync(p)
-
-	switch p.GetTokenStream().LA(1) {
-	case NumScriptParserLBRACE:
+	switch p.GetInterpreter().AdaptivePredict(p.GetTokenStream(), 7, p.GetParserRuleContext()) {
+	case 1:
 		localctx = NewSrcBlockContext(p, localctx)
 		p.EnterOuterAlt(localctx, 1)
 		{
-			p.SetState(117)
+			p.SetState(106)
 			p.SourceBlock()
 		}
 
-	case NumScriptParserLBRACK, NumScriptParserNUMBER, NumScriptParserVARIABLE_NAME, NumScriptParserACCOUNT, NumScriptParserASSET:
+	case 2:
 		localctx = NewSrcAccountContext(p, localctx)
 		p.EnterOuterAlt(localctx, 2)
 		{
-			p.SetState(118)
+			p.SetState(107)
 			p.expression(0)
 		}
 
-	default:
-		panic(antlr.NewNoViableAltException(p, nil, nil, nil, nil, nil))
+	case 3:
+		localctx = NewSrcAllotmentContext(p, localctx)
+		p.EnterOuterAlt(localctx, 3)
+		{
+			p.SetState(108)
+			p.SourceAllotment()
+		}
+
 	}
 
 	return localctx
@@ -2803,9 +2545,10 @@ func (s *FailContext) ExitRule(listener antlr.ParseTreeListener) {
 
 type SendContext struct {
 	*StatementContext
-	mon  IExpressionContext
-	src  ISourceContext
-	dest IAllocationContext
+	mon    IExpressionContext
+	monAll IMonetaryAllContext
+	src    ISourceContext
+	dest   IDestinationContext
 }
 
 func NewSendContext(parser antlr.Parser, ctx antlr.ParserRuleContext) *SendContext {
@@ -2820,15 +2563,19 @@ func NewSendContext(parser antlr.Parser, ctx antlr.ParserRuleContext) *SendConte
 
 func (s *SendContext) GetMon() IExpressionContext { return s.mon }
 
+func (s *SendContext) GetMonAll() IMonetaryAllContext { return s.monAll }
+
 func (s *SendContext) GetSrc() ISourceContext { return s.src }
 
-func (s *SendContext) GetDest() IAllocationContext { return s.dest }
+func (s *SendContext) GetDest() IDestinationContext { return s.dest }
 
 func (s *SendContext) SetMon(v IExpressionContext) { s.mon = v }
 
+func (s *SendContext) SetMonAll(v IMonetaryAllContext) { s.monAll = v }
+
 func (s *SendContext) SetSrc(v ISourceContext) { s.src = v }
 
-func (s *SendContext) SetDest(v IAllocationContext) { s.dest = v }
+func (s *SendContext) SetDest(v IDestinationContext) { s.dest = v }
 
 func (s *SendContext) GetRuleContext() antlr.RuleContext {
 	return s
@@ -2854,16 +2601,6 @@ func (s *SendContext) RPAREN() antlr.TerminalNode {
 	return s.GetToken(NumScriptParserRPAREN, 0)
 }
 
-func (s *SendContext) Expression() IExpressionContext {
-	var t = s.GetTypedRuleContext(reflect.TypeOf((*IExpressionContext)(nil)).Elem(), 0)
-
-	if t == nil {
-		return nil
-	}
-
-	return t.(IExpressionContext)
-}
-
 func (s *SendContext) SOURCE() antlr.TerminalNode {
 	return s.GetToken(NumScriptParserSOURCE, 0)
 }
@@ -2880,6 +2617,26 @@ func (s *SendContext) DESTINATION() antlr.TerminalNode {
 	return s.GetToken(NumScriptParserDESTINATION, 0)
 }
 
+func (s *SendContext) Expression() IExpressionContext {
+	var t = s.GetTypedRuleContext(reflect.TypeOf((*IExpressionContext)(nil)).Elem(), 0)
+
+	if t == nil {
+		return nil
+	}
+
+	return t.(IExpressionContext)
+}
+
+func (s *SendContext) MonetaryAll() IMonetaryAllContext {
+	var t = s.GetTypedRuleContext(reflect.TypeOf((*IMonetaryAllContext)(nil)).Elem(), 0)
+
+	if t == nil {
+		return nil
+	}
+
+	return t.(IMonetaryAllContext)
+}
+
 func (s *SendContext) Source() ISourceContext {
 	var t = s.GetTypedRuleContext(reflect.TypeOf((*ISourceContext)(nil)).Elem(), 0)
 
@@ -2890,14 +2647,14 @@ func (s *SendContext) Source() ISourceContext {
 	return t.(ISourceContext)
 }
 
-func (s *SendContext) Allocation() IAllocationContext {
-	var t = s.GetTypedRuleContext(reflect.TypeOf((*IAllocationContext)(nil)).Elem(), 0)
+func (s *SendContext) Destination() IDestinationContext {
+	var t = s.GetTypedRuleContext(reflect.TypeOf((*IDestinationContext)(nil)).Elem(), 0)
 
 	if t == nil {
 		return nil
 	}
 
-	return t.(IAllocationContext)
+	return t.(IDestinationContext)
 }
 
 func (s *SendContext) EnterRule(listener antlr.ParseTreeListener) {
@@ -2914,7 +2671,7 @@ func (s *SendContext) ExitRule(listener antlr.ParseTreeListener) {
 
 func (p *NumScriptParser) Statement() (localctx IStatementContext) {
 	localctx = NewStatementContext(p, p.GetParserRuleContext(), p.GetState())
-	p.EnterRule(localctx, 24, NumScriptParserRULE_statement)
+	p.EnterRule(localctx, 22, NumScriptParserRULE_statement)
 
 	defer func() {
 		p.ExitRule()
@@ -2932,7 +2689,7 @@ func (p *NumScriptParser) Statement() (localctx IStatementContext) {
 		}
 	}()
 
-	p.SetState(149)
+	p.SetState(142)
 	p.GetErrorHandler().Sync(p)
 
 	switch p.GetTokenStream().LA(1) {
@@ -2940,11 +2697,11 @@ func (p *NumScriptParser) Statement() (localctx IStatementContext) {
 		localctx = NewPrintContext(p, localctx)
 		p.EnterOuterAlt(localctx, 1)
 		{
-			p.SetState(121)
+			p.SetState(111)
 			p.Match(NumScriptParserPRINT)
 		}
 		{
-			p.SetState(122)
+			p.SetState(112)
 
 			var _x = p.expression(0)
 
@@ -2955,7 +2712,7 @@ func (p *NumScriptParser) Statement() (localctx IStatementContext) {
 		localctx = NewFailContext(p, localctx)
 		p.EnterOuterAlt(localctx, 2)
 		{
-			p.SetState(123)
+			p.SetState(113)
 			p.Match(NumScriptParserFAIL)
 		}
 
@@ -2963,94 +2720,109 @@ func (p *NumScriptParser) Statement() (localctx IStatementContext) {
 		localctx = NewSendContext(p, localctx)
 		p.EnterOuterAlt(localctx, 3)
 		{
-			p.SetState(124)
+			p.SetState(114)
 			p.Match(NumScriptParserSEND)
 		}
-		{
-			p.SetState(125)
+		p.SetState(117)
+		p.GetErrorHandler().Sync(p)
+		switch p.GetInterpreter().AdaptivePredict(p.GetTokenStream(), 8, p.GetParserRuleContext()) {
+		case 1:
+			{
+				p.SetState(115)
 
-			var _x = p.expression(0)
+				var _x = p.expression(0)
 
-			localctx.(*SendContext).mon = _x
+				localctx.(*SendContext).mon = _x
+			}
+
+		case 2:
+			{
+				p.SetState(116)
+
+				var _x = p.MonetaryAll()
+
+				localctx.(*SendContext).monAll = _x
+			}
+
 		}
 		{
-			p.SetState(126)
+			p.SetState(119)
 			p.Match(NumScriptParserLPAREN)
 		}
 		{
-			p.SetState(127)
+			p.SetState(120)
 			p.Match(NumScriptParserNEWLINE)
 		}
-		p.SetState(144)
+		p.SetState(137)
 		p.GetErrorHandler().Sync(p)
 
 		switch p.GetTokenStream().LA(1) {
 		case NumScriptParserSOURCE:
 			{
-				p.SetState(128)
+				p.SetState(121)
 				p.Match(NumScriptParserSOURCE)
 			}
 			{
-				p.SetState(129)
+				p.SetState(122)
 				p.Match(NumScriptParserEQ)
 			}
 			{
-				p.SetState(130)
+				p.SetState(123)
 
 				var _x = p.Source()
 
 				localctx.(*SendContext).src = _x
 			}
 			{
-				p.SetState(131)
+				p.SetState(124)
 				p.Match(NumScriptParserNEWLINE)
 			}
 			{
-				p.SetState(132)
+				p.SetState(125)
 				p.Match(NumScriptParserDESTINATION)
 			}
 			{
-				p.SetState(133)
+				p.SetState(126)
 				p.Match(NumScriptParserEQ)
 			}
 			{
-				p.SetState(134)
+				p.SetState(127)
 
-				var _x = p.Allocation()
+				var _x = p.Destination()
 
 				localctx.(*SendContext).dest = _x
 			}
 
 		case NumScriptParserDESTINATION:
 			{
-				p.SetState(136)
+				p.SetState(129)
 				p.Match(NumScriptParserDESTINATION)
 			}
 			{
-				p.SetState(137)
+				p.SetState(130)
 				p.Match(NumScriptParserEQ)
 			}
 			{
-				p.SetState(138)
+				p.SetState(131)
 
-				var _x = p.Allocation()
+				var _x = p.Destination()
 
 				localctx.(*SendContext).dest = _x
 			}
 			{
-				p.SetState(139)
+				p.SetState(132)
 				p.Match(NumScriptParserNEWLINE)
 			}
 			{
-				p.SetState(140)
+				p.SetState(133)
 				p.Match(NumScriptParserSOURCE)
 			}
 			{
-				p.SetState(141)
+				p.SetState(134)
 				p.Match(NumScriptParserEQ)
 			}
 			{
-				p.SetState(142)
+				p.SetState(135)
 
 				var _x = p.Source()
 
@@ -3061,11 +2833,11 @@ func (p *NumScriptParser) Statement() (localctx IStatementContext) {
 			panic(antlr.NewNoViableAltException(p, nil, nil, nil, nil, nil))
 		}
 		{
-			p.SetState(146)
+			p.SetState(139)
 			p.Match(NumScriptParserNEWLINE)
 		}
 		{
-			p.SetState(147)
+			p.SetState(140)
 			p.Match(NumScriptParserRPAREN)
 		}
 
@@ -3156,7 +2928,7 @@ func (s *Type_Context) ExitRule(listener antlr.ParseTreeListener) {
 
 func (p *NumScriptParser) Type_() (localctx IType_Context) {
 	localctx = NewType_Context(p, p.GetParserRuleContext(), p.GetState())
-	p.EnterRule(localctx, 26, NumScriptParserRULE_type_)
+	p.EnterRule(localctx, 24, NumScriptParserRULE_type_)
 	var _la int
 
 	defer func() {
@@ -3177,7 +2949,7 @@ func (p *NumScriptParser) Type_() (localctx IType_Context) {
 
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(151)
+		p.SetState(144)
 		_la = p.GetTokenStream().LA(1)
 
 		if !(((_la)&-(0x1f+1)) == 0 && ((1<<uint(_la))&((1<<NumScriptParserTY_ACCOUNT)|(1<<NumScriptParserTY_ASSET)|(1<<NumScriptParserTY_NUMBER)|(1<<NumScriptParserTY_MONETARY)|(1<<NumScriptParserTY_PORTION))) != 0) {
@@ -3291,7 +3063,7 @@ func (s *OriginContext) ExitRule(listener antlr.ParseTreeListener) {
 
 func (p *NumScriptParser) Origin() (localctx IOriginContext) {
 	localctx = NewOriginContext(p, p.GetParserRuleContext(), p.GetState())
-	p.EnterRule(localctx, 28, NumScriptParserRULE_origin)
+	p.EnterRule(localctx, 26, NumScriptParserRULE_origin)
 
 	defer func() {
 		p.ExitRule()
@@ -3311,29 +3083,29 @@ func (p *NumScriptParser) Origin() (localctx IOriginContext) {
 
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(153)
-		p.Match(NumScriptParserT__1)
+		p.SetState(146)
+		p.Match(NumScriptParserT__3)
 	}
 	{
-		p.SetState(154)
+		p.SetState(147)
 
 		var _x = p.expression(0)
 
 		localctx.(*OriginContext).acc = _x
 	}
 	{
-		p.SetState(155)
-		p.Match(NumScriptParserT__2)
+		p.SetState(148)
+		p.Match(NumScriptParserT__4)
 	}
 	{
-		p.SetState(156)
+		p.SetState(149)
 
 		var _m = p.Match(NumScriptParserSTRING)
 
 		localctx.(*OriginContext).key = _m
 	}
 	{
-		p.SetState(157)
+		p.SetState(150)
 		p.Match(NumScriptParserRPAREN)
 	}
 
@@ -3467,7 +3239,7 @@ func (s *VarDeclContext) ExitRule(listener antlr.ParseTreeListener) {
 
 func (p *NumScriptParser) VarDecl() (localctx IVarDeclContext) {
 	localctx = NewVarDeclContext(p, p.GetParserRuleContext(), p.GetState())
-	p.EnterRule(localctx, 30, NumScriptParserRULE_varDecl)
+	p.EnterRule(localctx, 28, NumScriptParserRULE_varDecl)
 	var _la int
 
 	defer func() {
@@ -3488,30 +3260,30 @@ func (p *NumScriptParser) VarDecl() (localctx IVarDeclContext) {
 
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(159)
+		p.SetState(152)
 
 		var _x = p.Type_()
 
 		localctx.(*VarDeclContext).ty = _x
 	}
 	{
-		p.SetState(160)
+		p.SetState(153)
 
 		var _x = p.Variable()
 
 		localctx.(*VarDeclContext).name = _x
 	}
-	p.SetState(163)
+	p.SetState(156)
 	p.GetErrorHandler().Sync(p)
 	_la = p.GetTokenStream().LA(1)
 
 	if _la == NumScriptParserEQ {
 		{
-			p.SetState(161)
+			p.SetState(154)
 			p.Match(NumScriptParserEQ)
 		}
 		{
-			p.SetState(162)
+			p.SetState(155)
 
 			var _x = p.Origin()
 
@@ -3648,7 +3420,7 @@ func (s *VarListDeclContext) ExitRule(listener antlr.ParseTreeListener) {
 
 func (p *NumScriptParser) VarListDecl() (localctx IVarListDeclContext) {
 	localctx = NewVarListDeclContext(p, p.GetParserRuleContext(), p.GetState())
-	p.EnterRule(localctx, 32, NumScriptParserRULE_varListDecl)
+	p.EnterRule(localctx, 30, NumScriptParserRULE_varListDecl)
 	var _la int
 
 	defer func() {
@@ -3669,74 +3441,74 @@ func (p *NumScriptParser) VarListDecl() (localctx IVarListDeclContext) {
 
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(165)
+		p.SetState(158)
 		p.Match(NumScriptParserVARS)
 	}
 	{
-		p.SetState(166)
+		p.SetState(159)
 		p.Match(NumScriptParserLBRACE)
 	}
-	p.SetState(168)
+	p.SetState(161)
 	p.GetErrorHandler().Sync(p)
 	_la = p.GetTokenStream().LA(1)
 
 	for ok := true; ok; ok = _la == NumScriptParserNEWLINE {
 		{
-			p.SetState(167)
+			p.SetState(160)
 			p.Match(NumScriptParserNEWLINE)
 		}
 
-		p.SetState(170)
+		p.SetState(163)
 		p.GetErrorHandler().Sync(p)
 		_la = p.GetTokenStream().LA(1)
 	}
-	p.SetState(178)
+	p.SetState(171)
 	p.GetErrorHandler().Sync(p)
 	_la = p.GetTokenStream().LA(1)
 
 	for ok := true; ok; ok = (((_la)&-(0x1f+1)) == 0 && ((1<<uint(_la))&((1<<NumScriptParserTY_ACCOUNT)|(1<<NumScriptParserTY_ASSET)|(1<<NumScriptParserTY_NUMBER)|(1<<NumScriptParserTY_MONETARY)|(1<<NumScriptParserTY_PORTION))) != 0) {
 		{
-			p.SetState(172)
+			p.SetState(165)
 
 			var _x = p.VarDecl()
 
 			localctx.(*VarListDeclContext)._varDecl = _x
 		}
 		localctx.(*VarListDeclContext).v = append(localctx.(*VarListDeclContext).v, localctx.(*VarListDeclContext)._varDecl)
-		p.SetState(174)
+		p.SetState(167)
 		p.GetErrorHandler().Sync(p)
 		_la = p.GetTokenStream().LA(1)
 
 		for ok := true; ok; ok = _la == NumScriptParserNEWLINE {
 			{
-				p.SetState(173)
+				p.SetState(166)
 				p.Match(NumScriptParserNEWLINE)
 			}
 
-			p.SetState(176)
+			p.SetState(169)
 			p.GetErrorHandler().Sync(p)
 			_la = p.GetTokenStream().LA(1)
 		}
 
-		p.SetState(180)
+		p.SetState(173)
 		p.GetErrorHandler().Sync(p)
 		_la = p.GetTokenStream().LA(1)
 	}
 	{
-		p.SetState(182)
+		p.SetState(175)
 		p.Match(NumScriptParserRBRACE)
 	}
-	p.SetState(184)
+	p.SetState(177)
 	p.GetErrorHandler().Sync(p)
 	_la = p.GetTokenStream().LA(1)
 
 	for ok := true; ok; ok = _la == NumScriptParserNEWLINE {
 		{
-			p.SetState(183)
+			p.SetState(176)
 			p.Match(NumScriptParserNEWLINE)
 		}
 
-		p.SetState(186)
+		p.SetState(179)
 		p.GetErrorHandler().Sync(p)
 		_la = p.GetTokenStream().LA(1)
 	}
@@ -3882,7 +3654,7 @@ func (s *ScriptContext) ExitRule(listener antlr.ParseTreeListener) {
 
 func (p *NumScriptParser) Script() (localctx IScriptContext) {
 	localctx = NewScriptContext(p, p.GetParserRuleContext(), p.GetState())
-	p.EnterRule(localctx, 34, NumScriptParserRULE_script)
+	p.EnterRule(localctx, 32, NumScriptParserRULE_script)
 	var _la int
 
 	defer func() {
@@ -3904,27 +3676,27 @@ func (p *NumScriptParser) Script() (localctx IScriptContext) {
 	var _alt int
 
 	p.EnterOuterAlt(localctx, 1)
-	p.SetState(191)
+	p.SetState(184)
 	p.GetErrorHandler().Sync(p)
 	_la = p.GetTokenStream().LA(1)
 
 	for _la == NumScriptParserNEWLINE {
 		{
-			p.SetState(188)
+			p.SetState(181)
 			p.Match(NumScriptParserNEWLINE)
 		}
 
-		p.SetState(193)
+		p.SetState(186)
 		p.GetErrorHandler().Sync(p)
 		_la = p.GetTokenStream().LA(1)
 	}
-	p.SetState(195)
+	p.SetState(188)
 	p.GetErrorHandler().Sync(p)
 	_la = p.GetTokenStream().LA(1)
 
 	if _la == NumScriptParserVARS {
 		{
-			p.SetState(194)
+			p.SetState(187)
 
 			var _x = p.VarListDecl()
 
@@ -3933,35 +3705,35 @@ func (p *NumScriptParser) Script() (localctx IScriptContext) {
 
 	}
 	{
-		p.SetState(197)
+		p.SetState(190)
 
 		var _x = p.Statement()
 
 		localctx.(*ScriptContext)._statement = _x
 	}
 	localctx.(*ScriptContext).stmts = append(localctx.(*ScriptContext).stmts, localctx.(*ScriptContext)._statement)
-	p.SetState(206)
+	p.SetState(199)
 	p.GetErrorHandler().Sync(p)
-	_alt = p.GetInterpreter().AdaptivePredict(p.GetTokenStream(), 21, p.GetParserRuleContext())
+	_alt = p.GetInterpreter().AdaptivePredict(p.GetTokenStream(), 19, p.GetParserRuleContext())
 
 	for _alt != 2 && _alt != antlr.ATNInvalidAltNumber {
 		if _alt == 1 {
-			p.SetState(199)
+			p.SetState(192)
 			p.GetErrorHandler().Sync(p)
 			_la = p.GetTokenStream().LA(1)
 
 			for ok := true; ok; ok = _la == NumScriptParserNEWLINE {
 				{
-					p.SetState(198)
+					p.SetState(191)
 					p.Match(NumScriptParserNEWLINE)
 				}
 
-				p.SetState(201)
+				p.SetState(194)
 				p.GetErrorHandler().Sync(p)
 				_la = p.GetTokenStream().LA(1)
 			}
 			{
-				p.SetState(203)
+				p.SetState(196)
 
 				var _x = p.Statement()
 
@@ -3970,26 +3742,26 @@ func (p *NumScriptParser) Script() (localctx IScriptContext) {
 			localctx.(*ScriptContext).stmts = append(localctx.(*ScriptContext).stmts, localctx.(*ScriptContext)._statement)
 
 		}
-		p.SetState(208)
+		p.SetState(201)
 		p.GetErrorHandler().Sync(p)
-		_alt = p.GetInterpreter().AdaptivePredict(p.GetTokenStream(), 21, p.GetParserRuleContext())
+		_alt = p.GetInterpreter().AdaptivePredict(p.GetTokenStream(), 19, p.GetParserRuleContext())
 	}
-	p.SetState(212)
+	p.SetState(205)
 	p.GetErrorHandler().Sync(p)
 	_la = p.GetTokenStream().LA(1)
 
 	for _la == NumScriptParserNEWLINE {
 		{
-			p.SetState(209)
+			p.SetState(202)
 			p.Match(NumScriptParserNEWLINE)
 		}
 
-		p.SetState(214)
+		p.SetState(207)
 		p.GetErrorHandler().Sync(p)
 		_la = p.GetTokenStream().LA(1)
 	}
 	{
-		p.SetState(215)
+		p.SetState(208)
 		p.Match(NumScriptParserEOF)
 	}
 

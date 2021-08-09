@@ -75,7 +75,7 @@ func NewValueFromJSON(typ Type, data json.RawMessage) (*Value, error) {
 		}
 		value = Monetary{
 			Asset:  Asset(mon.Asset),
-			Amount: NewAmountSpecific(mon.Amount),
+			Amount: mon.Amount,
 		}
 	case TYPE_PORTION:
 		var s string
