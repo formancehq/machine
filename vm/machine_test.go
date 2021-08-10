@@ -702,7 +702,7 @@ func TestAllocateDontTakeTooMuch(t *testing.T) {
 				"CREDIT": 100,
 			},
 			"users:002": {
-				"CREDIT": 100,
+				"CREDIT": 110,
 			},
 		},
 		CaseResult{
@@ -775,6 +775,46 @@ func TestMetadata(t *testing.T) {
 					Amount:      12,
 					Source:      "sales:042",
 					Destination: "platform",
+				},
+			},
+			ExitCode: 1,
+			Error:    "",
+		},
+	)
+}
+
+func TestTrackBalances(t *testing.T) {
+	testJSON(t,
+		`
+		send [COIN 50] (
+			source = @world
+			destination = @a
+		)
+		send [COIN 100] (
+			source = @a
+			destination = @b
+		)`,
+		`{}`,
+		map[string]map[string]core.Value{},
+		map[string]map[string]uint64{
+			"a": {
+				"COIN": 50,
+			},
+		},
+		CaseResult{
+			Printed: []core.Value{},
+			Postings: []ledger.Posting{
+				{
+					Asset:       "COIN",
+					Amount:      50,
+					Source:      "world",
+					Destination: "a",
+				},
+				{
+					Asset:       "COIN",
+					Amount:      100,
+					Source:      "a",
+					Destination: "b",
 				},
 			},
 			ExitCode: 1,

@@ -2,9 +2,8 @@
 	Provides `Machine`, which executes programs and outputs postings.
 	1: Create New Machine
 	2: Set Variables (with `core.Value`s or JSON)
-	3: Resolve Resources (listen for requests on channel and provide metadata)
-	4: Get Needed Balances
-	5: Set Balances of needed
+	3: Resolve Resources (answer requests on channel)
+	4: Resolve Balances (answer requests on channel)
 	6: Execute
 */
 package vm
@@ -70,21 +69,6 @@ func (m *Machine) getResource(addr core.Address) (*core.Value, bool) {
 	return &m.Resources[a], true
 }
 
-func (m *Machine) getBalance(account core.Account, asset core.Asset) (uint64, error) {
-	if account == "world" {
-		return 0, errors.New("tried to use balance of world")
-	}
-	if acc_balance, ok := m.Balances[string(account)]; ok {
-		if balance, ok := acc_balance[string(asset)]; ok {
-			return balance, nil
-		} else {
-			return 0, fmt.Errorf("missing %v balance of %v", asset, account)
-		}
-	} else {
-		return 0, fmt.Errorf("missing balance of %v", account)
-	}
-}
-
 func (m *Machine) withdraw(account core.Account, asset core.Asset, amount uint64) bool {
 	if account == "world" {
 		return true
@@ -101,17 +85,25 @@ func (m *Machine) withdraw(account core.Account, asset core.Asset, amount uint64
 	return withdraw_ok
 }
 
-func (m *Machine) credit(account core.Account, asset core.Asset, amount uint64) {
+func (m *Machine) credit(account core.Account, funding core.Funding) {
+	if account == "world" {
+		return
+	}
 	if acc_balance, ok := m.Balances[string(account)]; ok {
-		if _, ok := acc_balance[string(asset)]; ok {
-			acc_balance[string(asset)] += amount
-		} else {
-			acc_balance[string(asset)] = amount
+		if _, ok := acc_balance[string(funding.Asset)]; ok {
+			for _, part := range funding.Parts {
+				acc_balance[string(funding.Asset)] += part.Amount
+			}
 		}
-	} else {
-		m.Balances[string(account)] = map[string]uint64{
-			string(asset): amount,
+	}
+}
+
+func (m *Machine) repay(funding core.Funding) {
+	for _, part := range funding.Parts {
+		if part.Account == "world" {
+			continue
 		}
+		m.Balances[string(part.Account)][string(funding.Asset)] += part.Amount
 	}
 }
 
@@ -208,11 +200,7 @@ func (m *Machine) tick() (bool, byte) {
 		if err != nil {
 			return true, EXIT_FAIL_INSUFFICIENT_FUNDS
 		}
-		for _, part := range remainder.Parts {
-			if part.Account != "world" {
-				m.Balances[string(part.Account)][string(remainder.Asset)] += part.Amount
-			}
-		}
+		m.repay(remainder)
 		m.pushValue(result)
 	case program.OP_TAKE_SPLIT:
 		mon := m.popMonetary()
@@ -231,9 +219,7 @@ func (m *Machine) tick() (bool, byte) {
 				return true, EXIT_FAIL_INSUFFICIENT_FUNDS
 			}
 			result.Parts = append(result.Parts, res.Parts...)
-			for _, part := range rem.Parts {
-				m.Balances[string(part.Account)][string(rem.Asset)] += part.Amount
-			}
+			m.repay(rem)
 		}
 	case program.OP_ASSEMBLE:
 		n := m.popNumber()
@@ -274,13 +260,13 @@ func (m *Machine) tick() (bool, byte) {
 	case program.OP_SEND:
 		dest := m.popAccount()
 		funding := m.popFunding()
+		m.credit(dest, funding)
 		for _, part := range funding.Parts {
 			src := part.Account
 			amt := part.Amount
 			if amt == 0 {
 				continue
 			}
-			m.credit(dest, funding.Asset, amt)
 			m.Postings = append(m.Postings, ledger.Posting{
 				Source:      string(src),
 				Destination: string(dest),
@@ -290,7 +276,9 @@ func (m *Machine) tick() (bool, byte) {
 		}
 	}
 
-	fmt.Println(m.Stack)
+	// fmt.Println("STATE ---------------------------------------------------------------------")
+	// fmt.Printf("    %v\n", m.Stack)
+	// fmt.Printf("    %v\n", m.Balances)
 
 	m.P += 1
 
