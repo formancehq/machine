@@ -36,7 +36,7 @@ func (p *parseVisitor) VisitSource(c parser.ISourceContext, push_asset func(), m
 	case *parser.SrcBlockContext:
 		sources := c.SourceBlock().GetSources()
 		n := len(sources)
-		for i := n - 1; i >= 0; i-- {
+		for i := 0; i < n; i++ {
 			ty, acc_addr, err := p.VisitExpr(sources[i], true)
 			if err != nil {
 				return nil, err

@@ -235,13 +235,21 @@ func (m *Machine) tick() (bool, byte) {
 		if n == 0 {
 			return true, EXIT_FAIL_INVALID
 		}
-		result := m.popFunding()
+		first := m.popFunding()
+		result := core.Funding{
+			Asset: first.Asset,
+		}
+		parts := first.Parts
 		for i := uint64(0); i < n-1; i++ {
 			f := m.popFunding()
 			if f.Asset != result.Asset {
 				return true, EXIT_FAIL_INVALID
 			}
-			result.Parts = append(result.Parts, f.Parts...)
+			parts = append(parts, f.Parts...)
+		}
+		result.Parts = make([]core.FundingPart, len(parts))
+		for i := 0; i < len(parts); i++ {
+			result.Parts[i] = parts[len(parts)-1-i]
 		}
 		m.pushValue(result)
 	case program.OP_ALLOC:
