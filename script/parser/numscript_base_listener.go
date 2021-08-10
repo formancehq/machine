@@ -131,17 +131,17 @@ func (s *BaseNumScriptListener) EnterSourceAllotment(ctx *SourceAllotmentContext
 // ExitSourceAllotment is called when production sourceAllotment is exited.
 func (s *BaseNumScriptListener) ExitSourceAllotment(ctx *SourceAllotmentContext) {}
 
-// EnterSrcBlock is called when production SrcBlock is entered.
-func (s *BaseNumScriptListener) EnterSrcBlock(ctx *SrcBlockContext) {}
-
-// ExitSrcBlock is called when production SrcBlock is exited.
-func (s *BaseNumScriptListener) ExitSrcBlock(ctx *SrcBlockContext) {}
-
 // EnterSrcAccount is called when production SrcAccount is entered.
 func (s *BaseNumScriptListener) EnterSrcAccount(ctx *SrcAccountContext) {}
 
 // ExitSrcAccount is called when production SrcAccount is exited.
 func (s *BaseNumScriptListener) ExitSrcAccount(ctx *SrcAccountContext) {}
+
+// EnterSrcBlock is called when production SrcBlock is entered.
+func (s *BaseNumScriptListener) EnterSrcBlock(ctx *SrcBlockContext) {}
+
+// ExitSrcBlock is called when production SrcBlock is exited.
+func (s *BaseNumScriptListener) ExitSrcBlock(ctx *SrcBlockContext) {}
 
 // EnterSrcAllotment is called when production SrcAllotment is entered.
 func (s *BaseNumScriptListener) EnterSrcAllotment(ctx *SrcAllotmentContext) {}

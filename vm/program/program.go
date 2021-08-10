@@ -50,7 +50,7 @@ func (p Program) String() string {
 		case OP_TAKE:
 			out += "OP_TAKE\n"
 		case OP_TAKE_SPLIT:
-			out += "OP_SPLIT\n"
+			out += "OP_TAKE_SPLIT\n"
 		case OP_ASSEMBLE:
 			out += "OP_ASSEMBLE\n"
 		case OP_ASSET:

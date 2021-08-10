@@ -70,10 +70,10 @@ destination
   ;
 
 sourceBlock: LBRACE NEWLINE (sources+=expression NEWLINE)+ RBRACE;
-sourceAllotment: LBRACE NEWLINE (portions+=allotmentPortion 'from' srcs+=source) RBRACE;
+sourceAllotment: LBRACE NEWLINE (portions+=allotmentPortion 'from' srcs+=expression NEWLINE)+ RBRACE;
 source
-  : sourceBlock # SrcBlock
-  | expression # SrcAccount
+  : expression # SrcAccount
+  | sourceBlock # SrcBlock
   | sourceAllotment #SrcAllotment
   ;
 

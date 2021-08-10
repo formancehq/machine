@@ -59,6 +59,7 @@ type Machine struct {
 	Postings            []ledger.Posting // accumulates postings throughout execution
 	Printer             func(chan core.Value)
 	print_chan          chan core.Value
+	Debug               bool
 }
 
 func (m *Machine) getResource(addr core.Address) (*core.Value, bool) {
@@ -109,6 +110,13 @@ func (m *Machine) repay(funding core.Funding) {
 
 func (m *Machine) tick() (bool, byte) {
 	op := m.Program.Instructions[m.P]
+
+	if m.Debug {
+		fmt.Println("STATE ---------------------------------------------------------------------")
+		fmt.Printf("    %v\n", m.Stack)
+		fmt.Printf("    %v\n", m.Balances)
+		fmt.Printf("    %v\n", op)
+	}
 
 	switch op {
 	case program.OP_APUSH:
@@ -221,6 +229,7 @@ func (m *Machine) tick() (bool, byte) {
 			result.Parts = append(result.Parts, res.Parts...)
 			m.repay(rem)
 		}
+		m.pushValue(result)
 	case program.OP_ASSEMBLE:
 		n := m.popNumber()
 		if n == 0 {
@@ -275,10 +284,6 @@ func (m *Machine) tick() (bool, byte) {
 			})
 		}
 	}
-
-	// fmt.Println("STATE ---------------------------------------------------------------------")
-	// fmt.Printf("    %v\n", m.Stack)
-	// fmt.Printf("    %v\n", m.Balances)
 
 	m.P += 1
 
@@ -380,7 +385,6 @@ func (m *Machine) ResolveBalances() (chan BalanceRequest, error) {
 				return
 			}
 		}
-		fmt.Println(m.Balances)
 	}()
 	return ch, nil
 }

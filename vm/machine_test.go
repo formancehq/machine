@@ -823,6 +823,59 @@ func TestTrackBalances(t *testing.T) {
 	)
 }
 
+func TestSourceAllotment(t *testing.T) {
+	testJSON(t,
+		`
+		send [COIN 100] (
+			source = {
+				60% from @a
+				35.5% from @b
+				4.5% from @c
+			}
+			destination = @d
+		)
+		`,
+		`{}`,
+		map[string]map[string]core.Value{},
+		map[string]map[string]uint64{
+			"a": {
+				"COIN": 100,
+			},
+			"b": {
+				"COIN": 100,
+			},
+			"c": {
+				"COIN": 100,
+			},
+		},
+		CaseResult{
+			Printed: []core.Value{},
+			Postings: []ledger.Posting{
+				{
+					Asset:       "COIN",
+					Amount:      61,
+					Source:      "a",
+					Destination: "d",
+				},
+				{
+					Asset:       "COIN",
+					Amount:      35,
+					Source:      "b",
+					Destination: "d",
+				},
+				{
+					Asset:       "COIN",
+					Amount:      4,
+					Source:      "c",
+					Destination: "d",
+				},
+			},
+			ExitCode: 1,
+			Error:    "",
+		},
+	)
+}
+
 func TestNeededBalances(t *testing.T) {
 	p, err := compiler.Compile(`vars {
 		account $a

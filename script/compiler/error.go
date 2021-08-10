@@ -22,7 +22,7 @@ type CompileErrorList struct {
 
 func (c *CompileErrorList) Error() string {
 	source := strings.ReplaceAll(c.source, "\t", " ")
-	lines := strings.Split(strings.ReplaceAll(source, "\r\n", "\n"), "\n")
+	lines := strings.SplitAfter(strings.ReplaceAll(source, "\r\n", "\n"), "\n")
 
 	txt_bar_good := aurora.Blue("|")
 
@@ -63,6 +63,9 @@ func (c *CompileErrorList) Error() string {
 		if e.startl == e.endl {
 			start = e.startc
 			span = e.endc - e.startc
+		}
+		if span == 0 {
+			span = 1
 		}
 		s += fmt.Sprintf("%v %v %v%v %v\n", strings.Repeat(" ", ln_pad), txt_bar_good, strings.Repeat(" ", start), aurora.Red(strings.Repeat("^", span)), e.msg)
 	}

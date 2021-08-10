@@ -62,11 +62,11 @@ type NumScriptListener interface {
 	// EnterSourceAllotment is called when entering the sourceAllotment production.
 	EnterSourceAllotment(c *SourceAllotmentContext)
 
-	// EnterSrcBlock is called when entering the SrcBlock production.
-	EnterSrcBlock(c *SrcBlockContext)
-
 	// EnterSrcAccount is called when entering the SrcAccount production.
 	EnterSrcAccount(c *SrcAccountContext)
+
+	// EnterSrcBlock is called when entering the SrcBlock production.
+	EnterSrcBlock(c *SrcBlockContext)
 
 	// EnterSrcAllotment is called when entering the SrcAllotment production.
 	EnterSrcAllotment(c *SrcAllotmentContext)
@@ -149,11 +149,11 @@ type NumScriptListener interface {
 	// ExitSourceAllotment is called when exiting the sourceAllotment production.
 	ExitSourceAllotment(c *SourceAllotmentContext)
 
-	// ExitSrcBlock is called when exiting the SrcBlock production.
-	ExitSrcBlock(c *SrcBlockContext)
-
 	// ExitSrcAccount is called when exiting the SrcAccount production.
 	ExitSrcAccount(c *SrcAccountContext)
+
+	// ExitSrcBlock is called when exiting the SrcBlock production.
+	ExitSrcBlock(c *SrcBlockContext)
 
 	// ExitSrcAllotment is called when exiting the SrcAllotment production.
 	ExitSrcAllotment(c *SrcAllotmentContext)
