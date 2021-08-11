@@ -143,6 +143,7 @@ func testimpl(t *testing.T, code string, expected CaseResult, exec func(*Machine
 	wg.Add(1)
 
 	machine := NewMachine(p)
+	// machine.Debug = true
 	machine.Printer = func(c chan core.Value) {
 		for v := range c {
 			printed = append(printed, v)
@@ -868,6 +869,79 @@ func TestSourceAllotment(t *testing.T) {
 					Amount:      4,
 					Source:      "c",
 					Destination: "d",
+				},
+			},
+			ExitCode: 1,
+			Error:    "",
+		},
+	)
+}
+
+func TestSourceComplex(t *testing.T) {
+	testJSON(t,
+		`
+		vars {
+			monetary $max
+		}
+		send [COIN 200] (
+			source = {
+				50% from {
+					max [COIN 4] from @a
+					@b
+					@c
+				}
+				remaining from max $max from @d
+			}
+			destination = @platform
+		)
+		`,
+		`{
+			"max": {
+				"asset": "COIN",
+				"amount": 120
+			}
+		}`,
+		map[string]map[string]core.Value{},
+		map[string]map[string]uint64{
+			"a": {
+				"COIN": 1000,
+			},
+			"b": {
+				"COIN": 40,
+			},
+			"c": {
+				"COIN": 1000,
+			},
+			"d": {
+				"COIN": 1000,
+			},
+		},
+		CaseResult{
+			Printed: []core.Value{},
+			Postings: []ledger.Posting{
+				{
+					Asset:       "COIN",
+					Amount:      4,
+					Source:      "a",
+					Destination: "platform",
+				},
+				{
+					Asset:       "COIN",
+					Amount:      40,
+					Source:      "b",
+					Destination: "platform",
+				},
+				{
+					Asset:       "COIN",
+					Amount:      56,
+					Source:      "c",
+					Destination: "platform",
+				},
+				{
+					Asset:       "COIN",
+					Amount:      100,
+					Source:      "d",
+					Destination: "platform",
 				},
 			},
 			ExitCode: 1,

@@ -84,12 +84,13 @@ func (p *parseVisitor) VisitSource(c parser.ISourceContext, push_asset func(), i
 		sources := c.SourceInOrder().GetSources()
 		n := len(sources)
 		for i := 0; i < n; i++ {
-			accounts, bottomless, err := p.VisitSource(sources[i], push_asset, is_all)
+			accounts, subsource_bottomless, err := p.VisitSource(sources[i], push_asset, is_all)
 			if err != nil {
 				return nil, false, err
 			}
 			needed_accounts = append(needed_accounts, accounts...)
-			if bottomless && i != n-1 {
+			bottomless = bottomless || subsource_bottomless
+			if subsource_bottomless && i != n-1 {
 				return nil, false, LogicError(c, errors.New("world can only be in last position of source"))
 			}
 		}

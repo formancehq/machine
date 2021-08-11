@@ -36,6 +36,9 @@ func (f Funding) String() string {
 	for _, part := range f.Parts {
 		out += fmt.Sprintf(" %v %v", part.Amount, part.Account)
 	}
+	if f.Infinite {
+		out += " * @world"
+	}
 	return out + "]"
 }
 
@@ -73,8 +76,18 @@ func (f Funding) Take(amount uint64) (Funding, Funding, error) {
 		})
 		i++
 	}
+	if f.Infinite {
+		remainder.Infinite = true
+	}
 	if remaining_to_withdraw != 0 {
-		return Funding{}, Funding{}, errors.New("insufficient funding")
+		if f.Infinite {
+			result.Parts = append(result.Parts, FundingPart{
+				Account: "world",
+				Amount:  remaining_to_withdraw,
+			})
+		} else {
+			return Funding{}, Funding{}, errors.New("insufficient funding")
+		}
 	}
 	return result, remainder, nil
 }
@@ -113,7 +126,23 @@ func (f Funding) TakeMax(amount uint64) (Funding, Funding) {
 		})
 		i++
 	}
+	if f.Infinite {
+		remainder.Infinite = true
+	}
 	return result, remainder
+}
+
+func (f Funding) Concat(other Funding) Funding {
+	res := Funding{
+		Asset:    f.Asset,
+		Parts:    f.Parts,
+		Infinite: f.Infinite || other.Infinite,
+	}
+	if !f.Infinite {
+		res.Parts = append(res.Parts, other.Parts...)
+	}
+	fmt.Println(f, other, res)
+	return res
 }
 
 func (f Funding) Total() uint64 {

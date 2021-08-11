@@ -114,8 +114,8 @@ func (m *Machine) tick() (bool, byte) {
 
 	if m.Debug {
 		fmt.Println("STATE ---------------------------------------------------------------------")
-		fmt.Printf("    %v\n", aurora.Red(m.Stack))
-		fmt.Printf("    %v\n", aurora.Blue(m.Balances))
+		fmt.Printf("    %v\n", aurora.Blue(m.Stack))
+		fmt.Printf("    %v\n", aurora.Cyan(m.Balances))
 		fmt.Printf("    %v\n", op)
 	}
 
@@ -173,17 +173,24 @@ func (m *Machine) tick() (bool, byte) {
 	case program.OP_TAKE_ALL:
 		asset := m.popAsset()
 		account := m.popAccount()
-		balance := m.Balances[string(account)][string(asset)]
-		m.Balances[string(account)][string(asset)] = 0
-		m.pushValue(core.Funding{
-			Asset: asset,
-			Parts: []core.FundingPart{
-				{
-					Amount:  balance,
-					Account: account,
+		if account == "world" {
+			m.pushValue(core.Funding{
+				Asset:    asset,
+				Infinite: true,
+			})
+		} else {
+			balance := m.Balances[string(account)][string(asset)]
+			m.Balances[string(account)][string(asset)] = 0
+			m.pushValue(core.Funding{
+				Asset: asset,
+				Parts: []core.FundingPart{
+					{
+						Amount:  balance,
+						Account: account,
+					},
 				},
-			},
-		})
+			})
+		}
 	case program.OP_TAKE:
 		mon := m.popMonetary()
 		funding := m.popFunding()
@@ -218,21 +225,21 @@ func (m *Machine) tick() (bool, byte) {
 			Parts: []core.FundingPart{},
 		}
 		n := len(allotment)
-		res_fundings_rev := make([]core.Funding, n)
-		for i, part := range parts {
+		res_fundings := make([]core.Funding, n)
+		for i := len(parts) - 1; i >= 0; i-- {
 			funding := m.popFunding()
 			if funding.Asset != mon.Asset {
 				return true, EXIT_FAIL_INVALID
 			}
-			res, rem, err := funding.Take(part)
+			res, rem, err := funding.Take(parts[i])
 			if err != nil {
 				return true, EXIT_FAIL_INSUFFICIENT_FUNDS
 			}
-			res_fundings_rev[i] = res
+			res_fundings[i] = res
 			m.repay(rem)
 		}
 		for i := 0; i < n; i++ {
-			result.Parts = append(result.Parts, res_fundings_rev[n-1-i].Parts...)
+			result.Parts = append(result.Parts, res_fundings[i].Parts...)
 		}
 		m.pushValue(result)
 	case program.OP_ASSEMBLE:
@@ -254,7 +261,7 @@ func (m *Machine) tick() (bool, byte) {
 			fundings_rev[i] = f
 		}
 		for i := 0; i < n; i++ {
-			result.Parts = append(result.Parts, fundings_rev[n-1-i].Parts...)
+			result = result.Concat(fundings_rev[n-1-i])
 		}
 		m.pushValue(result)
 	case program.OP_ALLOC:

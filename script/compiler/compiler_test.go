@@ -225,6 +225,7 @@ func TestAllocationFractions(t *testing.T) {
 				program.OP_APUSH, 01, 00,
 				program.OP_APUSH, 00, 00,
 				program.OP_ASSET,
+				program.OP_TAKE_ALL,
 				program.OP_APUSH, 00, 00,
 				program.OP_TAKE,
 				program.OP_APUSH, 02, 00,
@@ -268,6 +269,7 @@ func TestAllocationPercentages(t *testing.T) {
 				program.OP_APUSH, 01, 00,
 				program.OP_APUSH, 00, 00,
 				program.OP_ASSET,
+				program.OP_TAKE_ALL,
 				program.OP_APUSH, 00, 00,
 				program.OP_TAKE,
 				program.OP_APUSH, 02, 00,
@@ -314,6 +316,7 @@ func TestSend(t *testing.T) {
 				program.OP_APUSH, 01, 00,
 				program.OP_APUSH, 00, 00,
 				program.OP_ASSET,
+				program.OP_TAKE_ALL,
 				program.OP_APUSH, 00, 00,
 				program.OP_TAKE,
 				program.OP_APUSH, 02, 00,
@@ -429,6 +432,64 @@ func TestPreventTakeAllFromWorld(t *testing.T) {
 			Instructions: nil,
 			Resources:    nil,
 			Error:        "cannot",
+		},
+	})
+}
+
+func TestPreventAddToBottomlessSource(t *testing.T) {
+	test(t, TestCase{
+		Case: `send [GEM 1000] (
+			source = {
+				@a
+				@world
+				@c
+			}
+			destination = @out
+		)`,
+		Expected: CaseResult{
+			Instructions: nil,
+			Resources:    nil,
+			Error:        "world",
+		},
+	})
+}
+
+func TestPreventAddToBottomlessSource2(t *testing.T) {
+	test(t, TestCase{
+		Case: `send [GEM 1000] (
+			source = {
+				{
+					@a
+					@world
+				}
+				{
+					@b
+					@world
+				}
+			}
+			destination = @out
+		)`,
+		Expected: CaseResult{
+			Instructions: nil,
+			Resources:    nil,
+			Error:        "world",
+		},
+	})
+}
+
+func TestPreventTakeAllFromAllocation(t *testing.T) {
+	test(t, TestCase{
+		Case: `send [GEM *] (
+			source = {
+				50% from @a
+				50% from @b
+			}
+			destination = @out
+		)`,
+		Expected: CaseResult{
+			Instructions: nil,
+			Resources:    nil,
+			Error:        "all",
 		},
 	})
 }
