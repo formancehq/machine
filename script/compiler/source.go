@@ -66,6 +66,20 @@ func (p *parseVisitor) VisitSource(c parser.ISourceContext, push_asset func(), i
 			push_asset()
 			p.instructions = append(p.instructions, program.OP_TAKE_ALL)
 		}
+	case *parser.SrcMaxedContext:
+		accounts, _, err := p.VisitSource(c.SourceMaxed().GetSrc(), push_asset, false)
+		if err != nil {
+			return nil, false, err
+		}
+		ty, _, err := p.VisitExpr(c.SourceMaxed().GetMax(), true)
+		if err != nil {
+			return nil, false, err
+		}
+		if ty != core.TYPE_MONETARY {
+			return nil, false, LogicError(c, errors.New("wrong type: expected monetary as max"))
+		}
+		needed_accounts = append(needed_accounts, accounts...)
+		p.instructions = append(p.instructions, program.OP_TAKE_MAX)
 	case *parser.SrcInOrderContext:
 		sources := c.SourceInOrder().GetSources()
 		n := len(sources)

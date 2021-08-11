@@ -11,6 +11,7 @@ const (
 	OP_MAKE_ALLOTMENT // <portion>*N <int N> => <allotment(N)>
 	OP_TAKE_ALL       // <account> <asset> => <funding>
 	OP_TAKE           // <funding> <monetary> => <funding>
+	OP_TAKE_MAX       // <funding> <monetary> => <funding>
 	OP_TAKE_SPLIT     // <funding>*N <monetary> <allotment(N)> => <funding>*N
 	OP_ASSEMBLE       // <fundings>*N <int N> => <funding>
 	OP_ALLOC          // <funding> <allotment(N)> => <funding>*N

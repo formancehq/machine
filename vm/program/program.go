@@ -47,6 +47,8 @@ func (p Program) String() string {
 			out += "OP_TAKE_ALL\n"
 		case OP_TAKE:
 			out += "OP_TAKE\n"
+		case OP_TAKE_MAX:
+			out += "OP_TAKE_MAX\n"
 		case OP_TAKE_SPLIT:
 			out += "OP_TAKE_SPLIT\n"
 		case OP_ASSEMBLE:

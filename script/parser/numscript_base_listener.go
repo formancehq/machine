@@ -125,11 +125,23 @@ func (s *BaseNumScriptListener) EnterSourceInOrder(ctx *SourceInOrderContext) {}
 // ExitSourceInOrder is called when production sourceInOrder is exited.
 func (s *BaseNumScriptListener) ExitSourceInOrder(ctx *SourceInOrderContext) {}
 
+// EnterSourceMaxed is called when production sourceMaxed is entered.
+func (s *BaseNumScriptListener) EnterSourceMaxed(ctx *SourceMaxedContext) {}
+
+// ExitSourceMaxed is called when production sourceMaxed is exited.
+func (s *BaseNumScriptListener) ExitSourceMaxed(ctx *SourceMaxedContext) {}
+
 // EnterSrcAccount is called when production SrcAccount is entered.
 func (s *BaseNumScriptListener) EnterSrcAccount(ctx *SrcAccountContext) {}
 
 // ExitSrcAccount is called when production SrcAccount is exited.
 func (s *BaseNumScriptListener) ExitSrcAccount(ctx *SrcAccountContext) {}
+
+// EnterSrcMaxed is called when production SrcMaxed is entered.
+func (s *BaseNumScriptListener) EnterSrcMaxed(ctx *SrcMaxedContext) {}
+
+// ExitSrcMaxed is called when production SrcMaxed is exited.
+func (s *BaseNumScriptListener) ExitSrcMaxed(ctx *SrcMaxedContext) {}
 
 // EnterSrcInOrder is called when production SrcInOrder is entered.
 func (s *BaseNumScriptListener) EnterSrcInOrder(ctx *SrcInOrderContext) {}

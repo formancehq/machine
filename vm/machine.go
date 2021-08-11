@@ -14,6 +14,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/logrusorgru/aurora"
 	ledger "github.com/numary/ledger/core"
 	"github.com/numary/machine/core"
 	"github.com/numary/machine/vm/program"
@@ -113,8 +114,8 @@ func (m *Machine) tick() (bool, byte) {
 
 	if m.Debug {
 		fmt.Println("STATE ---------------------------------------------------------------------")
-		fmt.Printf("    %v\n", m.Stack)
-		fmt.Printf("    %v\n", m.Balances)
+		fmt.Printf("    %v\n", aurora.Red(m.Stack))
+		fmt.Printf("    %v\n", aurora.Blue(m.Balances))
 		fmt.Printf("    %v\n", op)
 	}
 
@@ -195,6 +196,19 @@ func (m *Machine) tick() (bool, byte) {
 		}
 		m.repay(remainder)
 		m.pushValue(result)
+	case program.OP_TAKE_MAX:
+		mon := m.popMonetary()
+		funding := m.popFunding()
+		if funding.Asset != mon.Asset {
+			return true, EXIT_FAIL_INVALID
+		}
+		result, remainder, err := funding.Take(mon.Amount)
+		if err != nil {
+			return true, EXIT_FAIL_INSUFFICIENT_FUNDS
+		}
+		m.repay(remainder)
+		m.pushValue(result)
+
 	case program.OP_TAKE_SPLIT:
 		mon := m.popMonetary()
 		allotment := m.popAllotment()

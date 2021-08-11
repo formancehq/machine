@@ -59,8 +59,14 @@ type NumScriptListener interface {
 	// EnterSourceInOrder is called when entering the sourceInOrder production.
 	EnterSourceInOrder(c *SourceInOrderContext)
 
+	// EnterSourceMaxed is called when entering the sourceMaxed production.
+	EnterSourceMaxed(c *SourceMaxedContext)
+
 	// EnterSrcAccount is called when entering the SrcAccount production.
 	EnterSrcAccount(c *SrcAccountContext)
+
+	// EnterSrcMaxed is called when entering the SrcMaxed production.
+	EnterSrcMaxed(c *SrcMaxedContext)
 
 	// EnterSrcInOrder is called when entering the SrcInOrder production.
 	EnterSrcInOrder(c *SrcInOrderContext)
@@ -149,8 +155,14 @@ type NumScriptListener interface {
 	// ExitSourceInOrder is called when exiting the sourceInOrder production.
 	ExitSourceInOrder(c *SourceInOrderContext)
 
+	// ExitSourceMaxed is called when exiting the sourceMaxed production.
+	ExitSourceMaxed(c *SourceMaxedContext)
+
 	// ExitSrcAccount is called when exiting the SrcAccount production.
 	ExitSrcAccount(c *SrcAccountContext)
+
+	// ExitSrcMaxed is called when exiting the SrcMaxed production.
+	ExitSrcMaxed(c *SrcMaxedContext)
 
 	// ExitSrcInOrder is called when exiting the SrcInOrder production.
 	ExitSrcInOrder(c *SrcInOrderContext)

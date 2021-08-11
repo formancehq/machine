@@ -70,8 +70,10 @@ destination
   ;
 
 sourceInOrder: LBRACE NEWLINE (sources+=source NEWLINE)+ RBRACE;
+sourceMaxed: 'max' max=expression 'from' src=source;
 source
   : expression # SrcAccount
+  | sourceMaxed # SrcMaxed
   | sourceInOrder # SrcInOrder
   ;
 
