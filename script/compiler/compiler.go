@@ -196,7 +196,7 @@ func (p *parseVisitor) VisitSend(c *parser.SendContext) *CompileError {
 			return LogicError(c, err)
 		}
 		asset_addr = *addr
-		accounts, cerr := p.VisitSource(c.GetSrc(), func() {
+		accounts, cerr := p.VisitValueAwareSource(c.GetSrc(), func() {
 			p.PushAddress(*addr)
 		}, nil)
 		if cerr != nil {
@@ -213,7 +213,7 @@ func (p *parseVisitor) VisitSend(c *parser.SendContext) *CompileError {
 			return LogicError(c, errors.New("wrong type for monetary value"))
 		}
 		asset_addr = *mon_addr
-		accounts, err := p.VisitSource(c.GetSrc(), func() {
+		accounts, err := p.VisitValueAwareSource(c.GetSrc(), func() {
 			p.PushAddress(*mon_addr)
 			p.instructions = append(p.instructions, program.OP_ASSET)
 		}, mon_addr)

@@ -11,8 +11,9 @@ type FundingPart struct {
 }
 
 type Funding struct {
-	Asset Asset
-	Parts []FundingPart
+	Asset    Asset
+	Parts    []FundingPart
+	Infinite bool
 }
 
 func (lhs *Funding) Equals(rhs *Funding) bool {

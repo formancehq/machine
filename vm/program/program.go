@@ -43,10 +43,8 @@ func (p Program) String() string {
 			out += "OP_ALLOC\n"
 		case OP_MAKE_ALLOTMENT:
 			out += "OP_MAKE_ALLOTMENT\n"
-		case OP_TAKE_ACC:
-			out += "OP_TAKE_ACC\n"
-		case OP_TAKE_ACC_ALL:
-			out += "OP_TAKE_ACC_ALL\n"
+		case OP_TAKE_ALL:
+			out += "OP_TAKE_ALL\n"
 		case OP_TAKE:
 			out += "OP_TAKE\n"
 		case OP_TAKE_SPLIT:

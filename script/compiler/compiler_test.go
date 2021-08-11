@@ -224,7 +224,9 @@ func TestAllocationFractions(t *testing.T) {
 			Instructions: []byte{
 				program.OP_APUSH, 01, 00,
 				program.OP_APUSH, 00, 00,
-				program.OP_TAKE_ACC,
+				program.OP_ASSET,
+				program.OP_APUSH, 00, 00,
+				program.OP_TAKE,
 				program.OP_APUSH, 02, 00,
 				program.OP_APUSH, 03, 00,
 				program.OP_IPUSH, 02, 00, 00, 00, 00, 00, 00, 00,
@@ -265,7 +267,9 @@ func TestAllocationPercentages(t *testing.T) {
 			Instructions: []byte{
 				program.OP_APUSH, 01, 00,
 				program.OP_APUSH, 00, 00,
-				program.OP_TAKE_ACC,
+				program.OP_ASSET,
+				program.OP_APUSH, 00, 00,
+				program.OP_TAKE,
 				program.OP_APUSH, 02, 00,
 				program.OP_APUSH, 03, 00,
 				program.OP_APUSH, 04, 00,
@@ -309,7 +313,9 @@ func TestSend(t *testing.T) {
 			Instructions: []byte{
 				program.OP_APUSH, 01, 00,
 				program.OP_APUSH, 00, 00,
-				program.OP_TAKE_ACC,
+				program.OP_ASSET,
+				program.OP_APUSH, 00, 00,
+				program.OP_TAKE,
 				program.OP_APUSH, 02, 00,
 				program.OP_SEND,
 			}, Resources: []program.Resource{
@@ -331,7 +337,7 @@ func TestSendAll(t *testing.T) {
 			Instructions: []byte{
 				program.OP_APUSH, 01, 00,
 				program.OP_APUSH, 00, 00,
-				program.OP_TAKE_ACC_ALL,
+				program.OP_TAKE_ALL,
 				program.OP_APUSH, 02, 00,
 				program.OP_SEND,
 			}, Resources: []program.Resource{
@@ -362,7 +368,10 @@ func TestMetadata(t *testing.T) {
 			Instructions: []byte{
 				program.OP_APUSH, 00, 00,
 				program.OP_APUSH, 03, 00,
-				program.OP_TAKE_ACC,
+				program.OP_ASSET,
+				program.OP_TAKE_ALL,
+				program.OP_APUSH, 03, 00,
+				program.OP_TAKE,
 				program.OP_APUSH, 02, 00,
 				program.OP_APUSH, 04, 00,
 				program.OP_IPUSH, 02, 00, 00, 00, 00, 00, 00, 00,

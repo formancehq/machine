@@ -56,17 +56,20 @@ type NumScriptListener interface {
 	// EnterDestAllotment is called when entering the DestAllotment production.
 	EnterDestAllotment(c *DestAllotmentContext)
 
-	// EnterSourceBlock is called when entering the sourceBlock production.
-	EnterSourceBlock(c *SourceBlockContext)
-
-	// EnterSourceAllotment is called when entering the sourceAllotment production.
-	EnterSourceAllotment(c *SourceAllotmentContext)
+	// EnterSourceInOrder is called when entering the sourceInOrder production.
+	EnterSourceInOrder(c *SourceInOrderContext)
 
 	// EnterSrcAccount is called when entering the SrcAccount production.
 	EnterSrcAccount(c *SrcAccountContext)
 
-	// EnterSrcBlock is called when entering the SrcBlock production.
-	EnterSrcBlock(c *SrcBlockContext)
+	// EnterSrcInOrder is called when entering the SrcInOrder production.
+	EnterSrcInOrder(c *SrcInOrderContext)
+
+	// EnterSourceAllotment is called when entering the sourceAllotment production.
+	EnterSourceAllotment(c *SourceAllotmentContext)
+
+	// EnterSrc is called when entering the Src production.
+	EnterSrc(c *SrcContext)
 
 	// EnterSrcAllotment is called when entering the SrcAllotment production.
 	EnterSrcAllotment(c *SrcAllotmentContext)
@@ -143,17 +146,20 @@ type NumScriptListener interface {
 	// ExitDestAllotment is called when exiting the DestAllotment production.
 	ExitDestAllotment(c *DestAllotmentContext)
 
-	// ExitSourceBlock is called when exiting the sourceBlock production.
-	ExitSourceBlock(c *SourceBlockContext)
-
-	// ExitSourceAllotment is called when exiting the sourceAllotment production.
-	ExitSourceAllotment(c *SourceAllotmentContext)
+	// ExitSourceInOrder is called when exiting the sourceInOrder production.
+	ExitSourceInOrder(c *SourceInOrderContext)
 
 	// ExitSrcAccount is called when exiting the SrcAccount production.
 	ExitSrcAccount(c *SrcAccountContext)
 
-	// ExitSrcBlock is called when exiting the SrcBlock production.
-	ExitSrcBlock(c *SrcBlockContext)
+	// ExitSrcInOrder is called when exiting the SrcInOrder production.
+	ExitSrcInOrder(c *SrcInOrderContext)
+
+	// ExitSourceAllotment is called when exiting the sourceAllotment production.
+	ExitSourceAllotment(c *SourceAllotmentContext)
+
+	// ExitSrc is called when exiting the Src production.
+	ExitSrc(c *SrcContext)
 
 	// ExitSrcAllotment is called when exiting the SrcAllotment production.
 	ExitSrcAllotment(c *SrcAllotmentContext)

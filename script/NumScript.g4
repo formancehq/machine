@@ -69,20 +69,24 @@ destination
   | destinationAllotment # DestAllotment
   ;
 
-sourceBlock: LBRACE NEWLINE (sources+=expression NEWLINE)+ RBRACE;
-sourceAllotment: LBRACE NEWLINE (portions+=allotmentPortion 'from' srcs+=expression NEWLINE)+ RBRACE;
+sourceInOrder: LBRACE NEWLINE (sources+=source NEWLINE)+ RBRACE;
 source
   : expression # SrcAccount
-  | sourceBlock # SrcBlock
-  | sourceAllotment #SrcAllotment
+  | sourceInOrder # SrcInOrder
+  ;
+
+sourceAllotment: LBRACE NEWLINE (portions+=allotmentPortion 'from' sources+=source NEWLINE)+ RBRACE;
+valueAwareSource
+  : source # Src
+  | sourceAllotment # SrcAllotment
   ;
 
 statement
   : PRINT expr=expression # Print
   | FAIL # Fail
   | SEND (mon=expression | monAll=monetaryAll) LPAREN NEWLINE
-      ( SOURCE '=' src=source NEWLINE DESTINATION '=' dest=destination
-      | DESTINATION '=' dest=destination NEWLINE SOURCE '=' src=source) NEWLINE RPAREN # Send
+      ( SOURCE '=' src=valueAwareSource NEWLINE DESTINATION '=' dest=destination
+      | DESTINATION '=' dest=destination NEWLINE SOURCE '=' src=valueAwareSource) NEWLINE RPAREN # Send
   ;
 
 type_: TY_ACCOUNT | TY_ASSET | TY_NUMBER | TY_MONETARY | TY_PORTION;

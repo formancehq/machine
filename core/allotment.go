@@ -43,11 +43,14 @@ func NewAllotment(portions []Portion) (*Allotment, error) {
 }
 
 func (a Allotment) String() string {
-	out := "{\n"
-	for _, ratio := range a {
-		out += fmt.Sprintf("	%v\n", &ratio)
+	out := "{ "
+	for i, ratio := range a {
+		out += fmt.Sprintf("%v", &ratio)
+		if i != len(a)-1 {
+			out += " : "
+		}
 	}
-	return out + "}"
+	return out + " }"
 }
 
 func (a Allotment) Allocate(amount uint64) []uint64 {

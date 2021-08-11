@@ -169,22 +169,7 @@ func (m *Machine) tick() (bool, byte) {
 			return true, EXIT_FAIL_INVALID
 		}
 		m.pushValue(*allotment)
-	case program.OP_TAKE_ACC:
-		mon := m.popMonetary()
-		account := m.popAccount()
-		if !m.withdraw(account, mon.Asset, mon.Amount) {
-			return true, EXIT_FAIL_INSUFFICIENT_FUNDS
-		}
-		m.pushValue(core.Funding{
-			Asset: mon.Asset,
-			Parts: []core.FundingPart{
-				{
-					Amount:  mon.Amount,
-					Account: account,
-				},
-			},
-		})
-	case program.OP_TAKE_ACC_ALL:
+	case program.OP_TAKE_ALL:
 		asset := m.popAsset()
 		account := m.popAccount()
 		balance := m.Balances[string(account)][string(asset)]
@@ -216,8 +201,11 @@ func (m *Machine) tick() (bool, byte) {
 		parts := allotment.Allocate(mon.Amount)
 		result := core.Funding{
 			Asset: mon.Asset,
+			Parts: []core.FundingPart{},
 		}
-		for _, part := range parts {
+		n := len(allotment)
+		res_fundings_rev := make([]core.Funding, n)
+		for i, part := range parts {
 			funding := m.popFunding()
 			if funding.Asset != mon.Asset {
 				return true, EXIT_FAIL_INVALID
@@ -226,12 +214,15 @@ func (m *Machine) tick() (bool, byte) {
 			if err != nil {
 				return true, EXIT_FAIL_INSUFFICIENT_FUNDS
 			}
-			result.Parts = append(result.Parts, res.Parts...)
+			res_fundings_rev[i] = res
 			m.repay(rem)
+		}
+		for i := 0; i < n; i++ {
+			result.Parts = append(result.Parts, res_fundings_rev[n-1-i].Parts...)
 		}
 		m.pushValue(result)
 	case program.OP_ASSEMBLE:
-		n := m.popNumber()
+		n := int(m.popNumber())
 		if n == 0 {
 			return true, EXIT_FAIL_INVALID
 		}
@@ -239,17 +230,17 @@ func (m *Machine) tick() (bool, byte) {
 		result := core.Funding{
 			Asset: first.Asset,
 		}
-		parts := first.Parts
-		for i := uint64(0); i < n-1; i++ {
+		fundings_rev := make([]core.Funding, n)
+		fundings_rev[0] = first
+		for i := 1; i < n; i++ {
 			f := m.popFunding()
 			if f.Asset != result.Asset {
 				return true, EXIT_FAIL_INVALID
 			}
-			parts = append(parts, f.Parts...)
+			fundings_rev[i] = f
 		}
-		result.Parts = make([]core.FundingPart, len(parts))
-		for i := 0; i < len(parts); i++ {
-			result.Parts[i] = parts[len(parts)-1-i]
+		for i := 0; i < n; i++ {
+			result.Parts = append(result.Parts, fundings_rev[n-1-i].Parts...)
 		}
 		m.pushValue(result)
 	case program.OP_ALLOC:
@@ -291,6 +282,8 @@ func (m *Machine) tick() (bool, byte) {
 				Amount:      int64(amt),
 			})
 		}
+	default:
+		return true, EXIT_FAIL_INVALID
 	}
 
 	m.P += 1
