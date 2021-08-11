@@ -13,6 +13,10 @@ import (
 	"github.com/numary/machine/script/compiler"
 )
 
+const (
+	DEBUG bool = false
+)
+
 type CaseResult struct {
 	Printed  []core.Value
 	Postings []ledger.Posting
@@ -143,7 +147,7 @@ func testimpl(t *testing.T, code string, expected CaseResult, exec func(*Machine
 	wg.Add(1)
 
 	machine := NewMachine(p)
-	// machine.Debug = true
+	machine.Debug = DEBUG
 	machine.Printer = func(c chan core.Value) {
 		for v := range c {
 			printed = append(printed, v)
@@ -169,6 +173,9 @@ func testimpl(t *testing.T, code string, expected CaseResult, exec func(*Machine
 
 	if exit_code != expected.ExitCode {
 		t.Error(fmt.Errorf("unexpected exit code: %v", exit_code))
+		return
+	}
+	if exit_code != EXIT_OK {
 		return
 	}
 
@@ -628,8 +635,7 @@ func TestWorldSource(t *testing.T) {
 					Destination: "b",
 				},
 			},
-			ExitCode: 1,
-			Error:    "",
+			ExitCode: EXIT_OK,
 		},
 	)
 }
@@ -656,8 +662,7 @@ func TestNoEmptyPostings(t *testing.T) {
 					Destination: "a",
 				},
 			},
-			ExitCode: 1,
-			Error:    "",
+			ExitCode: EXIT_OK,
 		},
 	)
 }
@@ -678,8 +683,7 @@ func TestNoEmptyPostings2(t *testing.T) {
 		CaseResult{
 			Printed:  []core.Value{},
 			Postings: []ledger.Posting{},
-			ExitCode: 1,
-			Error:    "",
+			ExitCode: EXIT_OK,
 		},
 	)
 }
@@ -722,8 +726,7 @@ func TestAllocateDontTakeTooMuch(t *testing.T) {
 					Destination: "bar",
 				},
 			},
-			ExitCode: 1,
-			Error:    "",
+			ExitCode: EXIT_OK,
 		},
 	)
 }
@@ -778,8 +781,7 @@ func TestMetadata(t *testing.T) {
 					Destination: "platform",
 				},
 			},
-			ExitCode: 1,
-			Error:    "",
+			ExitCode: EXIT_OK,
 		},
 	)
 }
@@ -818,8 +820,33 @@ func TestTrackBalances(t *testing.T) {
 					Destination: "b",
 				},
 			},
-			ExitCode: 1,
-			Error:    "",
+			ExitCode: EXIT_OK,
+		},
+	)
+}
+
+func TestTrackBalances2(t *testing.T) {
+	testJSON(t,
+		`
+		send [COIN 50] (
+			source = @a
+			destination = @z
+		)
+		send [COIN 50] (
+			source = @a
+			destination = @z
+		)`,
+		`{}`,
+		map[string]map[string]core.Value{},
+		map[string]map[string]uint64{
+			"a": {
+				"COIN": 60,
+			},
+		},
+		CaseResult{
+			Printed:  []core.Value{},
+			Postings: []ledger.Posting{},
+			ExitCode: EXIT_FAIL_INSUFFICIENT_FUNDS,
 		},
 	)
 }
@@ -871,8 +898,7 @@ func TestSourceAllotment(t *testing.T) {
 					Destination: "d",
 				},
 			},
-			ExitCode: 1,
-			Error:    "",
+			ExitCode: EXIT_OK,
 		},
 	)
 }
@@ -944,8 +970,7 @@ func TestSourceComplex(t *testing.T) {
 					Destination: "platform",
 				},
 			},
-			ExitCode: 1,
-			Error:    "",
+			ExitCode: EXIT_OK,
 		},
 	)
 }

@@ -71,20 +71,26 @@ func (m *Machine) getResource(addr core.Address) (*core.Value, bool) {
 	return &m.Resources[a], true
 }
 
-func (m *Machine) withdraw(account core.Account, asset core.Asset, amount uint64) bool {
+func (m *Machine) withdrawAll(account core.Account, asset core.Asset) (*core.Funding, error) {
 	if account == "world" {
-		return true
+		return &core.Funding{
+			Asset:    asset,
+			Infinite: true,
+		}, nil
 	}
-	withdraw_ok := false
 	if acc_balance, ok := m.Balances[string(account)]; ok {
 		if balance, ok := acc_balance[string(asset)]; ok {
-			if balance >= amount {
-				acc_balance[string(asset)] -= amount
-				withdraw_ok = true
-			}
+			acc_balance[string(asset)] = 0
+			return &core.Funding{
+				Asset: asset,
+				Parts: []core.FundingPart{{
+					Account: account,
+					Amount:  balance,
+				}},
+			}, nil
 		}
 	}
-	return withdraw_ok
+	return nil, fmt.Errorf("missing %v balance from %v", asset, account)
 }
 
 func (m *Machine) credit(account core.Account, funding core.Funding) {
@@ -179,17 +185,11 @@ func (m *Machine) tick() (bool, byte) {
 				Infinite: true,
 			})
 		} else {
-			balance := m.Balances[string(account)][string(asset)]
-			m.Balances[string(account)][string(asset)] = 0
-			m.pushValue(core.Funding{
-				Asset: asset,
-				Parts: []core.FundingPart{
-					{
-						Amount:  balance,
-						Account: account,
-					},
-				},
-			})
+			funding, err := m.withdrawAll(account, asset)
+			if err != nil {
+				return true, EXIT_FAIL_INVALID
+			}
+			m.pushValue(*funding)
 		}
 	case program.OP_TAKE:
 		mon := m.popMonetary()

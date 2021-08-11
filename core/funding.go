@@ -129,6 +129,12 @@ func (f Funding) TakeMax(amount uint64) (Funding, Funding) {
 	if f.Infinite {
 		remainder.Infinite = true
 	}
+	if remaining_to_withdraw != 0 && f.Infinite {
+		result.Parts = append(result.Parts, FundingPart{
+			Account: "world",
+			Amount:  remaining_to_withdraw,
+		})
+	}
 	return result, remainder
 }
 
@@ -141,7 +147,6 @@ func (f Funding) Concat(other Funding) Funding {
 	if !f.Infinite {
 		res.Parts = append(res.Parts, other.Parts...)
 	}
-	fmt.Println(f, other, res)
 	return res
 }
 
