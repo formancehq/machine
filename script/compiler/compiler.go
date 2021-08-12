@@ -188,7 +188,7 @@ func (p *parseVisitor) VisitLit(c parser.ILiteralContext, push bool) (core.Type,
 // send statement
 func (p *parseVisitor) VisitSend(c *parser.SendContext) *CompileError {
 	var asset_addr core.Address
-	var needed_accounts []core.Address
+	var needed_accounts map[core.Address]struct{}
 	if mon := c.GetMonAll(); mon != nil {
 		asset := core.Asset(mon.GetAsset().GetText())
 		addr, err := p.AllocateResource(program.Constant{Inner: asset})
@@ -223,7 +223,7 @@ func (p *parseVisitor) VisitSend(c *parser.SendContext) *CompileError {
 		needed_accounts = accounts
 	}
 	// add source accounts to the needed balances
-	for _, acc := range needed_accounts {
+	for acc := range needed_accounts {
 		if b, ok := p.needed_balances[acc]; ok {
 			b[asset_addr] = struct{}{}
 		} else {

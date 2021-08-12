@@ -477,6 +477,26 @@ func TestPreventAddToBottomlessSource2(t *testing.T) {
 	})
 }
 
+func TestPreventSourceAlreadyEmptied(t *testing.T) {
+	test(t, TestCase{
+		Case: `send [GEM 1000] (
+			source = {
+				{
+					@a
+					@world
+				}
+				@a
+			}
+			destination = @out
+		)`,
+		Expected: CaseResult{
+			Instructions: nil,
+			Resources:    nil,
+			Error:        "@a",
+		},
+	})
+}
+
 func TestPreventTakeAllFromAllocation(t *testing.T) {
 	test(t, TestCase{
 		Case: `send [GEM *] (
