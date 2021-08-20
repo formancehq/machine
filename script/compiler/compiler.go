@@ -50,7 +50,7 @@ func (p *parseVisitor) AllocateResource(res program.Resource) (*core.Address, er
 	return &addr, nil
 }
 
-func (p *parseVisitor) PushAddress(addr *core.Address) {
+func (p *parseVisitor) PushAddress(addr core.Address) {
 	p.instructions = append(p.instructions, program.OP_APUSH)
 	bytes := addr.ToBytes()
 	p.instructions = append(p.instructions, bytes...)
@@ -61,18 +61,6 @@ func (p *parseVisitor) PushInteger(val core.Number) {
 	bytes := make([]byte, 8)
 	binary.LittleEndian.PutUint64(bytes, uint64(val))
 	p.instructions = append(p.instructions, bytes...)
-}
-
-func (p *parseVisitor) isMonetaryAll(addr core.Address) bool {
-	idx := int(addr)
-	if idx < len(p.resources) {
-		if c, ok := p.resources[idx].(program.Constant); ok {
-			if mon, ok := c.Inner.(core.Monetary); ok {
-				return mon.Amount.All
-			}
-		}
-	}
-	return false
 }
 
 func (p *parseVisitor) isWorld(addr core.Address) bool {
@@ -154,7 +142,7 @@ func (p *parseVisitor) VisitLit(c parser.ILiteralContext, push bool) (core.Type,
 			return 0, nil, LogicError(c, err)
 		}
 		if push {
-			p.PushAddress(addr)
+			p.PushAddress(*addr)
 		}
 		return core.TYPE_ACCOUNT, addr, nil
 	case *parser.LitAssetContext:
@@ -176,27 +164,20 @@ func (p *parseVisitor) VisitLit(c parser.ILiteralContext, push bool) (core.Type,
 		return core.TYPE_NUMBER, nil, nil
 	case *parser.LitMonetaryContext:
 		asset := c.Monetary().GetAsset().GetText()
-		var amount core.Amount
-		switch c := c.Monetary().GetAmt().(type) {
-		case *parser.AmountAllContext:
-			amount = core.NewAmountAll()
-		case *parser.AmountSpecificContext:
-			a, err := strconv.ParseUint(c.GetText(), 10, 64)
-			if err != nil {
-				return 0, nil, LogicError(c, err)
-			}
-			amount = core.NewAmountSpecific(a)
+		amt, err := strconv.ParseUint(c.Monetary().GetAmt().GetText(), 10, 64)
+		if err != nil {
+			return 0, nil, LogicError(c, err)
 		}
 		monetary := core.Monetary{
 			Asset:  core.Asset(asset),
-			Amount: amount,
+			Amount: amt,
 		}
 		addr, err := p.AllocateResource(program.Constant{Inner: monetary})
 		if err != nil {
 			return 0, nil, LogicError(c, err)
 		}
 		if push {
-			p.PushAddress(addr)
+			p.PushAddress(*addr)
 		}
 		return core.TYPE_MONETARY, addr, nil
 	default:
@@ -204,70 +185,54 @@ func (p *parseVisitor) VisitLit(c parser.ILiteralContext, push bool) (core.Type,
 	}
 }
 
-// Returns the resource addresses of all the accounts,
-// and true if the source is bottomless (contains @world)
-func (p *parseVisitor) VisitSource(c parser.ISourceContext) ([]core.Address, bool, *CompileError) {
-	needed_accounts := []core.Address{}
-	bottomless := false
-	switch c := c.(type) {
-	case *parser.SrcAccountContext:
-		ty, addr, err := p.VisitExpr(c.Expression(), true)
-		if err != nil {
-			return nil, false, err
-		}
-		if ty != core.TYPE_ACCOUNT {
-			return nil, false, LogicError(c, errors.New("wrong type: expected account or allocation as destination"))
-		}
-		bottomless = bottomless || p.isWorld(*addr)
-		needed_accounts = append(needed_accounts, *addr)
-		p.PushInteger(core.Number(1))
-	case *parser.SrcBlockContext:
-		sources := c.SourceBlock().GetSources()
-		n := len(sources)
-		for i := n - 1; i >= 0; i-- {
-			ty, addr, err := p.VisitExpr(sources[i], true)
-			if err != nil {
-				return nil, false, err
-			}
-			if ty != core.TYPE_ACCOUNT {
-				return nil, false, LogicError(c, errors.New("wrong type: expected only accounts in sources"))
-			}
-			bottomless = bottomless || p.isWorld(*addr)
-			needed_accounts = append(needed_accounts, *addr)
-		}
-		p.PushInteger(core.Number(len(c.SourceBlock().GetSources())))
-		p.instructions = append(p.instructions, program.OP_SOURCE)
-	}
-	return needed_accounts, bottomless, nil
-}
-
 // send statement
 func (p *parseVisitor) VisitSend(c *parser.SendContext) *CompileError {
-	ty, mon_addr, err := p.VisitExpr(c.GetMon(), true)
-	if err != nil {
-		return err
+	var asset_addr core.Address
+	var needed_accounts map[core.Address]struct{}
+	if mon := c.GetMonAll(); mon != nil {
+		asset := core.Asset(mon.GetAsset().GetText())
+		addr, err := p.AllocateResource(program.Constant{Inner: asset})
+		if err != nil {
+			return LogicError(c, err)
+		}
+		asset_addr = *addr
+		accounts, cerr := p.VisitValueAwareSource(c.GetSrc(), func() {
+			p.PushAddress(*addr)
+		}, nil)
+		if cerr != nil {
+			return cerr
+		}
+		needed_accounts = accounts
 	}
-	if ty != core.TYPE_MONETARY {
-		return LogicError(c, errors.New("wrong type for monetary value"))
-	}
-	needed_accounts, bottomless, err := p.VisitSource(c.GetSrc())
-	if err != nil {
-		return err
-	}
-	if p.isMonetaryAll(*mon_addr) && bottomless {
-		return LogicError(c, errors.New("cannot take all balance of world"))
+	if mon := c.GetMon(); mon != nil {
+		ty, mon_addr, err := p.VisitExpr(c.GetMon(), false)
+		if err != nil {
+			return err
+		}
+		if ty != core.TYPE_MONETARY {
+			return LogicError(c, errors.New("wrong type for monetary value"))
+		}
+		asset_addr = *mon_addr
+		accounts, err := p.VisitValueAwareSource(c.GetSrc(), func() {
+			p.PushAddress(*mon_addr)
+			p.instructions = append(p.instructions, program.OP_ASSET)
+		}, mon_addr)
+		if err != nil {
+			return err
+		}
+		needed_accounts = accounts
 	}
 	// add source accounts to the needed balances
-	for _, acc := range needed_accounts {
+	for acc := range needed_accounts {
 		if b, ok := p.needed_balances[acc]; ok {
-			b[*mon_addr] = struct{}{}
+			b[asset_addr] = struct{}{}
 		} else {
 			p.needed_balances[acc] = map[core.Address]struct{}{
-				*mon_addr: {},
+				asset_addr: {},
 			}
 		}
 	}
-	err = p.VisitAllocation(c.GetDest())
+	err := p.VisitDestination(c.GetDest())
 	if err != nil {
 		return err
 	}

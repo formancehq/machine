@@ -22,7 +22,8 @@ type CompileErrorList struct {
 
 func (c *CompileErrorList) Error() string {
 	source := strings.ReplaceAll(c.source, "\t", " ")
-	lines := strings.Split(strings.ReplaceAll(source, "\r\n", "\n"), "\n")
+	lines := strings.SplitAfter(strings.ReplaceAll(source, "\r\n", "\n"), "\n")
+	lines[len(lines)-1] += "\n"
 
 	txt_bar_good := aurora.Blue("|")
 
@@ -53,7 +54,7 @@ func (c *CompileErrorList) Error() string {
 				line = line[:idx]
 			}
 			s += aurora.Red(fmt.Sprintf("%0*d | ", ln_pad, l)).String()
-			s += fmt.Sprintf("%v%v%v\n", aurora.BrightBlack(before), line, aurora.BrightBlack(after))
+			s += fmt.Sprintf("%v%v%v", aurora.BrightBlack(before), line, aurora.BrightBlack(after))
 		}
 		// message
 		start := strings.IndexFunc(lines[e.endl-1], func(r rune) bool {
@@ -63,6 +64,9 @@ func (c *CompileErrorList) Error() string {
 		if e.startl == e.endl {
 			start = e.startc
 			span = e.endc - e.startc
+		}
+		if span == 0 {
+			span = 1
 		}
 		s += fmt.Sprintf("%v %v %v%v %v\n", strings.Repeat(" ", ln_pad), txt_bar_good, strings.Repeat(" ", start), aurora.Red(strings.Repeat("^", span)), e.msg)
 	}
@@ -92,6 +96,10 @@ func (l *ErrorListener) SyntaxError(recognizer antlr.Recognizer, offendingSymbol
 
 func LogicError(c antlr.ParserRuleContext, err error) *CompileError {
 	endc := c.GetStop().GetColumn() + len(c.GetStop().GetText())
+	// fmt.Println(c.GetStart().GetLine(),
+	// 	c.GetStart().GetColumn(),
+	// 	c.GetStop().GetLine(),
+	// 	endc)
 	return &CompileError{
 		startl: c.GetStart().GetLine(),
 		startc: c.GetStart().GetColumn(),

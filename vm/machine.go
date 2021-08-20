@@ -2,9 +2,8 @@
 	Provides `Machine`, which executes programs and outputs postings.
 	1: Create New Machine
 	2: Set Variables (with `core.Value`s or JSON)
-	3: Resolve Resources (listen for requests on channel and provide metadata)
-	4: Get Needed Balances
-	5: Set Balances of needed
+	3: Resolve Resources (answer requests on channel)
+	4: Resolve Balances (answer requests on channel)
 	6: Execute
 */
 package vm
@@ -14,8 +13,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math/big"
 
+	"github.com/logrusorgru/aurora"
 	ledger "github.com/numary/ledger/core"
 	"github.com/numary/machine/core"
 	"github.com/numary/machine/vm/program"
@@ -24,6 +23,8 @@ import (
 const (
 	EXIT_OK = byte(iota + 1)
 	EXIT_FAIL
+	EXIT_FAIL_INVALID
+	EXIT_FAIL_INSUFFICIENT_FUNDS
 )
 
 func StdOutPrinter(c chan core.Value) {
@@ -59,6 +60,7 @@ type Machine struct {
 	Postings            []ledger.Posting // accumulates postings throughout execution
 	Printer             func(chan core.Value)
 	print_chan          chan core.Value
+	Debug               bool
 }
 
 func (m *Machine) getResource(addr core.Address) (*core.Value, bool) {
@@ -69,67 +71,59 @@ func (m *Machine) getResource(addr core.Address) (*core.Value, bool) {
 	return &m.Resources[a], true
 }
 
-func (m *Machine) getBalance(account core.Account, asset core.Asset) (uint64, error) {
+func (m *Machine) withdrawAll(account core.Account, asset core.Asset) (*core.Funding, error) {
 	if account == "world" {
-		return 0, errors.New("tried to use balance of world")
+		return &core.Funding{
+			Asset:    asset,
+			Infinite: true,
+		}, nil
 	}
 	if acc_balance, ok := m.Balances[string(account)]; ok {
 		if balance, ok := acc_balance[string(asset)]; ok {
-			return balance, nil
-		} else {
-			return 0, fmt.Errorf("missing %v balance of %v", asset, account)
+			acc_balance[string(asset)] = 0
+			return &core.Funding{
+				Asset: asset,
+				Parts: []core.FundingPart{{
+					Account: account,
+					Amount:  balance,
+				}},
+			}, nil
 		}
-	} else {
-		return 0, fmt.Errorf("missing balance of %v", account)
 	}
+	return nil, fmt.Errorf("missing %v balance from %v", asset, account)
 }
 
-func (m *Machine) withdraw(account core.Account, asset core.Asset, amount uint64) bool {
+func (m *Machine) credit(account core.Account, funding core.Funding) {
 	if account == "world" {
-		return true
+		return
 	}
-	withdraw_ok := false
 	if acc_balance, ok := m.Balances[string(account)]; ok {
-		if balance, ok := acc_balance[string(asset)]; ok {
-			if balance >= amount {
-				acc_balance[string(asset)] -= amount
-				withdraw_ok = true
+		if _, ok := acc_balance[string(funding.Asset)]; ok {
+			for _, part := range funding.Parts {
+				acc_balance[string(funding.Asset)] += part.Amount
 			}
 		}
 	}
-	return withdraw_ok
 }
 
-func (m *Machine) credit(account core.Account, asset core.Asset, amount uint64) {
-	if acc_balance, ok := m.Balances[string(account)]; ok {
-		if _, ok := acc_balance[string(asset)]; ok {
-			acc_balance[string(asset)] += amount
-		} else {
-			acc_balance[string(asset)] = amount
+func (m *Machine) repay(funding core.Funding) {
+	for _, part := range funding.Parts {
+		if part.Account == "world" {
+			continue
 		}
-	} else {
-		m.Balances[string(account)] = map[string]uint64{
-			string(asset): amount,
-		}
+		m.Balances[string(part.Account)][string(funding.Asset)] += part.Amount
 	}
-}
-
-func (m *Machine) resolveMonetary(account core.Account, mon core.Monetary) (uint64, error) {
-	var res uint64
-	if mon.Amount.All {
-		a, err := m.getBalance(account, mon.Asset)
-		if err != nil {
-			return 0, err
-		}
-		res = a
-	} else {
-		res = mon.Amount.Specific
-	}
-	return res, nil
 }
 
 func (m *Machine) tick() (bool, byte) {
 	op := m.Program.Instructions[m.P]
+
+	if m.Debug {
+		fmt.Println("STATE ---------------------------------------------------------------------")
+		fmt.Printf("    %v\n", aurora.Blue(m.Stack))
+		fmt.Printf("    %v\n", aurora.Cyan(m.Balances))
+		fmt.Printf("    %v\n", op)
+	}
 
 	switch op {
 	case program.OP_APUSH:
@@ -158,59 +152,18 @@ func (m *Machine) tick() (bool, byte) {
 		m.print_chan <- a
 	case program.OP_FAIL:
 		return true, EXIT_FAIL
-	case program.OP_SOURCE:
-		n := m.popNumber()
-		sources := make([]core.Account, n)
-		for i := uint64(0); i < n; i++ {
-			sources[i] = m.popAccount()
+	case program.OP_ASSET:
+		v := m.popValue()
+		switch v := v.(type) {
+		case core.Asset:
+			m.pushValue(v)
+		case core.Monetary:
+			m.pushValue(v.Asset)
+		case core.Funding:
+			m.pushValue(v.Asset)
+		default:
+			return true, EXIT_FAIL_INVALID
 		}
-		mon := m.popMonetary()
-		asset := mon.Asset
-		target := mon.Amount
-
-		type part struct {
-			mon core.Monetary
-			acc core.Account
-		}
-		result := []part{}
-
-		var n_actual_src uint64
-		for _, src := range sources {
-			src_funds := m.Balances[string(src)][string(asset)]
-			var amt_to_withdraw uint64
-			if target.All {
-				if src == "world" {
-					return true, EXIT_FAIL
-				}
-				amt_to_withdraw = src_funds
-			} else {
-				if target.Specific == 0 {
-					break
-				}
-				if src_funds > target.Specific || src == "world" {
-					amt_to_withdraw = target.Specific
-				} else {
-					amt_to_withdraw = src_funds
-				}
-				target.Specific -= amt_to_withdraw
-			}
-			result = append(result, part{
-				mon: core.Monetary{
-					Asset:  asset,
-					Amount: core.NewAmountSpecific(amt_to_withdraw),
-				},
-				acc: src,
-			})
-			n_actual_src++
-		}
-		if !target.All && target.Specific != 0 {
-			return true, EXIT_FAIL
-		}
-		for i := len(result) - 1; i >= 0; i-- {
-			m.pushValue(result[i].mon)
-			m.pushValue(result[i].acc)
-		}
-		m.pushValue(core.Number(n_actual_src))
 	case program.OP_MAKE_ALLOTMENT:
 		n := m.popNumber()
 		portions := make([]core.Portion, n)
@@ -220,118 +173,138 @@ func (m *Machine) tick() (bool, byte) {
 		}
 		allotment, err := core.NewAllotment(portions)
 		if err != nil {
-			return true, EXIT_FAIL
+			return true, EXIT_FAIL_INVALID
 		}
 		m.pushValue(*allotment)
+	case program.OP_TAKE_ALL:
+		asset := m.popAsset()
+		account := m.popAccount()
+		if account == "world" {
+			m.pushValue(core.Funding{
+				Asset:    asset,
+				Infinite: true,
+			})
+		} else {
+			funding, err := m.withdrawAll(account, asset)
+			if err != nil {
+				return true, EXIT_FAIL_INVALID
+			}
+			m.pushValue(*funding)
+		}
+	case program.OP_TAKE:
+		mon := m.popMonetary()
+		funding := m.popFunding()
+		if funding.Asset != mon.Asset {
+			return true, EXIT_FAIL_INVALID
+		}
+		result, remainder, err := funding.Take(mon.Amount)
+		if err != nil {
+			return true, EXIT_FAIL_INSUFFICIENT_FUNDS
+		}
+		m.repay(remainder)
+		m.pushValue(result)
+	case program.OP_TAKE_MAX:
+		mon := m.popMonetary()
+		funding := m.popFunding()
+		if funding.Asset != mon.Asset {
+			return true, EXIT_FAIL_INVALID
+		}
+		result, remainder, err := funding.Take(mon.Amount)
+		if err != nil {
+			return true, EXIT_FAIL_INSUFFICIENT_FUNDS
+		}
+		m.repay(remainder)
+		m.pushValue(result)
 
+	case program.OP_TAKE_SPLIT:
+		mon := m.popMonetary()
+		allotment := m.popAllotment()
+		parts := allotment.Allocate(mon.Amount)
+		result := core.Funding{
+			Asset: mon.Asset,
+			Parts: []core.FundingPart{},
+		}
+		n := len(allotment)
+		res_fundings := make([]core.Funding, n)
+		for i := len(parts) - 1; i >= 0; i-- {
+			funding := m.popFunding()
+			if funding.Asset != mon.Asset {
+				return true, EXIT_FAIL_INVALID
+			}
+			res, rem, err := funding.Take(parts[i])
+			if err != nil {
+				return true, EXIT_FAIL_INSUFFICIENT_FUNDS
+			}
+			res_fundings[i] = res
+			m.repay(rem)
+		}
+		for i := 0; i < n; i++ {
+			result.Parts = append(result.Parts, res_fundings[i].Parts...)
+		}
+		m.pushValue(result)
+	case program.OP_ASSEMBLE:
+		n := int(m.popNumber())
+		if n == 0 {
+			return true, EXIT_FAIL_INVALID
+		}
+		first := m.popFunding()
+		result := core.Funding{
+			Asset: first.Asset,
+		}
+		fundings_rev := make([]core.Funding, n)
+		fundings_rev[0] = first
+		for i := 1; i < n; i++ {
+			f := m.popFunding()
+			if f.Asset != result.Asset {
+				return true, EXIT_FAIL_INVALID
+			}
+			fundings_rev[i] = f
+		}
+		for i := 0; i < n; i++ {
+			result = result.Concat(fundings_rev[n-1-i])
+		}
+		m.pushValue(result)
 	case program.OP_ALLOC:
 		allotment := m.popAllotment()
-		nparts := len(allotment)
-		nsources := m.popNumber()
-		source_accounts := make([]core.Account, nsources)
-		source_amounts := make([]uint64, nsources)
-		total_src := uint64(0)
-		var asset *core.Asset
-		// extract accounts from stack while checking the assets correspond
-		for i := uint64(0); i < nsources; i++ {
-			source_accounts[i] = m.popAccount()
-			mon := m.popMonetary()
-			amt, err := m.resolveMonetary(source_accounts[i], mon)
+		funding := m.popFunding()
+		total := funding.Total()
+		parts := allotment.Allocate(total)
+		results := []core.Funding{}
+		for _, part := range parts {
+			res, rem, err := funding.Take(part)
 			if err != nil {
-				return true, EXIT_FAIL
+				return true, EXIT_FAIL_INSUFFICIENT_FUNDS
 			}
-			source_amounts[i] = amt
-			// check that the assets correspond
-			if asset == nil {
-				asset = &mon.Asset
-			} else if *asset != mon.Asset {
-				return true, EXIT_FAIL
-			}
-			total_src += amt
+			results = append(results, res)
+			funding = rem
 		}
-		parts := make([]uint64, nparts)
-		total_allocated := uint64(0)
-		// for every part in the allotment, calculate the floored value
-		for i, allot := range allotment {
-			var res big.Int
-			res.Mul(new(big.Int).SetUint64(total_src), allot.Num())
-			res.Div(&res, allot.Denom())
-			parts[i] = res.Uint64()
-			total_allocated += res.Uint64()
+		for i := len(results) - 1; i >= 0; i-- {
+			m.pushValue(results[i])
 		}
-
-		type subpart struct {
-			mon core.Monetary
-			acc core.Account
-		}
-		result := make([][]subpart, nparts)
-
-		// for every part in the floored values, fetch them from the sources
-		first_non_empty_idx := 0
-		for ipart, part := range parts {
-			// if the total allocated is less than the target amount, add 1 unit until it isn't
-			if total_allocated < uint64(total_src) {
-				part += 1
-				total_allocated += 1
+		for _, part := range funding.Parts {
+			if part.Account != "world" {
+				m.Balances[string(part.Account)][string(funding.Asset)] += part.Amount
 			}
-
-			result[ipart] = []subpart{}
-			n := 0 // number of sources needed to fill this part
-			// start at the first non empty source
-			for i := first_non_empty_idx; i < len(source_accounts); i++ {
-				if part == 0 { // if we finished filling this part
-					break
-				}
-				amt := source_amounts[i] // amount to withdraw from the account
-				if amt > part {
-					// if we have more than enough to fill, don't give too much to this part
-					amt = part
-				} else { // if we had to empty the source
-					first_non_empty_idx++
-				}
-				part -= amt
-				source_amounts[i] -= amt
-				result[ipart] = append(result[ipart], subpart{
-					mon: core.Monetary{Asset: *asset, Amount: core.NewAmountSpecific(amt)},
-					acc: source_accounts[i],
-				})
-				n += 1
-			}
-		}
-		for i := len(result) - 1; i >= 0; i-- {
-			part := result[i]
-			for j := len(part) - 1; j >= 0; j-- {
-				subpart := part[j]
-				m.pushValue(subpart.mon)
-				m.pushValue(subpart.acc)
-			}
-			m.pushValue(core.Number(len(part)))
 		}
 	case program.OP_SEND:
 		dest := m.popAccount()
-		n := m.popNumber()
-		for i := uint64(0); i < n; i++ {
-			src := m.popAccount()
-			mon := m.popMonetary()
-			amt, err := m.resolveMonetary(src, mon)
-			if err != nil {
-				return true, EXIT_FAIL
-			}
+		funding := m.popFunding()
+		m.credit(dest, funding)
+		for _, part := range funding.Parts {
+			src := part.Account
+			amt := part.Amount
 			if amt == 0 {
 				continue
 			}
-			// verify and withdraw funds
-			if ok := m.withdraw(src, mon.Asset, amt); !ok {
-				return true, EXIT_FAIL
-			}
-			m.credit(dest, mon.Asset, amt)
 			m.Postings = append(m.Postings, ledger.Posting{
 				Source:      string(src),
 				Destination: string(dest),
-				Asset:       string(mon.Asset),
+				Asset:       string(funding.Asset),
 				Amount:      int64(amt),
 			})
 		}
+	default:
+		return true, EXIT_FAIL_INVALID
 	}
 
 	m.P += 1
@@ -385,7 +358,7 @@ func (m *Machine) ResolveBalances() (chan BalanceRequest, error) {
 			account, ok := m.getResource(addr)
 			if !ok {
 				ch <- BalanceRequest{
-					Error: errors.New("invalid program (set balances: invalid address of account)"),
+					Error: errors.New("invalid program (resolve balances: invalid address of account)"),
 				}
 				return
 			}
@@ -399,12 +372,12 @@ func (m *Machine) ResolveBalances() (chan BalanceRequest, error) {
 					mon, ok := m.getResource(addr)
 					if !ok {
 						ch <- BalanceRequest{
-							Error: errors.New("invalid program (set balances: invalid address of monetary)"),
+							Error: errors.New("invalid program (resolve balances: invalid address of monetary)"),
 						}
 						return
 					}
-					if mon, ok := (*mon).(core.Monetary); ok {
-						asset := mon.Asset
+					if ha, ok := (*mon).(core.HasAsset); ok {
+						asset := ha.GetAsset()
 						resp := make(chan uint64)
 						ch <- BalanceRequest{
 							Account:  string(account),
@@ -422,19 +395,18 @@ func (m *Machine) ResolveBalances() (chan BalanceRequest, error) {
 						m.Balances[string(account)][string(asset)] = balance
 					} else {
 						ch <- BalanceRequest{
-							Error: errors.New("invalid program (set balances: not a monetary)"),
+							Error: errors.New("invalid program (resolve balances: not an asset)"),
 						}
 						return
 					}
 				}
 			} else {
 				ch <- BalanceRequest{
-					Error: errors.New("incorrect program (set balances: not an account)"),
+					Error: errors.New("incorrect program (resolve balances: not an account)"),
 				}
 				return
 			}
 		}
-		fmt.Println(m.Balances)
 	}()
 	return ch, nil
 }

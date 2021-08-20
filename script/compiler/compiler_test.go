@@ -55,7 +55,10 @@ func test(t *testing.T, c TestCase) {
 		} else {
 			for i := range c.Expected.Resources {
 				if !checkResourceEquals(t, p.Resources[i], c.Expected.Resources[i]) {
-					t.Error(fmt.Errorf("%v is not %v", p.Resources[i], c.Expected.Resources[i]))
+					t.Error(fmt.Errorf("%v: %v is not %v: %v",
+						p.Resources[i], reflect.TypeOf(p.Resources[i]).Name(),
+						c.Expected.Resources[i], reflect.TypeOf(c.Expected.Resources[i]).Name(),
+					))
 					t.Error(fmt.Errorf("unexpected program resources: %v", *p))
 					return
 				}
@@ -219,23 +222,30 @@ func TestAllocationFractions(t *testing.T) {
 		)`,
 		Expected: CaseResult{
 			Instructions: []byte{
-				program.OP_APUSH, 00, 00,
 				program.OP_APUSH, 01, 00,
-				program.OP_IPUSH, 01, 00, 00, 00, 00, 00, 00, 00,
+				program.OP_APUSH, 00, 00,
+				program.OP_ASSET,
+				program.OP_TAKE_ALL,
+				program.OP_APUSH, 00, 00,
+				program.OP_TAKE,
 				program.OP_APUSH, 02, 00,
-				program.OP_ALLOC,
 				program.OP_APUSH, 03, 00,
-				program.OP_SEND,
+				program.OP_IPUSH, 02, 00, 00, 00, 00, 00, 00, 00,
+				program.OP_MAKE_ALLOTMENT,
+				program.OP_ALLOC,
 				program.OP_APUSH, 04, 00,
+				program.OP_SEND,
+				program.OP_APUSH, 05, 00,
 				program.OP_SEND,
 			},
 			Resources: []program.Resource{
 				program.Constant{Inner: core.Monetary{
 					Asset:  "EUR/2",
-					Amount: core.NewAmountSpecific(43),
+					Amount: 43,
 				}},
 				program.Constant{Inner: core.Account("foo")},
-				program.Constant{Inner: core.Allotment{*big.NewRat(1, 8), *big.NewRat(7, 8)}},
+				program.Constant{Inner: core.Portion{Specific: big.NewRat(7, 8)}},
+				program.Constant{Inner: core.Portion{Specific: big.NewRat(1, 8)}},
 				program.Constant{Inner: core.Account("bar")},
 				program.Constant{Inner: core.Account("baz")},
 			},
@@ -256,25 +266,34 @@ func TestAllocationPercentages(t *testing.T) {
 		)`,
 		Expected: CaseResult{
 			Instructions: []byte{
-				program.OP_APUSH, 00, 00,
 				program.OP_APUSH, 01, 00,
-				program.OP_IPUSH, 01, 00, 00, 00, 00, 00, 00, 00,
+				program.OP_APUSH, 00, 00,
+				program.OP_ASSET,
+				program.OP_TAKE_ALL,
+				program.OP_APUSH, 00, 00,
+				program.OP_TAKE,
 				program.OP_APUSH, 02, 00,
-				program.OP_ALLOC,
 				program.OP_APUSH, 03, 00,
-				program.OP_SEND,
 				program.OP_APUSH, 04, 00,
-				program.OP_SEND,
+				program.OP_IPUSH, 03, 00, 00, 00, 00, 00, 00, 00,
+				program.OP_MAKE_ALLOTMENT,
+				program.OP_ALLOC,
 				program.OP_APUSH, 05, 00,
+				program.OP_SEND,
+				program.OP_APUSH, 06, 00,
+				program.OP_SEND,
+				program.OP_APUSH, 07, 00,
 				program.OP_SEND,
 			},
 			Resources: []program.Resource{
 				program.Constant{Inner: core.Monetary{
 					Asset:  "EUR/2",
-					Amount: core.NewAmountSpecific(43),
+					Amount: 43,
 				}},
 				program.Constant{Inner: core.Account("foo")},
-				program.Constant{Inner: core.Allotment{*big.NewRat(125, 1000), *big.NewRat(375, 1000), *big.NewRat(1, 2)}},
+				program.Constant{Inner: core.Portion{Specific: big.NewRat(1, 2)}},
+				program.Constant{Inner: core.Portion{Specific: big.NewRat(3, 8)}},
+				program.Constant{Inner: core.Portion{Specific: big.NewRat(1, 8)}},
 				program.Constant{Inner: core.Account("bar")},
 				program.Constant{Inner: core.Account("baz")},
 				program.Constant{Inner: core.Account("qux")},
@@ -294,13 +313,16 @@ func TestSend(t *testing.T) {
 )`,
 		Expected: CaseResult{
 			Instructions: []byte{
-				program.OP_APUSH, 00, 00,
 				program.OP_APUSH, 01, 00,
-				program.OP_IPUSH, 01, 00, 00, 00, 00, 00, 00, 00,
+				program.OP_APUSH, 00, 00,
+				program.OP_ASSET,
+				program.OP_TAKE_ALL,
+				program.OP_APUSH, 00, 00,
+				program.OP_TAKE,
 				program.OP_APUSH, 02, 00,
 				program.OP_SEND,
 			}, Resources: []program.Resource{
-				program.Constant{Inner: core.Monetary{Asset: "EUR/2", Amount: core.NewAmountSpecific(99)}},
+				program.Constant{Inner: core.Monetary{Asset: "EUR/2", Amount: 99}},
 				program.Constant{Inner: alice},
 				program.Constant{Inner: bob}},
 			Error: "",
@@ -309,8 +331,6 @@ func TestSend(t *testing.T) {
 }
 
 func TestSendAll(t *testing.T) {
-	alice := core.Account("alice")
-	bob := core.Account("bob")
 	test(t, TestCase{
 		Case: `send [EUR/2 *] (
 	source = @alice
@@ -318,15 +338,15 @@ func TestSendAll(t *testing.T) {
 )`,
 		Expected: CaseResult{
 			Instructions: []byte{
-				program.OP_APUSH, 00, 00,
 				program.OP_APUSH, 01, 00,
-				program.OP_IPUSH, 01, 00, 00, 00, 00, 00, 00, 00,
+				program.OP_APUSH, 00, 00,
+				program.OP_TAKE_ALL,
 				program.OP_APUSH, 02, 00,
 				program.OP_SEND,
 			}, Resources: []program.Resource{
-				program.Constant{Inner: core.Monetary{Asset: "EUR/2", Amount: core.NewAmountAll()}},
-				program.Constant{Inner: alice},
-				program.Constant{Inner: bob}},
+				program.Constant{Inner: core.Asset("EUR/2")},
+				program.Constant{Inner: core.Account("alice")},
+				program.Constant{Inner: core.Account("bob")}},
 			Error: "",
 		},
 	})
@@ -349,9 +369,12 @@ func TestMetadata(t *testing.T) {
 		)`,
 		Expected: CaseResult{
 			Instructions: []byte{
-				program.OP_APUSH, 03, 00,
 				program.OP_APUSH, 00, 00,
-				program.OP_IPUSH, 01, 00, 00, 00, 00, 00, 00, 00,
+				program.OP_APUSH, 03, 00,
+				program.OP_ASSET,
+				program.OP_TAKE_ALL,
+				program.OP_APUSH, 03, 00,
+				program.OP_TAKE,
 				program.OP_APUSH, 02, 00,
 				program.OP_APUSH, 04, 00,
 				program.OP_IPUSH, 02, 00, 00, 00, 00, 00, 00, 00,
@@ -362,10 +385,10 @@ func TestMetadata(t *testing.T) {
 				program.OP_APUSH, 05, 00,
 				program.OP_SEND,
 			}, Resources: []program.Resource{
-				program.Parameter{Name: "sale", Typ: core.TYPE_ACCOUNT},
-				program.Metadata{SourceAccount: core.NewAddress(0), Key: "seller", Typ: core.TYPE_ACCOUNT},
-				program.Metadata{SourceAccount: core.NewAddress(1), Key: "commission", Typ: core.TYPE_PORTION},
-				program.Constant{Inner: core.Monetary{Asset: "EUR/2", Amount: core.NewAmountSpecific(53)}},
+				program.Parameter{Typ: core.TYPE_ACCOUNT, Name: "sale"},
+				program.Metadata{Typ: core.TYPE_ACCOUNT, SourceAccount: core.NewAddress(0), Key: "seller"},
+				program.Metadata{Typ: core.TYPE_PORTION, SourceAccount: core.NewAddress(1), Key: "commission"},
+				program.Constant{Inner: core.Monetary{Asset: "EUR/2", Amount: 53}},
 				program.Constant{Inner: core.NewPortionRemaining()},
 				program.Constant{Inner: core.Account("platform")},
 			},
@@ -409,6 +432,84 @@ func TestPreventTakeAllFromWorld(t *testing.T) {
 			Instructions: nil,
 			Resources:    nil,
 			Error:        "cannot",
+		},
+	})
+}
+
+func TestPreventAddToBottomlessSource(t *testing.T) {
+	test(t, TestCase{
+		Case: `send [GEM 1000] (
+			source = {
+				@a
+				@world
+				@c
+			}
+			destination = @out
+		)`,
+		Expected: CaseResult{
+			Instructions: nil,
+			Resources:    nil,
+			Error:        "world",
+		},
+	})
+}
+
+func TestPreventAddToBottomlessSource2(t *testing.T) {
+	test(t, TestCase{
+		Case: `send [GEM 1000] (
+			source = {
+				{
+					@a
+					@world
+				}
+				{
+					@b
+					@world
+				}
+			}
+			destination = @out
+		)`,
+		Expected: CaseResult{
+			Instructions: nil,
+			Resources:    nil,
+			Error:        "world",
+		},
+	})
+}
+
+func TestPreventSourceAlreadyEmptied(t *testing.T) {
+	test(t, TestCase{
+		Case: `send [GEM 1000] (
+			source = {
+				{
+					@a
+					@world
+				}
+				@a
+			}
+			destination = @out
+		)`,
+		Expected: CaseResult{
+			Instructions: nil,
+			Resources:    nil,
+			Error:        "@a",
+		},
+	})
+}
+
+func TestPreventTakeAllFromAllocation(t *testing.T) {
+	test(t, TestCase{
+		Case: `send [GEM *] (
+			source = {
+				50% from @a
+				50% from @b
+			}
+			destination = @out
+		)`,
+		Expected: CaseResult{
+			Instructions: nil,
+			Resources:    nil,
+			Error:        "all",
 		},
 	})
 }

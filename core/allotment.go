@@ -43,9 +43,32 @@ func NewAllotment(portions []Portion) (*Allotment, error) {
 }
 
 func (a Allotment) String() string {
-	out := "{\n"
-	for _, ratio := range a {
-		out += fmt.Sprintf("	%v\n", &ratio)
+	out := "{ "
+	for i, ratio := range a {
+		out += fmt.Sprintf("%v", &ratio)
+		if i != len(a)-1 {
+			out += " : "
+		}
 	}
-	return out + "}"
+	return out + " }"
+}
+
+func (a Allotment) Allocate(amount uint64) []uint64 {
+	parts := make([]uint64, len(a))
+	total_allocated := uint64(0)
+	// for every part in the allotment, calculate the floored value
+	for i, allot := range a {
+		var res big.Int
+		res.Mul(new(big.Int).SetUint64(amount), allot.Num())
+		res.Div(&res, allot.Denom())
+		parts[i] = res.Uint64()
+		total_allocated += res.Uint64()
+	}
+	for i := range parts {
+		if total_allocated < uint64(amount) {
+			parts[i] += 1
+			total_allocated += 1
+		}
+	}
+	return parts
 }

@@ -13,6 +13,10 @@ import (
 	"github.com/numary/machine/script/compiler"
 )
 
+const (
+	DEBUG bool = false
+)
+
 type CaseResult struct {
 	Printed  []core.Value
 	Postings []ledger.Posting
@@ -143,6 +147,7 @@ func testimpl(t *testing.T, code string, expected CaseResult, exec func(*Machine
 	wg.Add(1)
 
 	machine := NewMachine(p)
+	machine.Debug = DEBUG
 	machine.Printer = func(c chan core.Value) {
 		for v := range c {
 			printed = append(printed, v)
@@ -168,6 +173,9 @@ func testimpl(t *testing.T, code string, expected CaseResult, exec func(*Machine
 
 	if exit_code != expected.ExitCode {
 		t.Error(fmt.Errorf("unexpected exit code: %v", exit_code))
+		return
+	}
+	if exit_code != EXIT_OK {
 		return
 	}
 
@@ -590,7 +598,7 @@ send [GEM 16] (
 		CaseResult{
 			Printed:  []core.Value{},
 			Postings: []ledger.Posting{},
-			ExitCode: EXIT_FAIL,
+			ExitCode: EXIT_FAIL_INSUFFICIENT_FUNDS,
 		},
 	)
 }
@@ -627,8 +635,7 @@ func TestWorldSource(t *testing.T) {
 					Destination: "b",
 				},
 			},
-			ExitCode: 1,
-			Error:    "",
+			ExitCode: EXIT_OK,
 		},
 	)
 }
@@ -655,8 +662,7 @@ func TestNoEmptyPostings(t *testing.T) {
 					Destination: "a",
 				},
 			},
-			ExitCode: 1,
-			Error:    "",
+			ExitCode: EXIT_OK,
 		},
 	)
 }
@@ -677,8 +683,7 @@ func TestNoEmptyPostings2(t *testing.T) {
 		CaseResult{
 			Printed:  []core.Value{},
 			Postings: []ledger.Posting{},
-			ExitCode: 1,
-			Error:    "",
+			ExitCode: EXIT_OK,
 		},
 	)
 }
@@ -702,7 +707,7 @@ func TestAllocateDontTakeTooMuch(t *testing.T) {
 				"CREDIT": 100,
 			},
 			"users:002": {
-				"CREDIT": 100,
+				"CREDIT": 110,
 			},
 		},
 		CaseResult{
@@ -721,8 +726,7 @@ func TestAllocateDontTakeTooMuch(t *testing.T) {
 					Destination: "bar",
 				},
 			},
-			ExitCode: 1,
-			Error:    "",
+			ExitCode: EXIT_OK,
 		},
 	)
 }
@@ -777,8 +781,196 @@ func TestMetadata(t *testing.T) {
 					Destination: "platform",
 				},
 			},
-			ExitCode: 1,
-			Error:    "",
+			ExitCode: EXIT_OK,
+		},
+	)
+}
+
+func TestTrackBalances(t *testing.T) {
+	testJSON(t,
+		`
+		send [COIN 50] (
+			source = @world
+			destination = @a
+		)
+		send [COIN 100] (
+			source = @a
+			destination = @b
+		)`,
+		`{}`,
+		map[string]map[string]core.Value{},
+		map[string]map[string]uint64{
+			"a": {
+				"COIN": 50,
+			},
+		},
+		CaseResult{
+			Printed: []core.Value{},
+			Postings: []ledger.Posting{
+				{
+					Asset:       "COIN",
+					Amount:      50,
+					Source:      "world",
+					Destination: "a",
+				},
+				{
+					Asset:       "COIN",
+					Amount:      100,
+					Source:      "a",
+					Destination: "b",
+				},
+			},
+			ExitCode: EXIT_OK,
+		},
+	)
+}
+
+func TestTrackBalances2(t *testing.T) {
+	testJSON(t,
+		`
+		send [COIN 50] (
+			source = @a
+			destination = @z
+		)
+		send [COIN 50] (
+			source = @a
+			destination = @z
+		)`,
+		`{}`,
+		map[string]map[string]core.Value{},
+		map[string]map[string]uint64{
+			"a": {
+				"COIN": 60,
+			},
+		},
+		CaseResult{
+			Printed:  []core.Value{},
+			Postings: []ledger.Posting{},
+			ExitCode: EXIT_FAIL_INSUFFICIENT_FUNDS,
+		},
+	)
+}
+
+func TestSourceAllotment(t *testing.T) {
+	testJSON(t,
+		`
+		send [COIN 100] (
+			source = {
+				60% from @a
+				35.5% from @b
+				4.5% from @c
+			}
+			destination = @d
+		)
+		`,
+		`{}`,
+		map[string]map[string]core.Value{},
+		map[string]map[string]uint64{
+			"a": {
+				"COIN": 100,
+			},
+			"b": {
+				"COIN": 100,
+			},
+			"c": {
+				"COIN": 100,
+			},
+		},
+		CaseResult{
+			Printed: []core.Value{},
+			Postings: []ledger.Posting{
+				{
+					Asset:       "COIN",
+					Amount:      61,
+					Source:      "a",
+					Destination: "d",
+				},
+				{
+					Asset:       "COIN",
+					Amount:      35,
+					Source:      "b",
+					Destination: "d",
+				},
+				{
+					Asset:       "COIN",
+					Amount:      4,
+					Source:      "c",
+					Destination: "d",
+				},
+			},
+			ExitCode: EXIT_OK,
+		},
+	)
+}
+
+func TestSourceComplex(t *testing.T) {
+	testJSON(t,
+		`
+		vars {
+			monetary $max
+		}
+		send [COIN 200] (
+			source = {
+				50% from {
+					max [COIN 4] from @a
+					@b
+					@c
+				}
+				remaining from max $max from @d
+			}
+			destination = @platform
+		)
+		`,
+		`{
+			"max": {
+				"asset": "COIN",
+				"amount": 120
+			}
+		}`,
+		map[string]map[string]core.Value{},
+		map[string]map[string]uint64{
+			"a": {
+				"COIN": 1000,
+			},
+			"b": {
+				"COIN": 40,
+			},
+			"c": {
+				"COIN": 1000,
+			},
+			"d": {
+				"COIN": 1000,
+			},
+		},
+		CaseResult{
+			Printed: []core.Value{},
+			Postings: []ledger.Posting{
+				{
+					Asset:       "COIN",
+					Amount:      4,
+					Source:      "a",
+					Destination: "platform",
+				},
+				{
+					Asset:       "COIN",
+					Amount:      40,
+					Source:      "b",
+					Destination: "platform",
+				},
+				{
+					Asset:       "COIN",
+					Amount:      56,
+					Source:      "c",
+					Destination: "platform",
+				},
+				{
+					Asset:       "COIN",
+					Amount:      100,
+					Source:      "d",
+					Destination: "platform",
+				},
+			},
+			ExitCode: EXIT_OK,
 		},
 	)
 }
