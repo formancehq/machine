@@ -361,8 +361,8 @@ func Compile(input string) (*program.Program, error) {
 
 	if len(elistener.Errors) != 0 {
 		err := CompileErrorList{
-			errors: elistener.Errors,
-			source: input,
+			Errors: elistener.Errors,
+			Source: input,
 		}
 		return nil, &err
 	}
@@ -379,8 +379,8 @@ func Compile(input string) (*program.Program, error) {
 
 	if err != nil {
 		err := CompileErrorList{
-			errors: []CompileError{*err},
-			source: input,
+			Errors: []CompileError{*err},
+			Source: input,
 		}
 		return nil, &err
 	}
