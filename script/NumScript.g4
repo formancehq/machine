@@ -6,11 +6,15 @@ WHITESPACE: [ \t]+ -> skip;
 MULTILINE_COMMENT: '/*' (MULTILINE_COMMENT|.)*? '*/' -> skip;
 LINE_COMMENT: '//' .*? NEWLINE -> skip;
 VARS: 'vars';
+META: 'meta';
 PRINT: 'print';
 FAIL: 'fail';
 SEND: 'send';
 SOURCE: 'source';
+FROM: 'from';
+MAX: 'max';
 DESTINATION: 'destination';
+TO: 'to';
 ALLOCATE: 'allocate';
 OP_ADD: '+';
 OP_SUB: '-';
@@ -63,21 +67,21 @@ allotmentPortion
   | PORTION_REMAINING # allotmentPortionRemaining
   ;
 
-destinationAllotment: LBRACE NEWLINE (portions+=allotmentPortion  'to' dests+=expression NEWLINE)+ RBRACE;
+destinationAllotment: LBRACE NEWLINE (portions+=allotmentPortion TO dests+=expression NEWLINE)+ RBRACE;
 destination
   : expression # DestAccount
   | destinationAllotment # DestAllotment
   ;
 
 sourceInOrder: LBRACE NEWLINE (sources+=source NEWLINE)+ RBRACE;
-sourceMaxed: 'max' max=expression 'from' src=source;
+sourceMaxed: MAX max=expression FROM src=source;
 source
   : expression # SrcAccount
   | sourceMaxed # SrcMaxed
   | sourceInOrder # SrcInOrder
   ;
 
-sourceAllotment: LBRACE NEWLINE (portions+=allotmentPortion 'from' sources+=source NEWLINE)+ RBRACE;
+sourceAllotment: LBRACE NEWLINE (portions+=allotmentPortion FROM sources+=source NEWLINE)+ RBRACE;
 valueAwareSource
   : source # Src
   | sourceAllotment # SrcAllotment
@@ -94,7 +98,7 @@ statement
 type_: TY_ACCOUNT | TY_ASSET | TY_NUMBER | TY_MONETARY | TY_PORTION;
 
 origin
-  : 'meta(' acc=expression ',' key=STRING ')'
+  : META '(' acc=expression ',' key=STRING ')'
   ;
 
 
