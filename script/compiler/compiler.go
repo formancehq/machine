@@ -370,7 +370,7 @@ func CompileFull(input string) CompileArtifacts {
 
 	tree := p.Script()
 
-	artifacts.Tokens = lexer.GetAllTokens()
+	artifacts.Tokens = stream.GetAllTokens()
 	artifacts.Errors = append(artifacts.Errors, elistener.Errors...)
 
 	if len(elistener.Errors) != 0 {
