@@ -26,7 +26,7 @@ type parseVisitor struct {
 func (p *parseVisitor) findConstant(constant program.Constant) (*core.Address, bool) {
 	for i := 0; i < len(p.resources); i++ {
 		if c, ok := p.resources[i].(program.Constant); ok {
-			if c == constant {
+			if core.ValueEquals(c.Inner, constant.Inner) {
 				addr := core.Address(i)
 				return &addr, true
 			}
