@@ -8,37 +8,6 @@ import (
 	"github.com/numary/machine/vm"
 )
 
-/*
-
-push @world             @world
-push [COIN 100]         @world [COIN 100]
-asset                   @world COIN
-take_all                [COIN * @world]
-push [COIN 100]         [COIN * @world] [COIN 100]
-take                    [COIN * @world] [COIN 100 @world]
-swap                    [COIN 100 @world] [COIN * @world]
-repay                   [COIN 100 @world]
-// dest allotment
-push 50%                [COIN 100 @world] 50%
-push 50%                [COIN 100 @world] 50% 50%
-push 2                [COIN 100 @world] 50% 50% 2
-make_allotment          [COIN 100 @world] { 50% : 50% }
-allocate                [COIN 50 @world] [COIN 50 @world]
-// to @a
-push @a                 [COIN 50 @world] [COIN 50 @world] @a
-send                    [COIN 50 @world]
-// to {...}
-// max
-push [COIN 10]          [COIN 50 @world] [COIN 10]
-take_max                [COIN 40 @world] [COIN 10 @world]
-// to @b
-push @b                 [COIN 40 @world] [COIN 10 @world] @b
-send                    [COIN 40 @world]
-// to @c
-push @c
-send
-*/
-
 func main() {
 	program, err := compiler.Compile(`
 	send [COIN 100] (
