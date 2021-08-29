@@ -67,9 +67,13 @@ allotmentPortion
   | PORTION_REMAINING # allotmentPortionRemaining
   ;
 
-destinationAllotment: LBRACE NEWLINE (portions+=allotmentPortion TO dests+=expression NEWLINE)+ RBRACE;
+destinationInOrder: LBRACE NEWLINE (dests+=destination NEWLINE)+ RBRACE;
+destinationMaxed: MAX max=expression TO dest=destination;
+destinationAllotment: LBRACE NEWLINE (portions+=allotmentPortion TO dests+=destination NEWLINE)+ RBRACE;
 destination
   : expression # DestAccount
+  | destinationMaxed # DestMaxed
+  | destinationInOrder # DestInOrder
   | destinationAllotment # DestAllotment
   ;
 

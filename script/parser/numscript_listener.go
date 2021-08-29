@@ -47,11 +47,23 @@ type NumScriptListener interface {
 	// EnterAllotmentPortionRemaining is called when entering the allotmentPortionRemaining production.
 	EnterAllotmentPortionRemaining(c *AllotmentPortionRemainingContext)
 
+	// EnterDestinationInOrder is called when entering the destinationInOrder production.
+	EnterDestinationInOrder(c *DestinationInOrderContext)
+
+	// EnterDestinationMaxed is called when entering the destinationMaxed production.
+	EnterDestinationMaxed(c *DestinationMaxedContext)
+
 	// EnterDestinationAllotment is called when entering the destinationAllotment production.
 	EnterDestinationAllotment(c *DestinationAllotmentContext)
 
 	// EnterDestAccount is called when entering the DestAccount production.
 	EnterDestAccount(c *DestAccountContext)
+
+	// EnterDestMaxed is called when entering the DestMaxed production.
+	EnterDestMaxed(c *DestMaxedContext)
+
+	// EnterDestInOrder is called when entering the DestInOrder production.
+	EnterDestInOrder(c *DestInOrderContext)
 
 	// EnterDestAllotment is called when entering the DestAllotment production.
 	EnterDestAllotment(c *DestAllotmentContext)
@@ -143,11 +155,23 @@ type NumScriptListener interface {
 	// ExitAllotmentPortionRemaining is called when exiting the allotmentPortionRemaining production.
 	ExitAllotmentPortionRemaining(c *AllotmentPortionRemainingContext)
 
+	// ExitDestinationInOrder is called when exiting the destinationInOrder production.
+	ExitDestinationInOrder(c *DestinationInOrderContext)
+
+	// ExitDestinationMaxed is called when exiting the destinationMaxed production.
+	ExitDestinationMaxed(c *DestinationMaxedContext)
+
 	// ExitDestinationAllotment is called when exiting the destinationAllotment production.
 	ExitDestinationAllotment(c *DestinationAllotmentContext)
 
 	// ExitDestAccount is called when exiting the DestAccount production.
 	ExitDestAccount(c *DestAccountContext)
+
+	// ExitDestMaxed is called when exiting the DestMaxed production.
+	ExitDestMaxed(c *DestMaxedContext)
+
+	// ExitDestInOrder is called when exiting the DestInOrder production.
+	ExitDestInOrder(c *DestInOrderContext)
 
 	// ExitDestAllotment is called when exiting the DestAllotment production.
 	ExitDestAllotment(c *DestAllotmentContext)
