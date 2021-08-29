@@ -760,6 +760,44 @@ func TestAllocationInvalidPortion(t *testing.T) {
 	})
 }
 
+func TestCappedDestination(t *testing.T) {
+	test(t, TestCase{
+		Case: `
+		vars {
+			account $p
+		}
+		send [GEM 15] (
+			source = @world
+			destination = max [GEM 15] to @a
+		)`,
+		Expected: CaseResult{
+			Instructions: nil,
+			Resources:    nil,
+			Error:        "cap",
+		},
+	})
+}
+func TestCappedDestination2(t *testing.T) {
+	test(t, TestCase{
+		Case: `
+		vars {
+			account $p
+		}
+		send [GEM 15] (
+			source = @world
+			destination = {
+				50% to max [GEM 15] to @a
+				50% to @b
+			}
+		)`,
+		Expected: CaseResult{
+			Instructions: nil,
+			Resources:    nil,
+			Error:        "cap",
+		},
+	})
+}
+
 // func TestTooManyConstants(t *testing.T) {
 // 	script := ""
 // 	for i := 0; i < 11000; i++ {
