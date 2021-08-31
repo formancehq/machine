@@ -228,6 +228,8 @@ func TestAllocationFractions(t *testing.T) {
 				program.OP_TAKE_ALL,
 				program.OP_APUSH, 00, 00,
 				program.OP_TAKE,
+				program.OP_SWAP,
+				program.OP_REPAY,
 				program.OP_APUSH, 02, 00,
 				program.OP_APUSH, 03, 00,
 				program.OP_IPUSH, 02, 00, 00, 00, 00, 00, 00, 00,
@@ -254,6 +256,63 @@ func TestAllocationFractions(t *testing.T) {
 	})
 }
 
+func TestComplexDestination(t *testing.T) {
+	test(t, TestCase{
+		Case: `send [EUR/2 43] (
+			source = @a
+			destination = {
+				1/8 to {
+					max [EUR/2 10] to @b
+					@c
+				}
+				7/8 to @d
+			}
+		)`,
+		Expected: CaseResult{
+			Instructions: []byte{
+				program.OP_APUSH, 01, 00,
+				program.OP_APUSH, 00, 00,
+				program.OP_ASSET,
+				program.OP_TAKE_ALL,
+				program.OP_APUSH, 00, 00,
+				program.OP_TAKE,
+				program.OP_SWAP,
+				program.OP_REPAY,
+				program.OP_APUSH, 02, 00,
+				program.OP_APUSH, 03, 00,
+				program.OP_IPUSH, 02, 00, 00, 00, 00, 00, 00, 00,
+				program.OP_MAKE_ALLOTMENT,
+				program.OP_ALLOC,
+				program.OP_APUSH, 04, 00,
+				program.OP_TAKE_MAX,
+				program.OP_APUSH, 05, 00,
+				program.OP_SEND,
+				program.OP_APUSH, 06, 00,
+				program.OP_SEND,
+				program.OP_APUSH, 07, 00,
+				program.OP_SEND,
+			},
+			Resources: []program.Resource{
+				program.Constant{Inner: core.Monetary{
+					Asset:  "EUR/2",
+					Amount: 43,
+				}},
+				program.Constant{Inner: core.Account("a")},
+				program.Constant{Inner: core.Portion{Specific: big.NewRat(7, 8)}},
+				program.Constant{Inner: core.Portion{Specific: big.NewRat(1, 8)}},
+				program.Constant{Inner: core.Monetary{
+					Asset:  "EUR/2",
+					Amount: 10,
+				}},
+				program.Constant{Inner: core.Account("b")},
+				program.Constant{Inner: core.Account("c")},
+				program.Constant{Inner: core.Account("d")},
+			},
+			Error: "",
+		},
+	})
+}
+
 func TestAllocationPercentages(t *testing.T) {
 	test(t, TestCase{
 		Case: `send [EUR/2 43] (
@@ -272,6 +331,8 @@ func TestAllocationPercentages(t *testing.T) {
 				program.OP_TAKE_ALL,
 				program.OP_APUSH, 00, 00,
 				program.OP_TAKE,
+				program.OP_SWAP,
+				program.OP_REPAY,
 				program.OP_APUSH, 02, 00,
 				program.OP_APUSH, 03, 00,
 				program.OP_APUSH, 04, 00,
@@ -319,6 +380,8 @@ func TestSend(t *testing.T) {
 				program.OP_TAKE_ALL,
 				program.OP_APUSH, 00, 00,
 				program.OP_TAKE,
+				program.OP_SWAP,
+				program.OP_REPAY,
 				program.OP_APUSH, 02, 00,
 				program.OP_SEND,
 			}, Resources: []program.Resource{
@@ -375,6 +438,8 @@ func TestMetadata(t *testing.T) {
 				program.OP_TAKE_ALL,
 				program.OP_APUSH, 03, 00,
 				program.OP_TAKE,
+				program.OP_SWAP,
+				program.OP_REPAY,
 				program.OP_APUSH, 02, 00,
 				program.OP_APUSH, 04, 00,
 				program.OP_IPUSH, 02, 00, 00, 00, 00, 00, 00, 00,
@@ -691,6 +756,44 @@ func TestAllocationInvalidPortion(t *testing.T) {
 			Instructions: nil,
 			Resources:    nil,
 			Error:        "type",
+		},
+	})
+}
+
+func TestCappedDestination(t *testing.T) {
+	test(t, TestCase{
+		Case: `
+		vars {
+			account $p
+		}
+		send [GEM 15] (
+			source = @world
+			destination = max [GEM 15] to @a
+		)`,
+		Expected: CaseResult{
+			Instructions: nil,
+			Resources:    nil,
+			Error:        "cap",
+		},
+	})
+}
+func TestCappedDestination2(t *testing.T) {
+	test(t, TestCase{
+		Case: `
+		vars {
+			account $p
+		}
+		send [GEM 15] (
+			source = @world
+			destination = {
+				50% to max [GEM 15] to @a
+				50% to @b
+			}
+		)`,
+		Expected: CaseResult{
+			Instructions: nil,
+			Resources:    nil,
+			Error:        "cap",
 		},
 	})
 }

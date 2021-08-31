@@ -975,6 +975,50 @@ func TestSourceComplex(t *testing.T) {
 	)
 }
 
+func TestDestinationComplex(t *testing.T) {
+	testJSON(t,
+		`
+		send [COIN 100] (
+			source = @world
+			destination = {
+				40% to @a
+				60% to {
+					max [COIN 10] to @b
+					@c
+				}
+			}
+		)
+		`,
+		`{}`,
+		map[string]map[string]core.Value{},
+		map[string]map[string]uint64{},
+		CaseResult{
+			Printed: []core.Value{},
+			Postings: []ledger.Posting{
+				{
+					Asset:       "COIN",
+					Amount:      40,
+					Source:      "world",
+					Destination: "a",
+				},
+				{
+					Asset:       "COIN",
+					Amount:      10,
+					Source:      "world",
+					Destination: "b",
+				},
+				{
+					Asset:       "COIN",
+					Amount:      50,
+					Source:      "world",
+					Destination: "c",
+				},
+			},
+			ExitCode: EXIT_OK,
+		},
+	)
+}
+
 func TestNeededBalances(t *testing.T) {
 	p, err := compiler.Compile(`vars {
 		account $a

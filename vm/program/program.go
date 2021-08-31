@@ -29,6 +29,8 @@ func (p Program) String() string {
 			out += "OP_IPUSH "
 			out += fmt.Sprintf("%d\n", binary.LittleEndian.Uint64(p.Instructions[i+1:i+9]))
 			i += 8
+		case OP_SWAP:
+			out += "OP_SWAP\n"
 		case OP_IADD:
 			out += "OP_IADD\n"
 		case OP_ISUB:
@@ -53,6 +55,8 @@ func (p Program) String() string {
 			out += "OP_TAKE_SPLIT\n"
 		case OP_ASSEMBLE:
 			out += "OP_ASSEMBLE\n"
+		case OP_REPAY:
+			out += "OP_REPAY\n"
 		case OP_ASSET:
 			out += "OP_ASSET\n"
 		default:

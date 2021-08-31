@@ -101,6 +101,18 @@ func (s *BaseNumScriptListener) EnterAllotmentPortionRemaining(ctx *AllotmentPor
 func (s *BaseNumScriptListener) ExitAllotmentPortionRemaining(ctx *AllotmentPortionRemainingContext) {
 }
 
+// EnterDestinationInOrder is called when production destinationInOrder is entered.
+func (s *BaseNumScriptListener) EnterDestinationInOrder(ctx *DestinationInOrderContext) {}
+
+// ExitDestinationInOrder is called when production destinationInOrder is exited.
+func (s *BaseNumScriptListener) ExitDestinationInOrder(ctx *DestinationInOrderContext) {}
+
+// EnterDestinationMaxed is called when production destinationMaxed is entered.
+func (s *BaseNumScriptListener) EnterDestinationMaxed(ctx *DestinationMaxedContext) {}
+
+// ExitDestinationMaxed is called when production destinationMaxed is exited.
+func (s *BaseNumScriptListener) ExitDestinationMaxed(ctx *DestinationMaxedContext) {}
+
 // EnterDestinationAllotment is called when production destinationAllotment is entered.
 func (s *BaseNumScriptListener) EnterDestinationAllotment(ctx *DestinationAllotmentContext) {}
 
@@ -112,6 +124,18 @@ func (s *BaseNumScriptListener) EnterDestAccount(ctx *DestAccountContext) {}
 
 // ExitDestAccount is called when production DestAccount is exited.
 func (s *BaseNumScriptListener) ExitDestAccount(ctx *DestAccountContext) {}
+
+// EnterDestMaxed is called when production DestMaxed is entered.
+func (s *BaseNumScriptListener) EnterDestMaxed(ctx *DestMaxedContext) {}
+
+// ExitDestMaxed is called when production DestMaxed is exited.
+func (s *BaseNumScriptListener) ExitDestMaxed(ctx *DestMaxedContext) {}
+
+// EnterDestInOrder is called when production DestInOrder is entered.
+func (s *BaseNumScriptListener) EnterDestInOrder(ctx *DestInOrderContext) {}
+
+// ExitDestInOrder is called when production DestInOrder is exited.
+func (s *BaseNumScriptListener) ExitDestInOrder(ctx *DestInOrderContext) {}
 
 // EnterDestAllotment is called when production DestAllotment is entered.
 func (s *BaseNumScriptListener) EnterDestAllotment(ctx *DestAllotmentContext) {}

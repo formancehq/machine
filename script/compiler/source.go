@@ -25,6 +25,8 @@ func (p *parseVisitor) VisitValueAwareSource(c parser.IValueAwareSourceContext, 
 		if !is_all {
 			p.PushAddress(*mon_addr)
 			p.instructions = append(p.instructions, program.OP_TAKE)
+			p.instructions = append(p.instructions, program.OP_SWAP)
+			p.instructions = append(p.instructions, program.OP_REPAY)
 		}
 	case *parser.SrcAllotmentContext:
 		if is_all {
@@ -89,6 +91,8 @@ func (p *parseVisitor) VisitSource(c parser.ISourceContext, push_asset func(), i
 			needed_accounts[k] = v
 		}
 		p.instructions = append(p.instructions, program.OP_TAKE_MAX)
+		p.instructions = append(p.instructions, program.OP_SWAP)
+		p.instructions = append(p.instructions, program.OP_REPAY)
 	case *parser.SrcInOrderContext:
 		sources := c.SourceInOrder().GetSources()
 		n := len(sources)
