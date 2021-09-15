@@ -25,18 +25,18 @@ func TestEndCharacter(t *testing.T) {
 		t.Fatal("error had wrong type")
 	}
 
-	lerr := err.(*CompileErrorList).errors[0]
+	lerr := err.(*CompileErrorList).Errors[0]
 
-	if lerr.startl != 5 {
-		t.Fatal(fmt.Sprintf("start line was %v", lerr.startl))
+	if lerr.Startl != 5 {
+		t.Fatal(fmt.Sprintf("start line was %v", lerr.Startl))
 	}
-	if lerr.startc != 3 {
-		t.Fatal(fmt.Sprintf("start character was %v", lerr.startc))
+	if lerr.Startc != 3 {
+		t.Fatal(fmt.Sprintf("start character was %v", lerr.Startc))
 	}
-	if lerr.endl != 5 {
-		t.Fatal(fmt.Sprintf("end line was %v", lerr.endl))
+	if lerr.Endl != 5 {
+		t.Fatal(fmt.Sprintf("end line was %v", lerr.Endl))
 	}
-	if lerr.endc != 7 {
-		t.Fatal(fmt.Sprintf("end character was %v", lerr.endc))
+	if lerr.Endc != 7 {
+		t.Fatal(fmt.Sprintf("end character was %v", lerr.Endc))
 	}
 }

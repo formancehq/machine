@@ -342,7 +342,18 @@ func (p *parseVisitor) VisitScript(c parser.IScriptContext) *CompileError {
 	return nil
 }
 
-func Compile(input string) (*program.Program, error) {
+type CompileArtifacts struct {
+	Source  string
+	Tokens  []antlr.Token
+	Errors  []CompileError
+	Program *program.Program
+}
+
+func CompileFull(input string) CompileArtifacts {
+	artifacts := CompileArtifacts{
+		Source: input,
+	}
+
 	elistener := &ErrorListener{}
 
 	is := antlr.NewInputStream(input)
@@ -359,12 +370,11 @@ func Compile(input string) (*program.Program, error) {
 
 	tree := p.Script()
 
+	artifacts.Tokens = stream.GetAllTokens()
+	artifacts.Errors = append(artifacts.Errors, elistener.Errors...)
+
 	if len(elistener.Errors) != 0 {
-		err := CompileErrorList{
-			errors: elistener.Errors,
-			source: input,
-		}
-		return nil, &err
+		return artifacts
 	}
 
 	visitor := parseVisitor{
@@ -378,16 +388,27 @@ func Compile(input string) (*program.Program, error) {
 	err := visitor.VisitScript(tree)
 
 	if err != nil {
-		err := CompileErrorList{
-			errors: []CompileError{*err},
-			source: input,
-		}
-		return nil, &err
+		artifacts.Errors = append(artifacts.Errors, *err)
+		return artifacts
 	}
 
-	return &program.Program{
+	artifacts.Program = &program.Program{
 		Instructions:   visitor.instructions,
 		Resources:      visitor.resources,
 		NeededBalances: visitor.needed_balances,
-	}, nil
+	}
+
+	return artifacts
+}
+
+func Compile(input string) (*program.Program, error) {
+	artifacts := CompileFull(input)
+	if len(artifacts.Errors) > 0 {
+		err := CompileErrorList{
+			Errors: artifacts.Errors,
+			Source: artifacts.Source,
+		}
+		return nil, &err
+	}
+	return artifacts.Program, nil
 }
