@@ -42,7 +42,7 @@ func NewMachine(p *program.Program) *Machine {
 		Resources:           make([]core.Value, 0),
 		print_chan:          printc,
 		Printer:             StdOutPrinter,
-		TxMeta:              ledger.Metadata{},
+		TxMeta:              map[string]core.Value{},
 	}
 
 	return &m
@@ -58,8 +58,8 @@ type Machine struct {
 	Balances            map[string]map[string]uint64 // keeps tracks of balances througout execution
 	set_balance_called  bool
 	Stack               []core.Value
-	Postings            []ledger.Posting // accumulates postings throughout execution
-	TxMeta              ledger.Metadata  // accumulates transaction meta throughout execution
+	Postings            []ledger.Posting      // accumulates postings throughout execution
+	TxMeta              map[string]core.Value // accumulates transaction meta throughout execution
 	Printer             func(chan core.Value)
 	print_chan          chan core.Value
 	Debug               bool
