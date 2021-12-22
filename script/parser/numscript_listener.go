@@ -95,6 +95,9 @@ type NumScriptListener interface {
 	// EnterPrint is called when entering the Print production.
 	EnterPrint(c *PrintContext)
 
+	// EnterSetTxMeta is called when entering the SetTxMeta production.
+	EnterSetTxMeta(c *SetTxMetaContext)
+
 	// EnterFail is called when entering the Fail production.
 	EnterFail(c *FailContext)
 
@@ -202,6 +205,9 @@ type NumScriptListener interface {
 
 	// ExitPrint is called when exiting the Print production.
 	ExitPrint(c *PrintContext)
+
+	// ExitSetTxMeta is called when exiting the SetTxMeta production.
+	ExitSetTxMeta(c *SetTxMetaContext)
 
 	// ExitFail is called when exiting the Fail production.
 	ExitFail(c *FailContext)

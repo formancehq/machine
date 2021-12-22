@@ -197,6 +197,12 @@ func (s *BaseNumScriptListener) EnterPrint(ctx *PrintContext) {}
 // ExitPrint is called when production Print is exited.
 func (s *BaseNumScriptListener) ExitPrint(ctx *PrintContext) {}
 
+// EnterSetTxMeta is called when production SetTxMeta is entered.
+func (s *BaseNumScriptListener) EnterSetTxMeta(ctx *SetTxMetaContext) {}
+
+// ExitSetTxMeta is called when production SetTxMeta is exited.
+func (s *BaseNumScriptListener) ExitSetTxMeta(ctx *SetTxMetaContext) {}
+
 // EnterFail is called when production Fail is entered.
 func (s *BaseNumScriptListener) EnterFail(ctx *FailContext) {}
 

@@ -239,6 +239,24 @@ func (p *parseVisitor) VisitSend(c *parser.SendContext) *CompileError {
 	return nil
 }
 
+// set_tx_meta statement
+func (p *parseVisitor) VisitSetTxMeta(ctx *parser.SetTxMetaContext) *CompileError {
+
+	if ctx.GetValueExpr() != nil {
+		_, addr, _ := p.VisitExpr(ctx.GetValueExpr(), false)
+		p.PushAddress(*addr)
+
+		keyAddr, _ := p.AllocateResource(program.Constant{
+			Inner: core.String(strings.Trim(ctx.GetKey().GetText(), `"`)),
+		})
+		p.PushAddress(*keyAddr)
+
+		p.instructions = append(p.instructions, program.OP_TX_META)
+	}
+
+	return nil
+}
+
 // print statement
 func (p *parseVisitor) VisitPrint(ctx *parser.PrintContext) *CompileError {
 	_, _, err := p.VisitExpr(ctx.GetExpr(), true)
@@ -329,6 +347,11 @@ func (p *parseVisitor) VisitScript(c parser.IScriptContext) *CompileError {
 				p.instructions = append(p.instructions, program.OP_FAIL)
 			case *parser.SendContext:
 				err := p.VisitSend(c)
+				if err != nil {
+					return err
+				}
+			case *parser.SetTxMetaContext:
+				err := p.VisitSetTxMeta(c)
 				if err != nil {
 					return err
 				}

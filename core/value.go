@@ -11,6 +11,7 @@ const (
 	TYPE_ACCOUNT   = Type(iota + 1) // address of an account
 	TYPE_ASSET                      // name of an asset
 	TYPE_NUMBER                     // 64bit unsigned integer
+	TYPE_STRING                     // string
 	TYPE_MONETARY                   // [asset number]
 	TYPE_PORTION                    // rational number between 0 and 1 both exclusive
 	TYPE_ALLOTMENT                  // list of portions
@@ -26,6 +27,8 @@ func (t Type) String() string {
 		return "asset"
 	case TYPE_NUMBER:
 		return "number"
+	case TYPE_STRING:
+		return "string"
 	case TYPE_MONETARY:
 		return "monetary"
 	case TYPE_PORTION:
@@ -66,6 +69,14 @@ func (Number) isValue()      {}
 func (Number) GetType() Type { return TYPE_NUMBER }
 func (n Number) String() string {
 	return fmt.Sprintf("%v", uint64(n))
+}
+
+type String string
+
+func (String) isValue()      {}
+func (String) GetType() Type { return TYPE_STRING }
+func (s String) String() string {
+	return string(s)
 }
 
 type Monetary struct {
