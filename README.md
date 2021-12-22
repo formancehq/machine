@@ -1,4 +1,4 @@
-# Numary Machine [![test](https://github.com/numary/machine/actions/workflows/test.yml/badge.svg)](https://github.com/numary/machine/actions/workflows/test.yml)
+# Numary Machine [![test](https://github.com/numary/machine/actions/workflows/main.yml/badge.svg)](https://github.com/numary/machine/actions/workflows/main.yml)
 
 A virtual machine for moving money.
 
