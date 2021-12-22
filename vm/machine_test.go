@@ -1086,3 +1086,37 @@ func TestNeededBalances(t *testing.T) {
 		t.Fatalf("some balances were not requested: %v", expected)
 	}
 }
+
+func TestSetTxMeta(t *testing.T) {
+	p, err := compiler.Compile(`
+	set_tx_meta("beneficiary", @platform)
+	`)
+
+	if err != nil {
+		t.Fatalf("did not expect error on Compile, got: %v", err)
+	}
+
+	m := NewMachine(p)
+
+	{
+		ch, _ := m.ResolveResources()
+		for range ch {
+		}
+	}
+
+	{
+		ch, _ := m.ResolveBalances()
+		for range ch {
+		}
+	}
+
+	_, err = m.Execute()
+
+	if err != nil {
+		t.Fatalf("did not expect error on Execute, got: %v", err)
+	}
+
+	if _, ok := m.TxMeta["beneficiary"]; !ok {
+		t.Fatalf("expected transaction meta beneficiary to be set")
+	}
+}

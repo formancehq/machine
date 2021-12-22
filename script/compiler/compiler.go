@@ -242,17 +242,34 @@ func (p *parseVisitor) VisitSend(c *parser.SendContext) *CompileError {
 // set_tx_meta statement
 func (p *parseVisitor) VisitSetTxMeta(ctx *parser.SetTxMetaContext) *CompileError {
 
-	if ctx.GetValueExpr() != nil {
-		_, addr, _ := p.VisitExpr(ctx.GetValueExpr(), false)
-		p.PushAddress(*addr)
-
-		keyAddr, _ := p.AllocateResource(program.Constant{
-			Inner: core.String(strings.Trim(ctx.GetKey().GetText(), `"`)),
+	if ctx.GetValue() != nil {
+		addr, err := p.AllocateResource(program.Constant{
+			Inner: core.String(strings.Trim(ctx.GetValue().GetText(), `"`)),
 		})
-		p.PushAddress(*keyAddr)
 
-		p.instructions = append(p.instructions, program.OP_TX_META)
+		if err != nil {
+			return InternalError(ctx)
+		}
+
+		p.PushAddress(*addr)
 	}
+
+	if ctx.GetValueExpr() != nil {
+		_, addr, err := p.VisitExpr(ctx.GetValueExpr(), false)
+
+		if err != nil {
+			return err
+		}
+
+		p.PushAddress(*addr)
+	}
+
+	keyAddr, _ := p.AllocateResource(program.Constant{
+		Inner: core.String(strings.Trim(ctx.GetKey().GetText(), `"`)),
+	})
+	p.PushAddress(*keyAddr)
+
+	p.instructions = append(p.instructions, program.OP_TX_META)
 
 	return nil
 }
