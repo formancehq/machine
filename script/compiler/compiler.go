@@ -241,7 +241,6 @@ func (p *parseVisitor) VisitSend(c *parser.SendContext) *CompileError {
 
 // set_tx_meta statement
 func (p *parseVisitor) VisitSetTxMeta(ctx *parser.SetTxMetaContext) *CompileError {
-
 	if ctx.GetValue() != nil {
 		addr, err := p.AllocateResource(program.Constant{
 			Inner: core.String(strings.Trim(ctx.GetValue().GetText(), `"`)),
