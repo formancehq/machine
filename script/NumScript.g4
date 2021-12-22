@@ -7,6 +7,7 @@ MULTILINE_COMMENT: '/*' (MULTILINE_COMMENT|.)*? '*/' -> skip;
 LINE_COMMENT: '//' .*? NEWLINE -> skip;
 VARS: 'vars';
 META: 'meta';
+SET_TX_META: 'set_tx_meta';
 PRINT: 'print';
 FAIL: 'fail';
 SEND: 'send';
@@ -93,6 +94,7 @@ valueAwareSource
 
 statement
   : PRINT expr=expression # Print
+  | SET_TX_META '(' key=STRING ',' (value=STRING | valueExpr=expression) ')' #SetTxMeta
   | FAIL # Fail
   | SEND (mon=expression | monAll=monetaryAll) LPAREN NEWLINE
       ( SOURCE '=' src=valueAwareSource NEWLINE DESTINATION '=' dest=destination

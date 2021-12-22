@@ -42,6 +42,7 @@ func NewMachine(p *program.Program) *Machine {
 		Resources:           make([]core.Value, 0),
 		print_chan:          printc,
 		Printer:             StdOutPrinter,
+		TxMeta:              ledger.Metadata{},
 	}
 
 	return &m
@@ -58,6 +59,7 @@ type Machine struct {
 	set_balance_called  bool
 	Stack               []core.Value
 	Postings            []ledger.Posting // accumulates postings throughout execution
+	TxMeta              ledger.Metadata  // accumulates transaction meta throughout execution
 	Printer             func(chan core.Value)
 	print_chan          chan core.Value
 	Debug               bool
@@ -314,6 +316,10 @@ func (m *Machine) tick() (bool, byte) {
 				Amount:      int64(amt),
 			})
 		}
+	case program.OP_TX_META:
+		k := m.popValue()
+		v := m.popValue()
+		m.TxMeta[fmt.Sprintf("%s", k)] = v
 	default:
 		return true, EXIT_FAIL_INVALID
 	}

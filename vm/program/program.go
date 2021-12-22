@@ -59,6 +59,8 @@ func (p Program) String() string {
 			out += "OP_REPAY\n"
 		case OP_ASSET:
 			out += "OP_ASSET\n"
+		case OP_TX_META:
+			out += "OP_TX_META\n"
 		default:
 			out += "Unknown opcode"
 		}
