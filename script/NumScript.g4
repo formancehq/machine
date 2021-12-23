@@ -1,6 +1,6 @@
 grammar NumScript;
 
-NEWLINE: [\r\n];
+NEWLINE: [\r\n]+;
 WHITESPACE: [ \t]+ -> skip;
 
 MULTILINE_COMMENT: '/*' (MULTILINE_COMMENT|.)*? '*/' -> skip;
@@ -108,13 +108,13 @@ origin
 
 varDecl: ty=type_ name=variable (EQ orig=origin)?;
 
-varListDecl: VARS LBRACE NEWLINE+ (v+=varDecl NEWLINE+)+ RBRACE NEWLINE+;
+varListDecl: VARS LBRACE NEWLINE (v+=varDecl NEWLINE+)+ RBRACE NEWLINE;
 
 script:
   NEWLINE*
   vars=varListDecl?
   stmts+=statement
-  (NEWLINE+ stmts+=statement)*
+  (NEWLINE stmts+=statement)*
   NEWLINE*
   EOF
   ;
