@@ -63,11 +63,11 @@ func (p Program) String() string {
 			out += "OP_TX_META\n"
 		case OP_JMPF:
 			out += "OP_JMPF "
-			offset := binary.LittleEndian.Uint16(p.Instructions[i+1:i+3]) - (1 << 15)
+			offset := int(binary.LittleEndian.Uint16(p.Instructions[i+1:i+3])) - (1 << 15)
 			if offset > 0 {
 				out += "+"
 			}
-			dest := i + 3 + int(offset)
+			dest := i + 3 + offset
 			out += fmt.Sprintf("%d (=> #%d)\n", offset, dest)
 			i += 2
 		default:
