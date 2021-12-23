@@ -317,9 +317,10 @@ func (m *Machine) tick() (bool, byte) {
 			})
 		}
 	case program.OP_TX_META:
-		k := m.popValue()
+		k := m.popString()
 		v := m.popValue()
-		m.TxMeta[fmt.Sprintf("%s", k)] = v
+
+		m.TxMeta[string(k)] = v
 	default:
 		return true, EXIT_FAIL_INVALID
 	}
