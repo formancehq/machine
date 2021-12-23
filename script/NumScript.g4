@@ -98,7 +98,7 @@ valueAwareSource
   ;
 
 ifStatement:
-  IF condition=variable '{' NEWLINE stmts+=statement NEWLINE '}'
+  IF condition=variable '{' (NEWLINE stmts+=statement)+ NEWLINE '}'
   ;
 
 statement
