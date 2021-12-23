@@ -61,6 +61,11 @@ func (p Program) String() string {
 			out += "OP_ASSET\n"
 		case OP_TX_META:
 			out += "OP_TX_META\n"
+		case OP_JMPF:
+			out += "OP_JMPF "
+			pointer := binary.LittleEndian.Uint16(p.Instructions[i+1 : i+3])
+			out += fmt.Sprintf("#%d\n", pointer)
+			i += 2
 		default:
 			out += "Unknown opcode"
 		}

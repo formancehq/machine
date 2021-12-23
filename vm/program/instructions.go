@@ -1,6 +1,7 @@
 package program
 
 const (
+	// push a memory address to the stack
 	OP_APUSH = byte(iota + 1)
 	OP_IPUSH
 	OP_SWAP           // <left: any> <right: any> => <right:any> <left:any>
@@ -19,4 +20,5 @@ const (
 	OP_ALLOC          // <funding> <allotment(N)> => <funding>*N
 	OP_SEND           // <funding> <account>
 	OP_TX_META        //
+	OP_JMPF           //
 )

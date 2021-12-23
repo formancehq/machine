@@ -283,6 +283,45 @@ func (p *parseVisitor) VisitPrint(ctx *parser.PrintContext) *CompileError {
 	return nil
 }
 
+func (p *parseVisitor) VisitIf(c *parser.IfStmtContext) *CompileError {
+	ty, _, err := p.VisitVariable(c.GetStmt().GetCondition(), true)
+
+	if err != nil {
+		return err
+	}
+
+	if ty != core.TYPE_BOOLEAN {
+		return LogicError(c, errors.New("tried to do boolean logic with wrong type"))
+	}
+
+	l := len(p.instructions)
+
+	for _, stmt := range c.GetStmt().GetStmts() {
+		err := p.VisitStatement(stmt)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	nl := len(p.instructions)
+	target := make([]byte, 2)
+	binary.LittleEndian.PutUint16(target, uint16(nl+3))
+
+	jmpf := []byte{program.OP_JMPF}
+	jmpf = append(jmpf, target...)
+
+	p.instructions = append(
+		p.instructions[:l],
+		append(
+			jmpf,
+			p.instructions[l:]...,
+		)...,
+	)
+
+	return nil
+}
+
 // vars declaration block
 func (p *parseVisitor) VisitVars(c *parser.VarListDeclContext) *CompileError {
 	if len(c.GetV()) > 32768 {
@@ -305,6 +344,8 @@ func (p *parseVisitor) VisitVars(c *parser.VarListDeclContext) *CompileError {
 			ty = core.TYPE_MONETARY
 		case "portion":
 			ty = core.TYPE_PORTION
+		case "boolean":
+			ty = core.TYPE_BOOLEAN
 		default:
 			return InternalError(c)
 		}
@@ -337,6 +378,36 @@ func (p *parseVisitor) VisitVars(c *parser.VarListDeclContext) *CompileError {
 	return nil
 }
 
+func (p *parseVisitor) VisitStatement(stmt parser.IStatementContext) *CompileError {
+	switch c := stmt.(type) {
+	case *parser.PrintContext:
+		err := p.VisitPrint(c)
+		if err != nil {
+			return err
+		}
+	case *parser.FailContext:
+		p.instructions = append(p.instructions, program.OP_FAIL)
+	case *parser.SendContext:
+		err := p.VisitSend(c)
+		if err != nil {
+			return err
+		}
+	case *parser.SetTxMetaContext:
+		err := p.VisitSetTxMeta(c)
+		if err != nil {
+			return err
+		}
+	case *parser.IfStmtContext:
+		err := p.VisitIf(c)
+		if err != nil {
+			return err
+		}
+	default:
+		return InternalError(c)
+	}
+	return nil
+}
+
 func (p *parseVisitor) VisitScript(c parser.IScriptContext) *CompileError {
 	switch c := c.(type) {
 	case *parser.ScriptContext:
@@ -353,26 +424,10 @@ func (p *parseVisitor) VisitScript(c parser.IScriptContext) *CompileError {
 			}
 		}
 		for _, stmt := range c.GetStmts() {
-			switch c := stmt.(type) {
-			case *parser.PrintContext:
-				err := p.VisitPrint(c)
-				if err != nil {
-					return err
-				}
-			case *parser.FailContext:
-				p.instructions = append(p.instructions, program.OP_FAIL)
-			case *parser.SendContext:
-				err := p.VisitSend(c)
-				if err != nil {
-					return err
-				}
-			case *parser.SetTxMetaContext:
-				err := p.VisitSetTxMeta(c)
-				if err != nil {
-					return err
-				}
-			default:
-				return InternalError(c)
+			err := p.VisitStatement(stmt)
+
+			if err != nil {
+				return err
 			}
 		}
 	default:

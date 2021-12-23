@@ -10,6 +10,7 @@ META: 'meta';
 SET_TX_META: 'set_tx_meta';
 PRINT: 'print';
 FAIL: 'fail';
+IF: 'if';
 SEND: 'send';
 SOURCE: 'source';
 FROM: 'from';
@@ -31,12 +32,14 @@ TY_ASSET: 'asset';
 TY_NUMBER: 'number';
 TY_MONETARY: 'monetary';
 TY_PORTION: 'portion';
+TY_BOOLEAN: 'boolean';
 STRING: '"' [a-zA-Z0-9]* '"';
 PORTION:
   ( [0-9]+ [ ]? '/' [ ]? [0-9]+
   | [0-9]+     ('.'      [0-9]+)? '%'
   );
 PORTION_REMAINING: 'remaining';
+BOOLEAN: 'true' | 'false';
 NUMBER: [0-9]+;
 PERCENT: '%';
 VARIABLE_NAME: '$' [a-z_]+ [a-z0-9_]*;
@@ -92,6 +95,10 @@ valueAwareSource
   | sourceAllotment # SrcAllotment
   ;
 
+ifStatement:
+  IF condition=variable '{' NEWLINE stmts+=statement NEWLINE '}'
+  ;
+
 statement
   : PRINT expr=expression # Print
   | SET_TX_META '(' key=STRING ',' (value=STRING | valueExpr=expression) ')' #SetTxMeta
@@ -99,9 +106,10 @@ statement
   | SEND (mon=expression | monAll=monetaryAll) LPAREN NEWLINE
       ( SOURCE '=' src=valueAwareSource NEWLINE DESTINATION '=' dest=destination
       | DESTINATION '=' dest=destination NEWLINE SOURCE '=' src=valueAwareSource) NEWLINE RPAREN # Send
+  | stmt=ifStatement #IfStmt
   ;
 
-type_: TY_ACCOUNT | TY_ASSET | TY_NUMBER | TY_MONETARY | TY_PORTION;
+type_: TY_ACCOUNT | TY_ASSET | TY_NUMBER | TY_MONETARY | TY_PORTION | TY_BOOLEAN;
 
 origin
   : META '(' acc=expression ',' key=STRING ')'

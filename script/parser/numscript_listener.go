@@ -92,6 +92,9 @@ type NumScriptListener interface {
 	// EnterSrcAllotment is called when entering the SrcAllotment production.
 	EnterSrcAllotment(c *SrcAllotmentContext)
 
+	// EnterIfStatement is called when entering the ifStatement production.
+	EnterIfStatement(c *IfStatementContext)
+
 	// EnterPrint is called when entering the Print production.
 	EnterPrint(c *PrintContext)
 
@@ -103,6 +106,9 @@ type NumScriptListener interface {
 
 	// EnterSend is called when entering the Send production.
 	EnterSend(c *SendContext)
+
+	// EnterIfStmt is called when entering the IfStmt production.
+	EnterIfStmt(c *IfStmtContext)
 
 	// EnterType_ is called when entering the type_ production.
 	EnterType_(c *Type_Context)
@@ -203,6 +209,9 @@ type NumScriptListener interface {
 	// ExitSrcAllotment is called when exiting the SrcAllotment production.
 	ExitSrcAllotment(c *SrcAllotmentContext)
 
+	// ExitIfStatement is called when exiting the ifStatement production.
+	ExitIfStatement(c *IfStatementContext)
+
 	// ExitPrint is called when exiting the Print production.
 	ExitPrint(c *PrintContext)
 
@@ -214,6 +223,9 @@ type NumScriptListener interface {
 
 	// ExitSend is called when exiting the Send production.
 	ExitSend(c *SendContext)
+
+	// ExitIfStmt is called when exiting the IfStmt production.
+	ExitIfStmt(c *IfStmtContext)
 
 	// ExitType_ is called when exiting the type_ production.
 	ExitType_(c *Type_Context)

@@ -12,6 +12,7 @@ const (
 	TYPE_ASSET                      // name of an asset
 	TYPE_NUMBER                     // 64bit unsigned integer
 	TYPE_STRING                     // string
+	TYPE_BOOLEAN                    // boolean
 	TYPE_MONETARY                   // [asset number]
 	TYPE_PORTION                    // rational number between 0 and 1 both exclusive
 	TYPE_ALLOTMENT                  // list of portions
@@ -29,6 +30,8 @@ func (t Type) String() string {
 		return "number"
 	case TYPE_STRING:
 		return "string"
+	case TYPE_BOOLEAN:
+		return "boolean"
 	case TYPE_MONETARY:
 		return "monetary"
 	case TYPE_PORTION:
@@ -77,6 +80,14 @@ func (String) isValue()      {}
 func (String) GetType() Type { return TYPE_STRING }
 func (s String) String() string {
 	return string(s)
+}
+
+type Boolean bool
+
+func (Boolean) isValue()      {}
+func (Boolean) GetType() Type { return TYPE_BOOLEAN }
+func (b Boolean) String() string {
+	return fmt.Sprintf("%v", bool(b))
 }
 
 type Monetary struct {

@@ -122,9 +122,9 @@ func (m *Machine) tick() (bool, byte) {
 
 	if m.Debug {
 		fmt.Println("STATE ---------------------------------------------------------------------")
-		fmt.Printf("    %v\n", aurora.Blue(m.Stack))
-		fmt.Printf("    %v\n", aurora.Cyan(m.Balances))
-		fmt.Printf("    %v\n", op)
+		fmt.Printf("  %v\n", aurora.Blue(m.Stack))
+		fmt.Printf("  %v\n", aurora.Cyan(m.Balances))
+		fmt.Printf("  %d, %v\n", m.P, op)
 	}
 
 	switch op {
@@ -159,6 +159,16 @@ func (m *Machine) tick() (bool, byte) {
 		m.print_chan <- a
 	case program.OP_FAIL:
 		return true, EXIT_FAIL
+	case program.OP_JMPF:
+		b := m.popBool()
+		bytes := m.Program.Instructions[m.P+1 : m.P+3]
+		dest := binary.LittleEndian.Uint16(bytes)
+		if !b {
+			fmt.Printf("we are at %d, need to jump to %d\n", m.P, dest)
+			m.P = uint(dest - 1)
+		} else {
+			m.P += 2
+		}
 	case program.OP_ASSET:
 		v := m.popValue()
 		switch v := v.(type) {

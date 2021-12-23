@@ -191,6 +191,12 @@ func (s *BaseNumScriptListener) EnterSrcAllotment(ctx *SrcAllotmentContext) {}
 // ExitSrcAllotment is called when production SrcAllotment is exited.
 func (s *BaseNumScriptListener) ExitSrcAllotment(ctx *SrcAllotmentContext) {}
 
+// EnterIfStatement is called when production ifStatement is entered.
+func (s *BaseNumScriptListener) EnterIfStatement(ctx *IfStatementContext) {}
+
+// ExitIfStatement is called when production ifStatement is exited.
+func (s *BaseNumScriptListener) ExitIfStatement(ctx *IfStatementContext) {}
+
 // EnterPrint is called when production Print is entered.
 func (s *BaseNumScriptListener) EnterPrint(ctx *PrintContext) {}
 
@@ -214,6 +220,12 @@ func (s *BaseNumScriptListener) EnterSend(ctx *SendContext) {}
 
 // ExitSend is called when production Send is exited.
 func (s *BaseNumScriptListener) ExitSend(ctx *SendContext) {}
+
+// EnterIfStmt is called when production IfStmt is entered.
+func (s *BaseNumScriptListener) EnterIfStmt(ctx *IfStmtContext) {}
+
+// ExitIfStmt is called when production IfStmt is exited.
+func (s *BaseNumScriptListener) ExitIfStmt(ctx *IfStmtContext) {}
 
 // EnterType_ is called when production type_ is entered.
 func (s *BaseNumScriptListener) EnterType_(ctx *Type_Context) {}
