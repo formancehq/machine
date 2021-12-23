@@ -1,4 +1,4 @@
-// Code generated from NumScript.g4 by ANTLR 4.9.2. DO NOT EDIT.
+// Code generated from NumScript.g4 by ANTLR 4.9.3. DO NOT EDIT.
 
 package parser // NumScript
 
@@ -22,6 +22,9 @@ type NumScriptListener interface {
 
 	// EnterLitNumber is called when entering the LitNumber production.
 	EnterLitNumber(c *LitNumberContext)
+
+	// EnterLitString is called when entering the LitString production.
+	EnterLitString(c *LitStringContext)
 
 	// EnterLitMonetary is called when entering the LitMonetary production.
 	EnterLitMonetary(c *LitMonetaryContext)
@@ -139,6 +142,9 @@ type NumScriptListener interface {
 
 	// ExitLitNumber is called when exiting the LitNumber production.
 	ExitLitNumber(c *LitNumberContext)
+
+	// ExitLitString is called when exiting the LitString production.
+	ExitLitString(c *LitStringContext)
 
 	// ExitLitMonetary is called when exiting the LitMonetary production.
 	ExitLitMonetary(c *LitMonetaryContext)

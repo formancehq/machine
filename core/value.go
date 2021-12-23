@@ -79,7 +79,7 @@ type String string
 func (String) isValue()      {}
 func (String) GetType() Type { return TYPE_STRING }
 func (s String) String() string {
-	return string(s)
+	return fmt.Sprintf("\"%v\"", string(s))
 }
 
 type Boolean bool
