@@ -1,6 +1,6 @@
 grammar NumScript;
 
-NEWLINE: [\r\n];
+NEWLINE: [\r\n]+;
 WHITESPACE: [ \t]+ -> skip;
 
 MULTILINE_COMMENT: '/*' (MULTILINE_COMMENT|.)*? '*/' -> skip;
@@ -33,6 +33,7 @@ TY_NUMBER: 'number';
 TY_MONETARY: 'monetary';
 TY_PORTION: 'portion';
 TY_BOOLEAN: 'boolean';
+TY_STRING: 'string';
 STRING: '"' [a-zA-Z0-9]* '"';
 PORTION:
   ( [0-9]+ [ ]? '/' [ ]? [0-9]+
@@ -110,7 +111,8 @@ statement
   | stmt=ifStatement #IfStmt
   ;
 
-type_: TY_ACCOUNT | TY_ASSET | TY_NUMBER | TY_MONETARY | TY_PORTION | TY_BOOLEAN;
+
+type_: TY_ACCOUNT | TY_ASSET | TY_NUMBER | TY_STRING | TY_MONETARY | TY_PORTION | TY_BOOLEAN;
 
 origin
   : META '(' acc=expression ',' key=STRING ')'
@@ -119,13 +121,13 @@ origin
 
 varDecl: ty=type_ name=variable (EQ orig=origin)?;
 
-varListDecl: VARS LBRACE NEWLINE+ (v+=varDecl NEWLINE+)+ RBRACE NEWLINE+;
+varListDecl: VARS LBRACE NEWLINE (v+=varDecl NEWLINE+)+ RBRACE NEWLINE;
 
 script:
   NEWLINE*
   vars=varListDecl?
   stmts+=statement
-  (NEWLINE+ stmts+=statement)*
+  (NEWLINE stmts+=statement)*
   NEWLINE*
   EOF
   ;
