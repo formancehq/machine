@@ -51,6 +51,7 @@ literal
   : ACCOUNT # LitAccount
   | ASSET # LitAsset
   | NUMBER # LitNumber
+  | STRING # LitString
   | monetary # LitMonetary
   ;
 
@@ -94,7 +95,7 @@ valueAwareSource
 
 statement
   : PRINT expr=expression # Print
-  | SET_TX_META '(' key=STRING ',' (value=STRING | valueExpr=expression) ')' #SetTxMeta
+  | SET_TX_META '(' key=STRING ',' value=expression ')' #SetTxMeta
   | FAIL # Fail
   | SEND (mon=expression | monAll=monetaryAll) LPAREN NEWLINE
       ( SOURCE '=' src=valueAwareSource NEWLINE DESTINATION '=' dest=destination

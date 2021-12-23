@@ -1,4 +1,4 @@
-// Code generated from NumScript.g4 by ANTLR 4.9.2. DO NOT EDIT.
+// Code generated from NumScript.g4 by ANTLR 4.9.3. DO NOT EDIT.
 
 package parser // NumScript
 
@@ -50,6 +50,12 @@ func (s *BaseNumScriptListener) EnterLitNumber(ctx *LitNumberContext) {}
 
 // ExitLitNumber is called when production LitNumber is exited.
 func (s *BaseNumScriptListener) ExitLitNumber(ctx *LitNumberContext) {}
+
+// EnterLitString is called when production LitString is entered.
+func (s *BaseNumScriptListener) EnterLitString(ctx *LitStringContext) {}
+
+// ExitLitString is called when production LitString is exited.
+func (s *BaseNumScriptListener) ExitLitString(ctx *LitStringContext) {}
 
 // EnterLitMonetary is called when production LitMonetary is entered.
 func (s *BaseNumScriptListener) EnterLitMonetary(ctx *LitMonetaryContext) {}

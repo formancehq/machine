@@ -165,6 +165,17 @@ func (p *parseVisitor) VisitLit(c parser.ILiteralContext, push bool) (core.Type,
 			p.PushInteger(number)
 		}
 		return core.TYPE_NUMBER, nil, nil
+	case *parser.LitStringContext:
+		addr, err := p.AllocateResource(program.Constant{
+			Inner: core.String(strings.Trim(c.GetText(), `"`)),
+		})
+		if err != nil {
+			return 0, nil, LogicError(c, err)
+		}
+		if push {
+			p.PushAddress(*addr)
+		}
+		return core.TYPE_STRING, addr, nil
 	case *parser.LitMonetaryContext:
 		asset := c.Monetary().GetAsset().GetText()
 		amt, err := strconv.ParseUint(c.Monetary().GetAmt().GetText(), 10, 64)
@@ -244,24 +255,9 @@ func (p *parseVisitor) VisitSend(c *parser.SendContext) *CompileError {
 
 // set_tx_meta statement
 func (p *parseVisitor) VisitSetTxMeta(ctx *parser.SetTxMetaContext) *CompileError {
-	if ctx.GetValue() != nil {
-		addr, err := p.AllocateResource(program.Constant{
-			Inner: core.String(strings.Trim(ctx.GetValue().GetText(), `"`)),
-		})
-
-		if err != nil {
-			return InternalError(ctx)
-		}
-
-		p.PushAddress(*addr)
-	}
-
-	if ctx.GetValueExpr() != nil {
-		_, _, err := p.VisitExpr(ctx.GetValueExpr(), true)
-
-		if err != nil {
-			return err
-		}
+	_, _, err := p.VisitExpr(ctx.GetValue(), true)
+	if err != nil {
+		return err
 	}
 
 	keyAddr, _ := p.AllocateResource(program.Constant{
