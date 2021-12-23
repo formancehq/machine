@@ -303,7 +303,7 @@ func (p *parseVisitor) VisitIf(c *parser.IfStmtContext) *CompileError {
 
 	nl := len(p.instructions)
 	target := make([]byte, 2)
-	binary.LittleEndian.PutUint16(target, uint16(nl+3))
+	binary.LittleEndian.PutUint16(target, uint16(nl-l+(1<<15)))
 
 	jmpf := []byte{program.OP_JMPF}
 	jmpf = append(jmpf, target...)

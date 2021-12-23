@@ -867,6 +867,53 @@ func TestCappedDestination2(t *testing.T) {
 	})
 }
 
+func TestIf(t *testing.T) {
+	test(t, TestCase{
+		Case: `
+		vars {
+			boolean $cond0
+			boolean $cond1
+		}
+		if $cond0 {
+			set_tx_meta("first", 1)
+			if $cond1 {
+				set_tx_meta("second", 1)
+			}
+			set_tx_meta("first-end", 1)
+		}
+		set_tx_meta("end", 1)
+		`,
+		Expected: CaseResult{
+			Instructions: []byte{
+				program.OP_APUSH, 00, 00,
+				program.OP_JMPF, 0x2D, 0x80,
+				program.OP_IPUSH, 01, 00, 00, 00, 00, 00, 00, 00,
+				program.OP_APUSH, 02, 00,
+				program.OP_TX_META,
+				program.OP_APUSH, 01, 00,
+				program.OP_JMPF, 0x0D, 0x80,
+				program.OP_IPUSH, 01, 00, 00, 00, 00, 00, 00, 00,
+				program.OP_APUSH, 03, 00,
+				program.OP_TX_META,
+				program.OP_IPUSH, 01, 00, 00, 00, 00, 00, 00, 00,
+				program.OP_APUSH, 04, 00,
+				program.OP_TX_META,
+				program.OP_IPUSH, 01, 00, 00, 00, 00, 00, 00, 00,
+				program.OP_APUSH, 05, 00,
+				program.OP_TX_META,
+			}, Resources: []program.Resource{
+				program.Parameter{Typ: core.TYPE_BOOLEAN, Name: "cond0"},
+				program.Parameter{Typ: core.TYPE_BOOLEAN, Name: "cond1"},
+				program.Constant{Inner: core.String("first")},
+				program.Constant{Inner: core.String("second")},
+				program.Constant{Inner: core.String("first-end")},
+				program.Constant{Inner: core.String("end")},
+			},
+			Error: "",
+		},
+	})
+}
+
 // func TestTooManyConstants(t *testing.T) {
 // 	script := ""
 // 	for i := 0; i < 11000; i++ {

@@ -19,6 +19,6 @@ const (
 	OP_REPAY          // <funding>
 	OP_ALLOC          // <funding> <allotment(N)> => <funding>*N
 	OP_SEND           // <funding> <account>
-	OP_TX_META        //
-	OP_JMPF           //
+	OP_TX_META        // <value: any> <key: string>
+	OP_JMPF           // <boolean>
 )

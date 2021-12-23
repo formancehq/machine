@@ -49,7 +49,7 @@ func NewMachine(p *program.Program) *Machine {
 }
 
 type Machine struct {
-	P                   uint
+	P                   uint // instruction pointer
 	Program             *program.Program
 	Vars                map[string]core.Value
 	UnresolvedResources []program.Resource
@@ -127,6 +127,8 @@ func (m *Machine) tick() (bool, byte) {
 		fmt.Printf("  %d, %v\n", m.P, op)
 	}
 
+	poffset := 1 // instruction pointer offset, can be different for some instructions
+
 	switch op {
 	case program.OP_APUSH:
 		bytes := m.Program.Instructions[m.P+1 : m.P+3]
@@ -135,12 +137,12 @@ func (m *Machine) tick() (bool, byte) {
 			return true, EXIT_FAIL
 		}
 		m.Stack = append(m.Stack, *v)
-		m.P += 2
+		poffset += 2
 	case program.OP_IPUSH:
 		bytes := m.Program.Instructions[m.P+1 : m.P+9]
 		v := core.Number(binary.LittleEndian.Uint64(bytes))
 		m.Stack = append(m.Stack, v)
-		m.P += 8
+		poffset += 8
 	case program.OP_SWAP:
 		a := m.popValue()
 		b := m.popValue()
@@ -162,12 +164,14 @@ func (m *Machine) tick() (bool, byte) {
 	case program.OP_JMPF:
 		b := m.popBool()
 		bytes := m.Program.Instructions[m.P+1 : m.P+3]
-		dest := binary.LittleEndian.Uint16(bytes)
+		offset := int(binary.LittleEndian.Uint16(bytes)) - (1 << 15)
 		if !b {
-			fmt.Printf("we are at %d, need to jump to %d\n", m.P, dest)
-			m.P = uint(dest - 1)
+			poffset = offset + 3
+			if m.Debug {
+				fmt.Printf("jump from %d to %d\n", m.P, int(m.P)+poffset)
+			}
 		} else {
-			m.P += 2
+			poffset += 2
 		}
 	case program.OP_ASSET:
 		v := m.popValue()
@@ -335,7 +339,7 @@ func (m *Machine) tick() (bool, byte) {
 		return true, EXIT_FAIL_INVALID
 	}
 
-	m.P += 1
+	m.P = uint(int(m.P) + poffset)
 
 	if int(m.P) >= len(m.Program.Instructions) {
 		return true, EXIT_OK
