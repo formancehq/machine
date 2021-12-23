@@ -151,6 +151,9 @@ func (p *parseVisitor) VisitLit(c parser.ILiteralContext, push bool) (core.Type,
 		if err != nil {
 			return 0, nil, LogicError(c, err)
 		}
+		if push {
+			p.PushAddress(*addr)
+		}
 		return core.TYPE_ASSET, addr, nil
 	case *parser.LitNumberContext:
 		n, err := strconv.ParseUint(c.GetText(), 10, 64)
@@ -254,13 +257,11 @@ func (p *parseVisitor) VisitSetTxMeta(ctx *parser.SetTxMetaContext) *CompileErro
 	}
 
 	if ctx.GetValueExpr() != nil {
-		_, addr, err := p.VisitExpr(ctx.GetValueExpr(), false)
+		_, _, err := p.VisitExpr(ctx.GetValueExpr(), true)
 
 		if err != nil {
 			return err
 		}
-
-		p.PushAddress(*addr)
 	}
 
 	keyAddr, _ := p.AllocateResource(program.Constant{
