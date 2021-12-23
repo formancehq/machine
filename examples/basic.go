@@ -10,18 +10,16 @@ import (
 
 func main() {
 	program, err := compiler.Compile(`
-	vars {
-		boolean $cond0
-		boolean $cond1
-	}
-	if $cond0 {
-		set_tx_meta("first", 1)
-		if $cond1 {
-			set_tx_meta("second", 1)
+	send [COIN 100] (
+		source = @world
+		destination = {
+			50% to @a
+			50% to {
+				max [COIN 10] to @b
+				@c
+			}
 		}
-		set_tx_meta("first-end", 1)
-	}
-	set_tx_meta("end", 1)
+	)
 	`)
 	if err != nil {
 		panic(err)
@@ -30,10 +28,7 @@ func main() {
 
 	m := vm.NewMachine(program)
 
-	m.SetVars(map[string]core.Value{
-		"cond0": core.Boolean(true),
-		"cond1": core.Boolean(true),
-	})
+	m.SetVars(map[string]core.Value{})
 
 	{
 		ch, err := m.ResolveResources()
