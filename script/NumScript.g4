@@ -31,6 +31,7 @@ TY_ASSET: 'asset';
 TY_NUMBER: 'number';
 TY_MONETARY: 'monetary';
 TY_PORTION: 'portion';
+TY_STRING: 'string';
 STRING: '"' [a-zA-Z0-9]* '"';
 PORTION:
   ( [0-9]+ [ ]? '/' [ ]? [0-9]+
@@ -102,7 +103,7 @@ statement
       | DESTINATION '=' dest=destination NEWLINE SOURCE '=' src=valueAwareSource) NEWLINE RPAREN # Send
   ;
 
-type_: TY_ACCOUNT | TY_ASSET | TY_NUMBER | TY_MONETARY | TY_PORTION;
+type_: TY_ACCOUNT | TY_ASSET | TY_NUMBER | TY_STRING | TY_MONETARY | TY_PORTION;
 
 origin
   : META '(' acc=expression ',' key=STRING ')'

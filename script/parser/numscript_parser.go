@@ -16,7 +16,7 @@ var _ = reflect.Copy
 var _ = strconv.Itoa
 
 var parserATN = []uint16{
-	3, 24715, 42794, 33075, 47597, 16764, 15335, 30598, 22884, 3, 42, 262,
+	3, 24715, 42794, 33075, 47597, 16764, 15335, 30598, 22884, 3, 43, 262,
 	4, 2, 9, 2, 4, 3, 9, 3, 4, 4, 9, 4, 4, 5, 9, 5, 4, 6, 9, 6, 4, 7, 9, 7,
 	4, 8, 9, 8, 4, 9, 9, 9, 4, 10, 9, 10, 4, 11, 9, 11, 4, 12, 9, 12, 4, 13,
 	9, 13, 4, 14, 9, 14, 4, 15, 9, 15, 4, 16, 9, 16, 4, 17, 9, 17, 4, 18, 9,
@@ -46,24 +46,24 @@ var parserATN = []uint16{
 	14, 22, 252, 11, 22, 3, 22, 7, 22, 255, 10, 22, 12, 22, 14, 22, 258, 11,
 	22, 3, 22, 3, 22, 3, 22, 2, 3, 10, 23, 2, 4, 6, 8, 10, 12, 14, 16, 18,
 	20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 2, 4, 3, 2, 21, 22, 3,
-	2, 30, 34, 2, 273, 2, 44, 3, 2, 2, 2, 4, 49, 3, 2, 2, 2, 6, 59, 3, 2, 2,
+	2, 30, 35, 2, 273, 2, 44, 3, 2, 2, 2, 4, 49, 3, 2, 2, 2, 6, 59, 3, 2, 2,
 	2, 8, 61, 3, 2, 2, 2, 10, 66, 3, 2, 2, 2, 12, 79, 3, 2, 2, 2, 14, 81, 3,
 	2, 2, 2, 16, 92, 3, 2, 2, 2, 18, 97, 3, 2, 2, 2, 20, 114, 3, 2, 2, 2, 22,
 	116, 3, 2, 2, 2, 24, 127, 3, 2, 2, 2, 26, 135, 3, 2, 2, 2, 28, 137, 3,
 	2, 2, 2, 30, 152, 3, 2, 2, 2, 32, 192, 3, 2, 2, 2, 34, 194, 3, 2, 2, 2,
 	36, 196, 3, 2, 2, 2, 38, 203, 3, 2, 2, 2, 40, 209, 3, 2, 2, 2, 42, 235,
-	3, 2, 2, 2, 44, 45, 7, 25, 2, 2, 45, 46, 7, 42, 2, 2, 46, 47, 7, 38, 2,
+	3, 2, 2, 2, 44, 45, 7, 25, 2, 2, 45, 46, 7, 43, 2, 2, 46, 47, 7, 39, 2,
 	2, 47, 48, 7, 26, 2, 2, 48, 3, 3, 2, 2, 2, 49, 50, 7, 25, 2, 2, 50, 51,
-	7, 42, 2, 2, 51, 52, 7, 3, 2, 2, 52, 53, 7, 26, 2, 2, 53, 5, 3, 2, 2, 2,
-	54, 60, 7, 41, 2, 2, 55, 60, 7, 42, 2, 2, 56, 60, 7, 38, 2, 2, 57, 60,
-	7, 35, 2, 2, 58, 60, 5, 2, 2, 2, 59, 54, 3, 2, 2, 2, 59, 55, 3, 2, 2, 2,
+	7, 43, 2, 2, 51, 52, 7, 3, 2, 2, 52, 53, 7, 26, 2, 2, 53, 5, 3, 2, 2, 2,
+	54, 60, 7, 42, 2, 2, 55, 60, 7, 43, 2, 2, 56, 60, 7, 39, 2, 2, 57, 60,
+	7, 36, 2, 2, 58, 60, 5, 2, 2, 2, 59, 54, 3, 2, 2, 2, 59, 55, 3, 2, 2, 2,
 	59, 56, 3, 2, 2, 2, 59, 57, 3, 2, 2, 2, 59, 58, 3, 2, 2, 2, 60, 7, 3, 2,
-	2, 2, 61, 62, 7, 40, 2, 2, 62, 9, 3, 2, 2, 2, 63, 64, 8, 6, 1, 2, 64, 67,
+	2, 2, 61, 62, 7, 41, 2, 2, 62, 9, 3, 2, 2, 2, 63, 64, 8, 6, 1, 2, 64, 67,
 	5, 6, 4, 2, 65, 67, 5, 8, 5, 2, 66, 63, 3, 2, 2, 2, 66, 65, 3, 2, 2, 2,
 	67, 73, 3, 2, 2, 2, 68, 69, 12, 5, 2, 2, 69, 70, 9, 2, 2, 2, 70, 72, 5,
 	10, 6, 6, 71, 68, 3, 2, 2, 2, 72, 75, 3, 2, 2, 2, 73, 71, 3, 2, 2, 2, 73,
-	74, 3, 2, 2, 2, 74, 11, 3, 2, 2, 2, 75, 73, 3, 2, 2, 2, 76, 80, 7, 36,
-	2, 2, 77, 80, 5, 8, 5, 2, 78, 80, 7, 37, 2, 2, 79, 76, 3, 2, 2, 2, 79,
+	74, 3, 2, 2, 2, 74, 11, 3, 2, 2, 2, 75, 73, 3, 2, 2, 2, 76, 80, 7, 37,
+	2, 2, 77, 80, 5, 8, 5, 2, 78, 80, 7, 38, 2, 2, 79, 76, 3, 2, 2, 2, 79,
 	77, 3, 2, 2, 2, 79, 78, 3, 2, 2, 2, 80, 13, 3, 2, 2, 2, 81, 82, 7, 27,
 	2, 2, 82, 86, 7, 5, 2, 2, 83, 84, 5, 20, 11, 2, 84, 85, 7, 5, 2, 2, 85,
 	87, 3, 2, 2, 2, 86, 83, 3, 2, 2, 2, 87, 88, 3, 2, 2, 2, 88, 86, 3, 2, 2,
@@ -91,7 +91,7 @@ var parserATN = []uint16{
 	7, 28, 2, 2, 149, 29, 3, 2, 2, 2, 150, 153, 5, 26, 14, 2, 151, 153, 5,
 	28, 15, 2, 152, 150, 3, 2, 2, 2, 152, 151, 3, 2, 2, 2, 153, 31, 3, 2, 2,
 	2, 154, 155, 7, 12, 2, 2, 155, 193, 5, 10, 6, 2, 156, 157, 7, 11, 2, 2,
-	157, 158, 7, 23, 2, 2, 158, 159, 7, 35, 2, 2, 159, 160, 7, 4, 2, 2, 160,
+	157, 158, 7, 23, 2, 2, 158, 159, 7, 36, 2, 2, 159, 160, 7, 4, 2, 2, 160,
 	161, 5, 10, 6, 2, 161, 162, 7, 24, 2, 2, 162, 193, 3, 2, 2, 2, 163, 193,
 	7, 13, 2, 2, 164, 167, 7, 14, 2, 2, 165, 168, 5, 10, 6, 2, 166, 168, 5,
 	4, 3, 2, 167, 165, 3, 2, 2, 2, 167, 166, 3, 2, 2, 2, 168, 169, 3, 2, 2,
@@ -106,7 +106,7 @@ var parserATN = []uint16{
 	3, 2, 2, 2, 192, 163, 3, 2, 2, 2, 192, 164, 3, 2, 2, 2, 193, 33, 3, 2,
 	2, 2, 194, 195, 9, 3, 2, 2, 195, 35, 3, 2, 2, 2, 196, 197, 7, 10, 2, 2,
 	197, 198, 7, 23, 2, 2, 198, 199, 5, 10, 6, 2, 199, 200, 7, 4, 2, 2, 200,
-	201, 7, 35, 2, 2, 201, 202, 7, 24, 2, 2, 202, 37, 3, 2, 2, 2, 203, 204,
+	201, 7, 36, 2, 2, 201, 202, 7, 24, 2, 2, 202, 37, 3, 2, 2, 2, 203, 204,
 	5, 34, 18, 2, 204, 207, 5, 8, 5, 2, 205, 206, 7, 29, 2, 2, 206, 208, 5,
 	36, 19, 2, 207, 205, 3, 2, 2, 2, 207, 208, 3, 2, 2, 2, 208, 39, 3, 2, 2,
 	2, 209, 210, 7, 9, 2, 2, 210, 212, 7, 27, 2, 2, 211, 213, 7, 5, 2, 2, 212,
@@ -136,15 +136,15 @@ var literalNames = []string{
 	"'print'", "'fail'", "'send'", "'source'", "'from'", "'max'", "'destination'",
 	"'to'", "'allocate'", "'+'", "'-'", "'('", "')'", "'['", "']'", "'{'",
 	"'}'", "'='", "'account'", "'asset'", "'number'", "'monetary'", "'portion'",
-	"", "", "'remaining'", "", "'%'",
+	"'string'", "", "", "'remaining'", "", "'%'",
 }
 var symbolicNames = []string{
 	"", "", "", "NEWLINE", "WHITESPACE", "MULTILINE_COMMENT", "LINE_COMMENT",
 	"VARS", "META", "SET_TX_META", "PRINT", "FAIL", "SEND", "SOURCE", "FROM",
 	"MAX", "DESTINATION", "TO", "ALLOCATE", "OP_ADD", "OP_SUB", "LPAREN", "RPAREN",
 	"LBRACK", "RBRACK", "LBRACE", "RBRACE", "EQ", "TY_ACCOUNT", "TY_ASSET",
-	"TY_NUMBER", "TY_MONETARY", "TY_PORTION", "STRING", "PORTION", "PORTION_REMAINING",
-	"NUMBER", "PERCENT", "VARIABLE_NAME", "ACCOUNT", "ASSET",
+	"TY_NUMBER", "TY_MONETARY", "TY_PORTION", "TY_STRING", "STRING", "PORTION",
+	"PORTION_REMAINING", "NUMBER", "PERCENT", "VARIABLE_NAME", "ACCOUNT", "ASSET",
 }
 
 var ruleNames = []string{
@@ -218,14 +218,15 @@ const (
 	NumScriptParserTY_NUMBER         = 30
 	NumScriptParserTY_MONETARY       = 31
 	NumScriptParserTY_PORTION        = 32
-	NumScriptParserSTRING            = 33
-	NumScriptParserPORTION           = 34
-	NumScriptParserPORTION_REMAINING = 35
-	NumScriptParserNUMBER            = 36
-	NumScriptParserPERCENT           = 37
-	NumScriptParserVARIABLE_NAME     = 38
-	NumScriptParserACCOUNT           = 39
-	NumScriptParserASSET             = 40
+	NumScriptParserTY_STRING         = 33
+	NumScriptParserSTRING            = 34
+	NumScriptParserPORTION           = 35
+	NumScriptParserPORTION_REMAINING = 36
+	NumScriptParserNUMBER            = 37
+	NumScriptParserPERCENT           = 38
+	NumScriptParserVARIABLE_NAME     = 39
+	NumScriptParserACCOUNT           = 40
+	NumScriptParserASSET             = 41
 )
 
 // NumScriptParser rules.
@@ -2037,7 +2038,7 @@ func (p *NumScriptParser) DestinationAllotment() (localctx IDestinationAllotment
 	p.GetErrorHandler().Sync(p)
 	_la = p.GetTokenStream().LA(1)
 
-	for ok := true; ok; ok = (((_la-34)&-(0x1f+1)) == 0 && ((1<<uint((_la-34)))&((1<<(NumScriptParserPORTION-34))|(1<<(NumScriptParserPORTION_REMAINING-34))|(1<<(NumScriptParserVARIABLE_NAME-34)))) != 0) {
+	for ok := true; ok; ok = (((_la-35)&-(0x1f+1)) == 0 && ((1<<uint((_la-35)))&((1<<(NumScriptParserPORTION-35))|(1<<(NumScriptParserPORTION_REMAINING-35))|(1<<(NumScriptParserVARIABLE_NAME-35)))) != 0) {
 		{
 			p.SetState(97)
 
@@ -3129,7 +3130,7 @@ func (p *NumScriptParser) SourceAllotment() (localctx ISourceAllotmentContext) {
 	p.GetErrorHandler().Sync(p)
 	_la = p.GetTokenStream().LA(1)
 
-	for ok := true; ok; ok = (((_la-34)&-(0x1f+1)) == 0 && ((1<<uint((_la-34)))&((1<<(NumScriptParserPORTION-34))|(1<<(NumScriptParserPORTION_REMAINING-34))|(1<<(NumScriptParserVARIABLE_NAME-34)))) != 0) {
+	for ok := true; ok; ok = (((_la-35)&-(0x1f+1)) == 0 && ((1<<uint((_la-35)))&((1<<(NumScriptParserPORTION-35))|(1<<(NumScriptParserPORTION_REMAINING-35))|(1<<(NumScriptParserVARIABLE_NAME-35)))) != 0) {
 		{
 			p.SetState(137)
 
@@ -3935,6 +3936,10 @@ func (s *Type_Context) TY_NUMBER() antlr.TerminalNode {
 	return s.GetToken(NumScriptParserTY_NUMBER, 0)
 }
 
+func (s *Type_Context) TY_STRING() antlr.TerminalNode {
+	return s.GetToken(NumScriptParserTY_STRING, 0)
+}
+
 func (s *Type_Context) TY_MONETARY() antlr.TerminalNode {
 	return s.GetToken(NumScriptParserTY_MONETARY, 0)
 }
@@ -3992,7 +3997,7 @@ func (p *NumScriptParser) Type_() (localctx IType_Context) {
 		p.SetState(192)
 		_la = p.GetTokenStream().LA(1)
 
-		if !(((_la-28)&-(0x1f+1)) == 0 && ((1<<uint((_la-28)))&((1<<(NumScriptParserTY_ACCOUNT-28))|(1<<(NumScriptParserTY_ASSET-28))|(1<<(NumScriptParserTY_NUMBER-28))|(1<<(NumScriptParserTY_MONETARY-28))|(1<<(NumScriptParserTY_PORTION-28)))) != 0) {
+		if !(((_la-28)&-(0x1f+1)) == 0 && ((1<<uint((_la-28)))&((1<<(NumScriptParserTY_ACCOUNT-28))|(1<<(NumScriptParserTY_ASSET-28))|(1<<(NumScriptParserTY_NUMBER-28))|(1<<(NumScriptParserTY_MONETARY-28))|(1<<(NumScriptParserTY_PORTION-28))|(1<<(NumScriptParserTY_STRING-28)))) != 0) {
 			p.GetErrorHandler().RecoverInline(p)
 		} else {
 			p.GetErrorHandler().ReportMatch(p)
@@ -4527,7 +4532,7 @@ func (p *NumScriptParser) VarListDecl() (localctx IVarListDeclContext) {
 	p.GetErrorHandler().Sync(p)
 	_la = p.GetTokenStream().LA(1)
 
-	for ok := true; ok; ok = (((_la-28)&-(0x1f+1)) == 0 && ((1<<uint((_la-28)))&((1<<(NumScriptParserTY_ACCOUNT-28))|(1<<(NumScriptParserTY_ASSET-28))|(1<<(NumScriptParserTY_NUMBER-28))|(1<<(NumScriptParserTY_MONETARY-28))|(1<<(NumScriptParserTY_PORTION-28)))) != 0) {
+	for ok := true; ok; ok = (((_la-28)&-(0x1f+1)) == 0 && ((1<<uint((_la-28)))&((1<<(NumScriptParserTY_ACCOUNT-28))|(1<<(NumScriptParserTY_ASSET-28))|(1<<(NumScriptParserTY_NUMBER-28))|(1<<(NumScriptParserTY_MONETARY-28))|(1<<(NumScriptParserTY_PORTION-28))|(1<<(NumScriptParserTY_STRING-28)))) != 0) {
 		{
 			p.SetState(214)
 

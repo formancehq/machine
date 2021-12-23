@@ -298,6 +298,8 @@ func (p *parseVisitor) VisitVars(c *parser.VarListDeclContext) *CompileError {
 			ty = core.TYPE_ASSET
 		case "number":
 			ty = core.TYPE_NUMBER
+		case "string":
+			ty = core.TYPE_STRING
 		case "monetary":
 			ty = core.TYPE_MONETARY
 		case "portion":
