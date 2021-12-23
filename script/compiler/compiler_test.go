@@ -133,6 +133,23 @@ func TestFail(t *testing.T) {
 	})
 }
 
+func TestCRLF(t *testing.T) {
+	test(t, TestCase{
+		Case: "print @a\r\nprint @b",
+		Expected: CaseResult{
+			Instructions: []byte{
+				program.OP_APUSH, 00, 00, program.OP_PRINT,
+				program.OP_APUSH, 01, 00, program.OP_PRINT,
+			},
+			Resources: []program.Resource{
+				program.Constant{Inner: core.Account("a")},
+				program.Constant{Inner: core.Account("b")},
+			},
+			Error: "",
+		},
+	})
+}
+
 func TestConstant(t *testing.T) {
 	user := core.Account("user:001")
 	test(t, TestCase{
