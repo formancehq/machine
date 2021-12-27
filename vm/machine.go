@@ -65,6 +65,15 @@ type Machine struct {
 	Debug               bool
 }
 
+func (m *Machine) GetTxMetaJson() ledger.Metadata {
+	meta := make(ledger.Metadata)
+	for k, v := range m.TxMeta {
+		b, _ := json.Marshal(v)
+		meta[k] = b
+	}
+	return meta
+}
+
 func (m *Machine) getResource(addr core.Address) (*core.Value, bool) {
 	a := int(addr)
 	if a >= len(m.Resources) {
