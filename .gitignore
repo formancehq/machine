@@ -5,3 +5,5 @@ coverage.out
 machine
 main.go
 machine.go
+.idea
+vendor
