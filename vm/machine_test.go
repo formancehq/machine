@@ -8,7 +8,7 @@ import (
 	"sync"
 	"testing"
 
-	ledger "github.com/numary/ledger/core"
+	ledger "github.com/numary/ledger/pkg/core"
 	"github.com/numary/machine/core"
 	"github.com/numary/machine/script/compiler"
 )

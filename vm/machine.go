@@ -15,7 +15,7 @@ import (
 	"fmt"
 
 	"github.com/logrusorgru/aurora"
-	ledger "github.com/numary/ledger/core"
+	ledger "github.com/numary/ledger/pkg/core"
 	"github.com/numary/machine/core"
 	"github.com/numary/machine/vm/program"
 )
