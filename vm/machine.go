@@ -68,8 +68,12 @@ type Machine struct {
 func (m *Machine) GetTxMetaJson() ledger.Metadata {
 	meta := make(ledger.Metadata)
 	for k, v := range m.TxMeta {
-		b, _ := json.Marshal(v)
-		meta[k] = b
+		val_json, _ := json.Marshal(v)
+		v, _ := json.Marshal(core.ValueJSON{
+			Type:  v.GetType().String(),
+			Value: val_json,
+		})
+		meta[k] = v
 	}
 	return meta
 }
