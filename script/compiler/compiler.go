@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/antlr/antlr4/runtime/Go/antlr"
+	ledger "github.com/numary/ledger/core"
 	"github.com/numary/machine/core"
 	"github.com/numary/machine/script/parser"
 	"github.com/numary/machine/vm/program"
@@ -68,7 +69,11 @@ func (p *parseVisitor) isWorld(addr core.Address) bool {
 	if idx < len(p.resources) {
 		if c, ok := p.resources[idx].(program.Constant); ok {
 			if acc, ok := c.Inner.(core.Account); ok {
-				if string(acc) == "world" {
+				account := ledger.Account{
+					Address: string(acc),
+				}
+
+				if account.CanEmit() {
 					return true
 				}
 			}
