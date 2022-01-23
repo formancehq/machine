@@ -6,6 +6,11 @@ import (
 	"fmt"
 )
 
+type ValueJSON struct {
+	Type  string          `json:"type"`
+	Value json.RawMessage `json:"value"`
+}
+
 func TypenameToType(name string) (Type, bool) {
 	switch name {
 	case "account":
@@ -20,10 +25,7 @@ func TypenameToType(name string) (Type, bool) {
 }
 
 func NewValueFromTypedJSON(raw_input json.RawMessage) (*Value, error) {
-	var input struct {
-		Type  string          `json:"type"`
-		Value json.RawMessage `json:"value"`
-	}
+	var input ValueJSON
 
 	err := json.Unmarshal(raw_input, &input)
 	if err != nil {
