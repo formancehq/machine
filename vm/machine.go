@@ -199,18 +199,11 @@ func (m *Machine) tick() (bool, byte) {
 	case program.OP_TAKE_ALL:
 		asset := m.popAsset()
 		account := m.popAccount()
-		if account == "world" {
-			m.pushValue(core.Funding{
-				Asset:    asset,
-				Infinite: true,
-			})
-		} else {
-			funding, err := m.withdrawAll(account, asset)
-			if err != nil {
-				return true, EXIT_FAIL_INVALID
-			}
-			m.pushValue(*funding)
+		funding, err := m.withdrawAll(account, asset)
+		if err != nil {
+			return true, EXIT_FAIL_INVALID
 		}
+		m.pushValue(*funding)
 	case program.OP_TAKE:
 		mon := m.popMonetary()
 		funding := m.popFunding()

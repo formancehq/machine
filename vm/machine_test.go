@@ -1089,7 +1089,11 @@ func TestNeededBalances(t *testing.T) {
 
 func TestSetTxMeta(t *testing.T) {
 	p, err := compiler.Compile(`
-	set_tx_meta("beneficiary", @platform)
+	set_tx_meta("aaa", @platform)
+	set_tx_meta("bbb", GEM)
+	set_tx_meta("ccc", 45)
+	set_tx_meta("ddd", "hello")
+	set_tx_meta("eee", [COIN 30])
 	`)
 
 	if err != nil {
@@ -1116,7 +1120,29 @@ func TestSetTxMeta(t *testing.T) {
 		t.Fatalf("did not expect error on Execute, got: %v", err)
 	}
 
-	if _, ok := m.TxMeta["beneficiary"]; !ok {
-		t.Fatalf("expected transaction meta beneficiary to be set")
+	expected_meta := map[string]json.RawMessage{
+		"aaa": json.RawMessage(`{"type":"account","value":"platform"}`),
+		"bbb": json.RawMessage(`{"type":"asset","value":"GEM"}`),
+		"ccc": json.RawMessage(`{"type":"number","value":45}`),
+		"ddd": json.RawMessage(`{"type":"string","value":"hello"}`),
+		"eee": json.RawMessage(`{"type":"monetary","value":{"asset":"COIN","amount":30}}`),
+	}
+
+	meta := m.GetTxMetaJson()
+
+	fmt.Printf("%v", len(meta))
+
+	if len(meta) != 5 {
+		t.Fatalf("unexpected transaction metadata")
+	}
+
+	for k, v := range meta {
+		if expected, ok := expected_meta[k]; ok {
+			if string(v) != string(expected) {
+				fmt.Printf("%v\n", string(v))
+				fmt.Printf("%v\n", string(expected))
+				t.Fatalf("unexpected transaction metadata")
+			}
+		}
 	}
 }
