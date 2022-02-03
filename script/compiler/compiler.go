@@ -151,6 +151,9 @@ func (p *parseVisitor) VisitLit(c parser.ILiteralContext, push bool) (core.Type,
 		if err != nil {
 			return 0, nil, LogicError(c, err)
 		}
+		if push {
+			p.PushAddress(*addr)
+		}
 		return core.TYPE_ASSET, addr, nil
 	case *parser.LitNumberContext:
 		n, err := strconv.ParseUint(c.GetText(), 10, 64)
@@ -162,6 +165,17 @@ func (p *parseVisitor) VisitLit(c parser.ILiteralContext, push bool) (core.Type,
 			p.PushInteger(number)
 		}
 		return core.TYPE_NUMBER, nil, nil
+	case *parser.LitStringContext:
+		addr, err := p.AllocateResource(program.Constant{
+			Inner: core.String(strings.Trim(c.GetText(), `"`)),
+		})
+		if err != nil {
+			return 0, nil, LogicError(c, err)
+		}
+		if push {
+			p.PushAddress(*addr)
+		}
+		return core.TYPE_STRING, addr, nil
 	case *parser.LitMonetaryContext:
 		asset := c.Monetary().GetAsset().GetText()
 		amt, err := strconv.ParseUint(c.Monetary().GetAmt().GetText(), 10, 64)
@@ -239,6 +253,23 @@ func (p *parseVisitor) VisitSend(c *parser.SendContext) *CompileError {
 	return nil
 }
 
+// set_tx_meta statement
+func (p *parseVisitor) VisitSetTxMeta(ctx *parser.SetTxMetaContext) *CompileError {
+	_, _, err := p.VisitExpr(ctx.GetValue(), true)
+	if err != nil {
+		return err
+	}
+
+	keyAddr, _ := p.AllocateResource(program.Constant{
+		Inner: core.String(strings.Trim(ctx.GetKey().GetText(), `"`)),
+	})
+	p.PushAddress(*keyAddr)
+
+	p.instructions = append(p.instructions, program.OP_TX_META)
+
+	return nil
+}
+
 // print statement
 func (p *parseVisitor) VisitPrint(ctx *parser.PrintContext) *CompileError {
 	_, _, err := p.VisitExpr(ctx.GetExpr(), true)
@@ -267,6 +298,8 @@ func (p *parseVisitor) VisitVars(c *parser.VarListDeclContext) *CompileError {
 			ty = core.TYPE_ASSET
 		case "number":
 			ty = core.TYPE_NUMBER
+		case "string":
+			ty = core.TYPE_STRING
 		case "monetary":
 			ty = core.TYPE_MONETARY
 		case "portion":
@@ -329,6 +362,11 @@ func (p *parseVisitor) VisitScript(c parser.IScriptContext) *CompileError {
 				p.instructions = append(p.instructions, program.OP_FAIL)
 			case *parser.SendContext:
 				err := p.VisitSend(c)
+				if err != nil {
+					return err
+				}
+			case *parser.SetTxMetaContext:
+				err := p.VisitSetTxMeta(c)
 				if err != nil {
 					return err
 				}

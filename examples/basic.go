@@ -57,4 +57,5 @@ func main() {
 	}
 	fmt.Println("Exit code:", exit_code)
 	fmt.Println(m.Postings)
+	fmt.Println(m.TxMeta)
 }

@@ -7,6 +7,7 @@ MULTILINE_COMMENT: '/*' (MULTILINE_COMMENT|.)*? '*/' -> skip;
 LINE_COMMENT: '//' .*? NEWLINE -> skip;
 VARS: 'vars';
 META: 'meta';
+SET_TX_META: 'set_tx_meta';
 PRINT: 'print';
 FAIL: 'fail';
 SEND: 'send';
@@ -30,7 +31,8 @@ TY_ASSET: 'asset';
 TY_NUMBER: 'number';
 TY_MONETARY: 'monetary';
 TY_PORTION: 'portion';
-STRING: '"' [a-zA-Z0-9]* '"';
+TY_STRING: 'string';
+STRING: '"' [a-zA-Z0-9_\- ]* '"';
 PORTION:
   ( [0-9]+ [ ]? '/' [ ]? [0-9]+
   | [0-9]+     ('.'      [0-9]+)? '%'
@@ -50,6 +52,7 @@ literal
   : ACCOUNT # LitAccount
   | ASSET # LitAsset
   | NUMBER # LitNumber
+  | STRING # LitString
   | monetary # LitMonetary
   ;
 
@@ -93,13 +96,14 @@ valueAwareSource
 
 statement
   : PRINT expr=expression # Print
+  | SET_TX_META '(' key=STRING ',' value=expression ')' #SetTxMeta
   | FAIL # Fail
   | SEND (mon=expression | monAll=monetaryAll) LPAREN NEWLINE
       ( SOURCE '=' src=valueAwareSource NEWLINE DESTINATION '=' dest=destination
       | DESTINATION '=' dest=destination NEWLINE SOURCE '=' src=valueAwareSource) NEWLINE RPAREN # Send
   ;
 
-type_: TY_ACCOUNT | TY_ASSET | TY_NUMBER | TY_MONETARY | TY_PORTION;
+type_: TY_ACCOUNT | TY_ASSET | TY_NUMBER | TY_STRING | TY_MONETARY | TY_PORTION;
 
 origin
   : META '(' acc=expression ',' key=STRING ')'

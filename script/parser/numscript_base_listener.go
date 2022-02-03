@@ -51,6 +51,12 @@ func (s *BaseNumScriptListener) EnterLitNumber(ctx *LitNumberContext) {}
 // ExitLitNumber is called when production LitNumber is exited.
 func (s *BaseNumScriptListener) ExitLitNumber(ctx *LitNumberContext) {}
 
+// EnterLitString is called when production LitString is entered.
+func (s *BaseNumScriptListener) EnterLitString(ctx *LitStringContext) {}
+
+// ExitLitString is called when production LitString is exited.
+func (s *BaseNumScriptListener) ExitLitString(ctx *LitStringContext) {}
+
 // EnterLitMonetary is called when production LitMonetary is entered.
 func (s *BaseNumScriptListener) EnterLitMonetary(ctx *LitMonetaryContext) {}
 
@@ -196,6 +202,12 @@ func (s *BaseNumScriptListener) EnterPrint(ctx *PrintContext) {}
 
 // ExitPrint is called when production Print is exited.
 func (s *BaseNumScriptListener) ExitPrint(ctx *PrintContext) {}
+
+// EnterSetTxMeta is called when production SetTxMeta is entered.
+func (s *BaseNumScriptListener) EnterSetTxMeta(ctx *SetTxMetaContext) {}
+
+// ExitSetTxMeta is called when production SetTxMeta is exited.
+func (s *BaseNumScriptListener) ExitSetTxMeta(ctx *SetTxMetaContext) {}
 
 // EnterFail is called when production Fail is entered.
 func (s *BaseNumScriptListener) EnterFail(ctx *FailContext) {}

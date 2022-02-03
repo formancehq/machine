@@ -47,7 +47,7 @@ func test(t *testing.T, c TestCase) {
 			return
 		} else if !bytes.Equal(p.Instructions, c.Expected.Instructions) {
 			t.Error(fmt.Errorf("generated program is incorrect: %v", *p))
-			fmt.Println(p.Instructions, "vs", c.Expected.Instructions)
+			fmt.Println("has:", p.Instructions, "want:", c.Expected.Instructions)
 			return
 		} else if len(p.Resources) != len(c.Expected.Resources) {
 			t.Error(fmt.Errorf("unexpected program resources (=/= lengths): %v", *p))
@@ -158,6 +158,58 @@ func TestConstant(t *testing.T) {
 			Instructions: []byte{program.OP_APUSH, 00, 00, program.OP_PRINT},
 			Resources:    []program.Resource{program.Constant{Inner: user}},
 			Error:        "",
+		},
+	})
+}
+
+func TestSetTxMeta(t *testing.T) {
+	test(t, TestCase{
+		Case: `
+		set_tx_meta("beneficiary", @platform)
+		`,
+		Expected: CaseResult{
+			Instructions: []byte{
+				program.OP_APUSH, 00, 00,
+				program.OP_APUSH, 01, 00,
+				program.OP_TX_META,
+			},
+			Resources: []program.Resource{
+				program.Constant{
+					Inner: core.Account("platform"),
+				},
+				program.Constant{
+					Inner: core.String("beneficiary"),
+				},
+			},
+			Error: "",
+		},
+	})
+}
+
+func TestSetTxMetaVars(t *testing.T) {
+	test(t, TestCase{
+		Case: `
+		vars {
+			portion $commission
+		}
+		set_tx_meta("fee", $commission)
+		`,
+		Expected: CaseResult{
+			Instructions: []byte{
+				program.OP_APUSH, 00, 00,
+				program.OP_APUSH, 01, 00,
+				program.OP_TX_META,
+			},
+			Resources: []program.Resource{
+				program.Parameter{
+					Typ:  core.TYPE_PORTION,
+					Name: "commission",
+				},
+				program.Constant{
+					Inner: core.String("fee"),
+				},
+			},
+			Error: "",
 		},
 	})
 }

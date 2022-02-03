@@ -18,4 +18,5 @@ const (
 	OP_REPAY          // <funding>
 	OP_ALLOC          // <funding> <allotment(N)> => <funding>*N
 	OP_SEND           // <funding> <account>
+	OP_TX_META        //
 )

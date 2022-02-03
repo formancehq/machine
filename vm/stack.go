@@ -25,6 +25,14 @@ func (m *Machine) popNumber() uint64 {
 	}
 }
 
+func (m *Machine) popString() core.String {
+	if s, ok := m.popValue().(core.String); ok {
+		return s
+	} else {
+		panic("unexpected type on stack")
+	}
+}
+
 func (m *Machine) popMonetary() core.Monetary {
 	if m, ok := m.popValue().(core.Monetary); ok {
 		return m

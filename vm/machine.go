@@ -42,6 +42,7 @@ func NewMachine(p *program.Program) *Machine {
 		Resources:           make([]core.Value, 0),
 		print_chan:          printc,
 		Printer:             StdOutPrinter,
+		TxMeta:              map[string]core.Value{},
 	}
 
 	return &m
@@ -57,10 +58,24 @@ type Machine struct {
 	Balances            map[string]map[string]uint64 // keeps tracks of balances througout execution
 	set_balance_called  bool
 	Stack               []core.Value
-	Postings            []ledger.Posting // accumulates postings throughout execution
+	Postings            []ledger.Posting      // accumulates postings throughout execution
+	TxMeta              map[string]core.Value // accumulates transaction meta throughout execution
 	Printer             func(chan core.Value)
 	print_chan          chan core.Value
 	Debug               bool
+}
+
+func (m *Machine) GetTxMetaJson() ledger.Metadata {
+	meta := make(ledger.Metadata)
+	for k, v := range m.TxMeta {
+		val_json, _ := json.Marshal(v)
+		v, _ := json.Marshal(core.ValueJSON{
+			Type:  v.GetType().String(),
+			Value: val_json,
+		})
+		meta[k] = v
+	}
+	return meta
 }
 
 func (m *Machine) getResource(addr core.Address) (*core.Value, bool) {
@@ -184,18 +199,11 @@ func (m *Machine) tick() (bool, byte) {
 	case program.OP_TAKE_ALL:
 		asset := m.popAsset()
 		account := m.popAccount()
-		if account == "world" {
-			m.pushValue(core.Funding{
-				Asset:    asset,
-				Infinite: true,
-			})
-		} else {
-			funding, err := m.withdrawAll(account, asset)
-			if err != nil {
-				return true, EXIT_FAIL_INVALID
-			}
-			m.pushValue(*funding)
+		funding, err := m.withdrawAll(account, asset)
+		if err != nil {
+			return true, EXIT_FAIL_INVALID
 		}
+		m.pushValue(*funding)
 	case program.OP_TAKE:
 		mon := m.popMonetary()
 		funding := m.popFunding()
@@ -314,6 +322,11 @@ func (m *Machine) tick() (bool, byte) {
 				Amount:      int64(amt),
 			})
 		}
+	case program.OP_TX_META:
+		k := m.popString()
+		v := m.popValue()
+
+		m.TxMeta[string(k)] = v
 	default:
 		return true, EXIT_FAIL_INVALID
 	}
