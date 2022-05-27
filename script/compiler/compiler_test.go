@@ -151,9 +151,9 @@ func TestCRLF(t *testing.T) {
 }
 
 func TestConstant(t *testing.T) {
-	user := core.Account("user:001")
+	user := core.Account("user:U001")
 	test(t, TestCase{
-		Case: "print @user:001",
+		Case: "print @user:U001",
 		Expected: CaseResult{
 			Instructions: []byte{program.OP_APUSH, 00, 00, program.OP_PRINT},
 			Resources:    []program.Resource{program.Constant{Inner: user}},
