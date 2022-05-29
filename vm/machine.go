@@ -230,33 +230,6 @@ func (m *Machine) tick() (bool, byte) {
 		m.pushValue(remainder)
 		m.pushValue(result)
 
-	case program.OP_TAKE_SPLIT:
-		mon := m.popMonetary()
-		allotment := m.popAllotment()
-		parts := allotment.Allocate(mon.Amount)
-		result := core.Funding{
-			Asset: mon.Asset,
-			Parts: []core.FundingPart{},
-		}
-		n := len(allotment)
-		res_fundings := make([]core.Funding, n)
-		for i := len(parts) - 1; i >= 0; i-- {
-			funding := m.popFunding()
-			if funding.Asset != mon.Asset {
-				return true, EXIT_FAIL_INVALID
-			}
-			res, rem, err := funding.Take(parts[i])
-			if err != nil {
-				return true, EXIT_FAIL_INSUFFICIENT_FUNDS
-			}
-			res_fundings[i] = res
-			m.repay(rem)
-		}
-		for i := 0; i < n; i++ {
-			result.Parts = append(result.Parts, res_fundings[i].Parts...)
-		}
-		m.pushValue(result)
-
 	case program.OP_ASSEMBLE:
 		n := int(m.popNumber())
 		if n == 0 {

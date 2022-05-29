@@ -13,7 +13,6 @@ const (
 	OP_TAKE_ALL       // <account> <asset> => <funding>
 	OP_TAKE           // <funding> <monetary> => <remaining: funding> <taken: funding>
 	OP_TAKE_MAX       // <funding> <monetary> => <remaining: funding> <taken: funding>
-	OP_TAKE_SPLIT     // <funding>*N <monetary> <allotment(N)> => <funding>*N
 	OP_ASSEMBLE       // <fundings>*N <int N> => <funding>
 	OP_REPAY          // <funding>
 	OP_ALLOC          // <funding> <allotment(N)> => <funding>*N
@@ -50,8 +49,6 @@ func OpcodeName(op byte) string {
 		return "OP_TAKE"
 	case OP_TAKE_MAX:
 		return "OP_TAKE_MAX"
-	case OP_TAKE_SPLIT:
-		return "OP_TAKE_SPLIT"
 	case OP_ASSEMBLE:
 		return "OP_ASSEMBLE"
 	case OP_REPAY:
