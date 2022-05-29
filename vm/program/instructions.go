@@ -3,7 +3,7 @@ package program
 const (
 	OP_APUSH = byte(iota + 1)
 	OP_IPUSH
-	OP_SWAP           // <left: any> <right: any> => <right:any> <left:any>
+	OP_BUMP           // <value_to_bump: any> <any>*N <int N> => <any>*N <value_to_bump>
 	OP_IADD           // <number> <number> => <number>
 	OP_ISUB           // <number> <number> => <number>
 	OP_PRINT          // <any>
@@ -19,4 +19,50 @@ const (
 	OP_ALLOC          // <funding> <allotment(N)> => <funding>*N
 	OP_SEND           // <funding> <account>
 	OP_TX_META        //
+	OP_ALLOC_MON      // <monetary> <allotment(N)> => <monetary>*N
 )
+
+func OpcodeName(op byte) string {
+	switch op {
+	case OP_APUSH:
+		return "OP_APUSH"
+	case OP_IPUSH:
+		return "OP_IPUSH"
+	case OP_BUMP:
+		return "OP_BUMP"
+	case OP_IADD:
+		return "OP_IADD"
+	case OP_ISUB:
+		return "OP_ISUB"
+	case OP_PRINT:
+		return "OP_PRINT"
+	case OP_FAIL:
+		return "OP_FAIL"
+	case OP_SEND:
+		return "OP_SEND"
+	case OP_ALLOC:
+		return "OP_ALLOC"
+	case OP_MAKE_ALLOTMENT:
+		return "OP_MAKE_ALLOTMENT"
+	case OP_TAKE_ALL:
+		return "OP_TAKE_ALL"
+	case OP_TAKE:
+		return "OP_TAKE"
+	case OP_TAKE_MAX:
+		return "OP_TAKE_MAX"
+	case OP_TAKE_SPLIT:
+		return "OP_TAKE_SPLIT"
+	case OP_ASSEMBLE:
+		return "OP_ASSEMBLE"
+	case OP_REPAY:
+		return "OP_REPAY"
+	case OP_ASSET:
+		return "OP_ASSET"
+	case OP_TX_META:
+		return "OP_TX_META"
+	case OP_ALLOC_MON:
+		return "OP_ALLOC_MON"
+	default:
+		return "Unknown opcode"
+	}
+}
