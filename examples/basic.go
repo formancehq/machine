@@ -10,15 +10,15 @@ import (
 
 func main() {
 	program, err := compiler.Compile(`
-	send [COIN 100] (
-		source = @world
-		destination = {
-			50% to @a
-			50% to {
-				max [COIN 10] to @b
-				@c
+	send [COIN 99] (
+		source = {
+			15% from {
+				@a
+				@b
 			}
+			remaining from @a
 		}
+		destination = @world
 	)
 	`)
 	if err != nil {
@@ -41,12 +41,25 @@ func main() {
 	}
 
 	{
+		balances := map[string]map[string]uint64{
+			"a": {
+				"COIN": 500000,
+			},
+			"b": {
+				"COIN": 3500000,
+			},
+		}
+
 		ch, err := m.ResolveBalances()
 		if err != nil {
 			panic(err)
 		}
-		for range ch {
-
+		for req := range ch {
+			val := balances[req.Account][req.Asset]
+			if req.Error != nil {
+				panic(req.Error)
+			}
+			req.Response <- val
 		}
 	}
 

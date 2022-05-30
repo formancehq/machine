@@ -29,40 +29,8 @@ func (p Program) String() string {
 			out += "OP_IPUSH "
 			out += fmt.Sprintf("%d\n", binary.LittleEndian.Uint64(p.Instructions[i+1:i+9]))
 			i += 8
-		case OP_SWAP:
-			out += "OP_SWAP\n"
-		case OP_IADD:
-			out += "OP_IADD\n"
-		case OP_ISUB:
-			out += "OP_ISUB\n"
-		case OP_PRINT:
-			out += "OP_PRINT\n"
-		case OP_FAIL:
-			out += "OP_FAIL\n"
-		case OP_SEND:
-			out += "OP_SEND\n"
-		case OP_ALLOC:
-			out += "OP_ALLOC\n"
-		case OP_MAKE_ALLOTMENT:
-			out += "OP_MAKE_ALLOTMENT\n"
-		case OP_TAKE_ALL:
-			out += "OP_TAKE_ALL\n"
-		case OP_TAKE:
-			out += "OP_TAKE\n"
-		case OP_TAKE_MAX:
-			out += "OP_TAKE_MAX\n"
-		case OP_TAKE_SPLIT:
-			out += "OP_TAKE_SPLIT\n"
-		case OP_ASSEMBLE:
-			out += "OP_ASSEMBLE\n"
-		case OP_REPAY:
-			out += "OP_REPAY\n"
-		case OP_ASSET:
-			out += "OP_ASSET\n"
-		case OP_TX_META:
-			out += "OP_TX_META\n"
 		default:
-			out += "Unknown opcode"
+			out += OpcodeName(p.Instructions[i]) + "\n"
 		}
 	}
 

@@ -25,13 +25,18 @@ func (p *parseVisitor) VisitValueAwareSource(c parser.IValueAwareSourceContext, 
 		if !is_all {
 			p.PushAddress(*mon_addr)
 			p.instructions = append(p.instructions, program.OP_TAKE)
-			p.instructions = append(p.instructions, program.OP_SWAP)
+			p.PushInteger(core.Number(1))
+			p.instructions = append(p.instructions, program.OP_BUMP)
 			p.instructions = append(p.instructions, program.OP_REPAY)
 		}
 	case *parser.SrcAllotmentContext:
 		if is_all {
 			return nil, LogicError(c, errors.New("cannot take all balance of an allotment source"))
 		}
+		p.PushAddress(*mon_addr)
+		p.VisitAllotment(c.SourceAllotment(), c.SourceAllotment().GetPortions())
+		p.instructions = append(p.instructions, program.OP_ALLOC_MON)
+
 		sources := c.SourceAllotment().GetSources()
 		n := len(sources)
 		for i := 0; i < n; i++ {
@@ -42,10 +47,15 @@ func (p *parseVisitor) VisitValueAwareSource(c parser.IValueAwareSourceContext, 
 			for k, v := range accounts {
 				needed_accounts[k] = v
 			}
+			p.PushInteger(core.Number(i + 1))
+			p.instructions = append(p.instructions, program.OP_BUMP)
+			p.instructions = append(p.instructions, program.OP_TAKE)
+			p.PushInteger(core.Number(1))
+			p.instructions = append(p.instructions, program.OP_BUMP)
+			p.instructions = append(p.instructions, program.OP_REPAY)
 		}
-		p.VisitAllotment(c.SourceAllotment(), c.SourceAllotment().GetPortions())
-		p.PushAddress(*mon_addr)
-		p.instructions = append(p.instructions, program.OP_TAKE_SPLIT)
+		p.PushInteger(core.Number(n))
+		p.instructions = append(p.instructions, program.OP_ASSEMBLE)
 	}
 	return needed_accounts, nil
 }
@@ -91,7 +101,8 @@ func (p *parseVisitor) VisitSource(c parser.ISourceContext, push_asset func(), i
 			needed_accounts[k] = v
 		}
 		p.instructions = append(p.instructions, program.OP_TAKE_MAX)
-		p.instructions = append(p.instructions, program.OP_SWAP)
+		p.PushInteger(core.Number(1))
+		p.instructions = append(p.instructions, program.OP_BUMP)
 		p.instructions = append(p.instructions, program.OP_REPAY)
 	case *parser.SrcInOrderContext:
 		sources := c.SourceInOrder().GetSources()

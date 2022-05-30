@@ -137,7 +137,7 @@ func (m *Machine) tick() (bool, byte) {
 		fmt.Println("STATE ---------------------------------------------------------------------")
 		fmt.Printf("    %v\n", aurora.Blue(m.Stack))
 		fmt.Printf("    %v\n", aurora.Cyan(m.Balances))
-		fmt.Printf("    %v\n", op)
+		fmt.Printf("    %v\n", program.OpcodeName(op))
 	}
 
 	switch op {
@@ -154,11 +154,12 @@ func (m *Machine) tick() (bool, byte) {
 		v := core.Number(binary.LittleEndian.Uint64(bytes))
 		m.Stack = append(m.Stack, v)
 		m.P += 8
-	case program.OP_SWAP:
-		a := m.popValue()
-		b := m.popValue()
-		m.pushValue(a)
-		m.pushValue(b)
+	case program.OP_BUMP:
+		n := m.popNumber()
+		idx := len(m.Stack) - int(n) - 1
+		v := m.Stack[idx]
+		m.Stack = append(m.Stack[:idx], m.Stack[idx+1:]...)
+		m.Stack = append(m.Stack, v)
 	case program.OP_IADD:
 		b := m.popNumber()
 		a := m.popNumber()
@@ -229,33 +230,6 @@ func (m *Machine) tick() (bool, byte) {
 		m.pushValue(remainder)
 		m.pushValue(result)
 
-	case program.OP_TAKE_SPLIT:
-		mon := m.popMonetary()
-		allotment := m.popAllotment()
-		parts := allotment.Allocate(mon.Amount)
-		result := core.Funding{
-			Asset: mon.Asset,
-			Parts: []core.FundingPart{},
-		}
-		n := len(allotment)
-		res_fundings := make([]core.Funding, n)
-		for i := len(parts) - 1; i >= 0; i-- {
-			funding := m.popFunding()
-			if funding.Asset != mon.Asset {
-				return true, EXIT_FAIL_INVALID
-			}
-			res, rem, err := funding.Take(parts[i])
-			if err != nil {
-				return true, EXIT_FAIL_INSUFFICIENT_FUNDS
-			}
-			res_fundings[i] = res
-			m.repay(rem)
-		}
-		for i := 0; i < n; i++ {
-			result.Parts = append(result.Parts, res_fundings[i].Parts...)
-		}
-		m.pushValue(result)
-
 	case program.OP_ASSEMBLE:
 		n := int(m.popNumber())
 		if n == 0 {
@@ -300,6 +274,18 @@ func (m *Machine) tick() (bool, byte) {
 			if part.Account != "world" {
 				m.Balances[string(part.Account)][string(funding.Asset)] += part.Amount
 			}
+		}
+
+	case program.OP_ALLOC_MON:
+		allotment := m.popAllotment()
+		monetary := m.popMonetary()
+		total := monetary.Amount
+		parts := allotment.Allocate(total)
+		for i := len(parts) - 1; i >= 0; i-- {
+			m.pushValue(core.Monetary{
+				Asset:  monetary.Asset,
+				Amount: parts[i],
+			})
 		}
 
 	case program.OP_REPAY:
