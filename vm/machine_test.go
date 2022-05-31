@@ -903,6 +903,64 @@ func TestSourceAllotment(t *testing.T) {
 	)
 }
 
+func TestSourceOverlapping(t *testing.T) {
+	testJSON(t,
+		`
+		send [COIN 99] (
+			source = {
+				15% from {
+					@b
+					@a
+				}
+				30% from @a
+				remaining from @a
+			}
+			destination = @world
+		)
+		`,
+		`{}`,
+		map[string]map[string]core.Value{},
+		map[string]map[string]uint64{
+			"a": {
+				"COIN": 99,
+			},
+			"b": {
+				"COIN": 3,
+			},
+		},
+		CaseResult{
+			Printed: []core.Value{},
+			Postings: []ledger.Posting{
+				{
+					Asset:       "COIN",
+					Amount:      3,
+					Source:      "b",
+					Destination: "world",
+				},
+				{
+					Asset:       "COIN",
+					Amount:      12,
+					Source:      "a",
+					Destination: "world",
+				},
+				{
+					Asset:       "COIN",
+					Amount:      30,
+					Source:      "a",
+					Destination: "world",
+				},
+				{
+					Asset:       "COIN",
+					Amount:      54,
+					Source:      "a",
+					Destination: "world",
+				},
+			},
+			ExitCode: EXIT_OK,
+		},
+	)
+}
+
 func TestSourceComplex(t *testing.T) {
 	testJSON(t,
 		`

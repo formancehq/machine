@@ -1,7 +1,6 @@
 package compiler
 
 import (
-	"fmt"
 	"testing"
 )
 
@@ -28,15 +27,15 @@ func TestEndCharacter(t *testing.T) {
 	lerr := err.(*CompileErrorList).Errors[0]
 
 	if lerr.Startl != 5 {
-		t.Fatal(fmt.Sprintf("start line was %v", lerr.Startl))
+		t.Fatalf("start line was %v", lerr.Startl)
 	}
 	if lerr.Startc != 3 {
-		t.Fatal(fmt.Sprintf("start character was %v", lerr.Startc))
+		t.Fatalf("start character was %v", lerr.Startc)
 	}
 	if lerr.Endl != 5 {
-		t.Fatal(fmt.Sprintf("end line was %v", lerr.Endl))
+		t.Fatalf("end line was %v", lerr.Endl)
 	}
 	if lerr.Endc != 7 {
-		t.Fatal(fmt.Sprintf("end character was %v", lerr.Endc))
+		t.Fatalf("end character was %v", lerr.Endc)
 	}
 }
