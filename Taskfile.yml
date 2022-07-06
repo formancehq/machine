@@ -1,0 +1,15 @@
+version: '3'
+
+vars:
+  PKG: ./...
+  COVERAGE_FILE: coverage.out
+  FAILFAST: -failfast
+  TIMEOUT: 10m
+
+tasks:
+  tests:
+    cmds:
+      - go test -v {{.FAILFAST}} -coverpkg {{.PKG}} -coverprofile {{.COVERAGE_FILE}} -covermode atomic -timeout {{.TIMEOUT}} {{.PKG}}
+  lint:
+    cmds:
+    - golangci-lint run -v --fix {{.PKG}}
