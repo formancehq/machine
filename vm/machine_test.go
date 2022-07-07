@@ -20,6 +20,7 @@ const (
 type CaseResult struct {
 	Printed  []core.Value
 	Postings []ledger.Posting
+	Metadata map[string]core.Value
 	ExitCode byte
 	Error    string
 }
@@ -191,6 +192,23 @@ func testimpl(t *testing.T, code string, expected CaseResult, exec func(*Machine
 		}
 	}
 
+	if len(machine.TxMeta) != len(expected.Metadata) {
+		t.Error(fmt.Errorf("unexpected metadata output: %v", machine.TxMeta))
+		return
+	} else {
+		for k := range machine.TxMeta {
+			if machine.TxMeta[k] != expected.Metadata[k] {
+				t.Error(fmt.Errorf(
+					"unexpected metadata output value for key %s, got: %v, expected: %v",
+					k,
+					machine.TxMeta[k],
+					expected.Metadata[k],
+				))
+				return
+			}
+		}
+	}
+
 	wg.Wait()
 
 	if len(printed) != len(expected.Printed) {
@@ -302,14 +320,17 @@ func TestVariablesJSON(t *testing.T) {
 		`vars {
 			account $rider
 			account $driver
+			string 	$description
 		}
 		send [EUR/2 999] (
 			source=$rider
 			destination=$driver
-		)`,
+		)
+		set_tx_meta("description", $description)`,
 		`{
 			"rider": "users:001",
-			"driver": "users:002"
+			"driver": "users:002",
+			"description": "midnight ride"
 		}`,
 		map[string]map[string]core.Value{},
 		map[string]map[string]uint64{
@@ -326,6 +347,9 @@ func TestVariablesJSON(t *testing.T) {
 					Source:      "users:001",
 					Destination: "users:002",
 				},
+			},
+			Metadata: map[string]core.Value{
+				"description": core.String("midnight ride"),
 			},
 			ExitCode: EXIT_OK,
 		},
