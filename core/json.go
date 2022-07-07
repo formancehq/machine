@@ -90,6 +90,13 @@ func NewValueFromJSON(typ Type, data json.RawMessage) (*Value, error) {
 			return nil, err
 		}
 		value = *res
+	case TYPE_STRING:
+		var s String
+		err := json.Unmarshal(data, &s)
+		if err != nil {
+			return nil, err
+		}
+		value = s
 	default:
 		return nil, errors.New("invalid type")
 	}

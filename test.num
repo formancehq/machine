@@ -1,0 +1,12 @@
+vars {
+  account $user = meta(@world, "fee")
+}
+
+send [USD/2 100] (
+  source = {
+    @world
+  }
+  destination = {
+    @world
+  }
+)
