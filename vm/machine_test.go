@@ -875,6 +875,47 @@ func TestTrackBalances2(t *testing.T) {
 	)
 }
 
+func TestTrackBalances3(t *testing.T) {
+	testJSON(t,
+		`send [COIN *] (
+			source = @foo
+			destination = {
+				max [COIN 1000] to @bar
+			}
+		)
+		send [COIN *] (
+			source = @foo
+			destination = @bar
+		)`,
+		`{}`,
+		map[string]map[string]core.Value{},
+		map[string]map[string]uint64{
+			"foo": {
+				"COIN": 2000,
+			},
+		},
+		CaseResult{
+			Printed: []core.Value{},
+			Postings: []ledger.Posting{
+				{
+					Asset:       "COIN",
+					Amount:      1000,
+					Source:      "foo",
+					Destination: "bar",
+				},
+
+				{
+					Asset:       "COIN",
+					Amount:      1000,
+					Source:      "foo",
+					Destination: "bar",
+				},
+			},
+			ExitCode: EXIT_OK,
+		},
+	)
+}
+
 func TestSourceAllotment(t *testing.T) {
 	testJSON(t,
 		`

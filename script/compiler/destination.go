@@ -14,7 +14,7 @@ func (p *parseVisitor) VisitDestination(c parser.IDestinationContext) *CompileEr
 		return err
 	}
 	if !bottomless {
-		return LogicError(c, errors.New("this destination must not be capped"))
+		p.instructions = append(p.instructions, program.OP_REPAY)
 	}
 	return nil
 }
@@ -49,17 +49,19 @@ func (p *parseVisitor) VisitDestinationRec(c parser.IDestinationContext) (bool, 
 		return false, nil
 	case *parser.DestInOrderContext:
 		dests := c.DestinationInOrder().GetDests()
+		bottomless := false
 		n := len(dests)
 		for i := 0; i < n; i++ {
-			bottomless, err := p.VisitDestinationRec(dests[i])
+			subdest_bottomless, err := p.VisitDestinationRec(dests[i])
 			if err != nil {
 				return false, err
 			}
-			if bottomless && i != n-1 {
+			if subdest_bottomless && i != n-1 {
 				return false, LogicError(dests[i+1], errors.New("the value has already been entirely distributed to previous destinations at this stage"))
 			}
+			bottomless = bottomless || subdest_bottomless
 		}
-		return true, nil
+		return bottomless, nil
 	case *parser.DestAllotmentContext:
 		err := p.VisitDestinationAllotment(c.DestinationAllotment())
 		return true, err

@@ -339,7 +339,11 @@ func (m *Machine) Execute() (byte, error) {
 	for {
 		finished, exit_code := m.tick()
 		if finished {
-			return exit_code, nil
+			if len(m.Stack) != 0 {
+				return EXIT_FAIL_INVALID, nil
+			} else {
+				return exit_code, nil
+			}
 		}
 	}
 }
