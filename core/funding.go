@@ -34,7 +34,7 @@ func (lhs *Funding) Equals(rhs *Funding) bool {
 func (f Funding) String() string {
 	out := fmt.Sprintf("[%v", string(f.Asset))
 	for _, part := range f.Parts {
-		out += fmt.Sprintf(" %v %v", part.Amount, part.Account)
+		out += fmt.Sprintf(" %v %v", part.Account, part.Amount)
 	}
 	if f.Infinite {
 		out += " * @world"
@@ -150,10 +150,29 @@ func (f Funding) Concat(other Funding) Funding {
 	return res
 }
 
-func (f Funding) Total() uint64 {
+func (f Funding) Total() (uint64, error) {
+	if f.Infinite {
+		return 0, errors.New("tried to calculate total of infinite funding")
+	}
 	total := uint64(0)
 	for _, part := range f.Parts {
 		total += part.Amount
 	}
-	return total
+	return total, nil
+}
+
+func (f Funding) Reverse() (*Funding, error) {
+	if f.Infinite {
+		return nil, errors.New("tried to reverse an infinite funding")
+	}
+	new_parts := []FundingPart{}
+	for i := len(f.Parts) - 1; i >= 0; i-- {
+		new_parts = append(new_parts, f.Parts[i])
+	}
+	new_funding := Funding{
+		Asset:    f.Asset,
+		Parts:    new_parts,
+		Infinite: false,
+	}
+	return &new_funding, nil
 }

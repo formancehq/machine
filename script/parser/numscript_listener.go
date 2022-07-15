@@ -1,4 +1,4 @@
-// Code generated from NumScript.g4 by ANTLR 4.9.3. DO NOT EDIT.
+// Code generated from NumScript.g4 by ANTLR 4.10.1. DO NOT EDIT.
 
 package parser // NumScript
 
@@ -53,17 +53,17 @@ type NumScriptListener interface {
 	// EnterDestinationInOrder is called when entering the destinationInOrder production.
 	EnterDestinationInOrder(c *DestinationInOrderContext)
 
-	// EnterDestinationMaxed is called when entering the destinationMaxed production.
-	EnterDestinationMaxed(c *DestinationMaxedContext)
-
 	// EnterDestinationAllotment is called when entering the destinationAllotment production.
 	EnterDestinationAllotment(c *DestinationAllotmentContext)
 
+	// EnterIsDestination is called when entering the isDestination production.
+	EnterIsDestination(c *IsDestinationContext)
+
+	// EnterIsKept is called when entering the isKept production.
+	EnterIsKept(c *IsKeptContext)
+
 	// EnterDestAccount is called when entering the DestAccount production.
 	EnterDestAccount(c *DestAccountContext)
-
-	// EnterDestMaxed is called when entering the DestMaxed production.
-	EnterDestMaxed(c *DestMaxedContext)
 
 	// EnterDestInOrder is called when entering the DestInOrder production.
 	EnterDestInOrder(c *DestInOrderContext)
@@ -167,17 +167,17 @@ type NumScriptListener interface {
 	// ExitDestinationInOrder is called when exiting the destinationInOrder production.
 	ExitDestinationInOrder(c *DestinationInOrderContext)
 
-	// ExitDestinationMaxed is called when exiting the destinationMaxed production.
-	ExitDestinationMaxed(c *DestinationMaxedContext)
-
 	// ExitDestinationAllotment is called when exiting the destinationAllotment production.
 	ExitDestinationAllotment(c *DestinationAllotmentContext)
 
+	// ExitIsDestination is called when exiting the isDestination production.
+	ExitIsDestination(c *IsDestinationContext)
+
+	// ExitIsKept is called when exiting the isKept production.
+	ExitIsKept(c *IsKeptContext)
+
 	// ExitDestAccount is called when exiting the DestAccount production.
 	ExitDestAccount(c *DestAccountContext)
-
-	// ExitDestMaxed is called when exiting the DestMaxed production.
-	ExitDestMaxed(c *DestMaxedContext)
 
 	// ExitDestInOrder is called when exiting the DestInOrder production.
 	ExitDestInOrder(c *DestInOrderContext)

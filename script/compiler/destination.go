@@ -9,84 +9,102 @@ import (
 )
 
 func (p *parseVisitor) VisitDestination(c parser.IDestinationContext) *CompileError {
-	bottomless, err := p.VisitDestinationRec(c)
-	if err != nil {
-		return err
-	}
-	if !bottomless {
-		p.instructions = append(p.instructions, program.OP_REPAY)
-	}
-	return nil
-}
-
-func (p *parseVisitor) VisitDestinationRec(c parser.IDestinationContext) (bool, *CompileError) {
 	switch c := c.(type) {
 	case *parser.DestAccountContext:
 		ty, _, err := p.VisitExpr(c.Expression(), true)
 		if err != nil {
-			return false, err
+			return err
 		}
 		if ty != core.TYPE_ACCOUNT {
-			return false, LogicError(c,
-				errors.New("expected account or allocation as destination"),
+			return LogicError(c,
+				errors.New("wrong type: expected account as destination"),
 			)
 		}
 		p.instructions = append(p.instructions, program.OP_SEND)
-		return true, nil
-	case *parser.DestMaxedContext:
-		ty, _, err := p.VisitExpr(c.DestinationMaxed().GetMax(), true)
-		if err != nil {
-			return false, err
-		}
-		if ty != core.TYPE_MONETARY {
-			return false, LogicError(c, errors.New("wrong type: expected monetary as max"))
-		}
-		p.instructions = append(p.instructions, program.OP_TAKE_MAX)
-		_, err = p.VisitDestinationRec(c.DestinationMaxed().GetDest())
-		if err != nil {
-			return false, err
-		}
-		return false, nil
+		return nil
 	case *parser.DestInOrderContext:
 		dests := c.DestinationInOrder().GetDests()
-		bottomless := false
+		amounts := c.DestinationInOrder().GetAmounts()
 		n := len(dests)
 		for i := 0; i < n; i++ {
-			subdest_bottomless, err := p.VisitDestinationRec(dests[i])
+			_, reversed := dests[i].(*parser.IsKeptContext)
+			if reversed {
+				p.instructions = append(p.instructions, program.OP_FUNDING_REVERSE)
+			}
+			ty, _, err := p.VisitExpr(amounts[i], true)
 			if err != nil {
-				return false, err
+				return err
 			}
-			if subdest_bottomless && i != n-1 {
-				return false, LogicError(dests[i+1], errors.New("the value has already been entirely distributed to previous destinations at this stage"))
+			if ty != core.TYPE_MONETARY {
+				return LogicError(c, errors.New("wrong type: expected monetary as max"))
 			}
-			bottomless = bottomless || subdest_bottomless
+			p.instructions = append(p.instructions, program.OP_TAKE_MAX)
+			err = p.VisitKeptOrDestination(dests[i])
+			if err != nil {
+				return err
+			}
+			if reversed {
+				p.instructions = append(p.instructions, program.OP_FUNDING_REVERSE)
+			}
 		}
-		return bottomless, nil
+		err := p.VisitKeptOrDestination(c.DestinationInOrder().GetRemainingDest())
+		if err != nil {
+			return err
+		}
+		return nil
 	case *parser.DestAllotmentContext:
 		err := p.VisitDestinationAllotment(c.DestinationAllotment())
-		return true, err
+		return err
 	default:
-		return false, InternalError(c)
+		return InternalError(c)
+	}
+}
+
+func (p *parseVisitor) VisitKeptOrDestination(c parser.IKeptOrDestinationContext) *CompileError {
+	switch c := c.(type) {
+	case *parser.IsKeptContext:
+		p.instructions = append(p.instructions, program.OP_REPAY)
+		return nil
+	case *parser.IsDestinationContext:
+		err := p.VisitDestination(c.Destination())
+		return err
+	default:
+		return InternalError(c)
 	}
 }
 
 func (p *parseVisitor) VisitDestinationAllotment(c parser.IDestinationAllotmentContext) *CompileError {
+	p.instructions = append(p.instructions, program.OP_FUNDING_SUM)
 	err := p.VisitAllotment(c, c.GetPortions())
 	if err != nil {
 		return err
 	}
 	p.instructions = append(p.instructions, program.OP_ALLOC)
-	return p.VisitAllocDestination(c.GetDests())
+	err = p.VisitAllocDestination(c.GetDests())
+	if err != nil {
+		return err
+	}
+	p.instructions = append(p.instructions, program.OP_REPAY) // funding should always be empty at this point
+	return nil
 }
 
-func (p *parseVisitor) VisitAllocDestination(dests []parser.IDestinationContext) *CompileError {
+func (p *parseVisitor) VisitAllocDestination(dests []parser.IKeptOrDestinationContext) *CompileError {
+	p.PushInteger(core.Number(len(dests)))
+	p.instructions = append(p.instructions, program.OP_BUMP)
 	for _, dest := range dests {
-		bottomless, err := p.VisitDestinationRec(dest)
+		_, reversed := dest.(*parser.IsKeptContext)
+		if reversed {
+			p.instructions = append(p.instructions, program.OP_FUNDING_REVERSE)
+		}
+		p.PushInteger(core.Number(1))
+		p.instructions = append(p.instructions, program.OP_BUMP)
+		p.instructions = append(p.instructions, program.OP_TAKE)
+		err := p.VisitKeptOrDestination(dest)
 		if err != nil {
 			return err
 		}
-		if !bottomless {
-			return LogicError(dest, errors.New("this destination must not be capped"))
+		if reversed {
+			p.instructions = append(p.instructions, program.OP_FUNDING_REVERSE)
 		}
 	}
 	return nil

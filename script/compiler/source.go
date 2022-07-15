@@ -35,7 +35,7 @@ func (p *parseVisitor) VisitValueAwareSource(c parser.IValueAwareSourceContext, 
 		}
 		p.PushAddress(*mon_addr)
 		p.VisitAllotment(c.SourceAllotment(), c.SourceAllotment().GetPortions())
-		p.instructions = append(p.instructions, program.OP_ALLOC_MON)
+		p.instructions = append(p.instructions, program.OP_ALLOC)
 
 		sources := c.SourceAllotment().GetSources()
 		n := len(sources)

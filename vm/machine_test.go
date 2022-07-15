@@ -881,6 +881,7 @@ func TestTrackBalances3(t *testing.T) {
 			source = @foo
 			destination = {
 				max [COIN 1000] to @bar
+				remaining kept
 			}
 		)
 		send [COIN *] (
@@ -1104,10 +1105,11 @@ func TestDestinationComplex(t *testing.T) {
 		send [COIN 100] (
 			source = @world
 			destination = {
-				40% to @a
+				20% to @a
+				20% kept
 				60% to {
 					max [COIN 10] to @b
-					@c
+					remaining to @c
 				}
 			}
 		)
@@ -1120,7 +1122,7 @@ func TestDestinationComplex(t *testing.T) {
 			Postings: []ledger.Posting{
 				{
 					Asset:       "COIN",
-					Amount:      40,
+					Amount:      20,
 					Source:      "world",
 					Destination: "a",
 				},

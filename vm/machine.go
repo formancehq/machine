@@ -223,10 +223,7 @@ func (m *Machine) tick() (bool, byte) {
 		if funding.Asset != mon.Asset {
 			return true, EXIT_FAIL_INVALID
 		}
-		result, remainder, err := funding.Take(mon.Amount)
-		if err != nil {
-			return true, EXIT_FAIL_INSUFFICIENT_FUNDS
-		}
+		result, remainder := funding.TakeMax(mon.Amount)
 		m.pushValue(remainder)
 		m.pushValue(result)
 
@@ -253,30 +250,27 @@ func (m *Machine) tick() (bool, byte) {
 		}
 		m.pushValue(result)
 
-	case program.OP_ALLOC:
-		allotment := m.popAllotment()
+	case program.OP_FUNDING_SUM:
 		funding := m.popFunding()
-		total := funding.Total()
-		parts := allotment.Allocate(total)
-		results := []core.Funding{}
-		for _, part := range parts {
-			res, rem, err := funding.Take(part)
-			if err != nil {
-				return true, EXIT_FAIL_INSUFFICIENT_FUNDS
-			}
-			results = append(results, res)
-			funding = rem
+		sum, err := funding.Total()
+		if err != nil {
+			return true, EXIT_FAIL_INVALID
 		}
-		for i := len(results) - 1; i >= 0; i-- {
-			m.pushValue(results[i])
-		}
-		for _, part := range funding.Parts {
-			if part.Account != "world" {
-				m.Balances[string(part.Account)][string(funding.Asset)] += part.Amount
-			}
-		}
+		m.pushValue(funding)
+		m.pushValue(core.Monetary{
+			Asset:  funding.Asset,
+			Amount: sum,
+		})
 
-	case program.OP_ALLOC_MON:
+	case program.OP_FUNDING_REVERSE:
+		funding := m.popFunding()
+		result, err := funding.Reverse()
+		if err != nil {
+			return true, EXIT_FAIL_INVALID
+		}
+		m.pushValue(*result)
+
+	case program.OP_ALLOC:
 		allotment := m.popAllotment()
 		monetary := m.popMonetary()
 		total := monetary.Amount
@@ -311,8 +305,8 @@ func (m *Machine) tick() (bool, byte) {
 	case program.OP_TX_META:
 		k := m.popString()
 		v := m.popValue()
-
 		m.TxMeta[string(k)] = v
+
 	default:
 		return true, EXIT_FAIL_INVALID
 	}

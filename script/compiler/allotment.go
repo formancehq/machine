@@ -55,23 +55,27 @@ func (p *parseVisitor) VisitAllotment(c antlr.ParserRuleContext, portions []pars
 			has_remaining = true
 		}
 	}
-	if has_variable && !has_remaining {
+	if total.Cmp(big.NewRat(1, 1)) == 1 {
 		return LogicError(c,
-			errors.New("allotment has variable portions but no 'remaining'"),
+			errors.New("the sum of known portions is greater than 100%"),
+		)
+	}
+	if total.Cmp(big.NewRat(1, 1)) == -1 && !has_remaining {
+		return LogicError(c,
+			errors.New("the sum of portions might be less than 100%"),
+		)
+	}
+	if total.Cmp(big.NewRat(1, 1)) == 0 && has_variable {
+		return LogicError(c,
+			errors.New("the sum of portions might be greater than 100%"),
+		)
+	}
+	if total.Cmp(big.NewRat(1, 1)) == 0 && has_remaining {
+		return LogicError(c,
+			errors.New("known portions are already equal to 100%"),
 		)
 	}
 	p.PushInteger(core.Number(len(portions)))
-
-	if has_remaining && total.Cmp(big.NewRat(1, 1)) != -1 {
-		return LogicError(c,
-			errors.New("allotment has variable portions but sum of known portions is already equal or is greater than 100%"),
-		)
-	}
-	if !has_variable && !has_remaining && total.Cmp(big.NewRat(1, 1)) != 0 {
-		return LogicError(c,
-			errors.New("allotment has no variable or remaining portions but sum is not 100%"),
-		)
-	}
 	p.instructions = append(p.instructions, program.OP_MAKE_ALLOTMENT)
 	return nil
 }
