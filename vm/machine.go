@@ -185,6 +185,26 @@ func (m *Machine) tick() (bool, byte) {
 		default:
 			return true, EXIT_FAIL_INVALID
 		}
+
+	case program.OP_MONETARY_NEW:
+		amount := m.popNumber()
+		asset := m.popAsset()
+		m.pushValue(core.Monetary{
+			Asset:  asset,
+			Amount: amount,
+		})
+
+	case program.OP_MONETARY_ADD:
+		b := m.popMonetary()
+		a := m.popMonetary()
+		if a.Asset != b.Asset {
+			return true, EXIT_FAIL_INVALID
+		}
+		m.pushValue(core.Monetary{
+			Asset:  a.Asset,
+			Amount: a.Amount + b.Amount,
+		})
+
 	case program.OP_MAKE_ALLOTMENT:
 		n := m.popNumber()
 		portions := make([]core.Portion, n)
@@ -227,7 +247,7 @@ func (m *Machine) tick() (bool, byte) {
 		m.pushValue(remainder)
 		m.pushValue(result)
 
-	case program.OP_ASSEMBLE:
+	case program.OP_FUNDING_ASSEMBLE:
 		n := int(m.popNumber())
 		if n == 0 {
 			return true, EXIT_FAIL_INVALID
@@ -246,7 +266,11 @@ func (m *Machine) tick() (bool, byte) {
 			fundings_rev[i] = f
 		}
 		for i := 0; i < n; i++ {
-			result = result.Concat(fundings_rev[n-1-i])
+			res, err := result.Concat(fundings_rev[n-1-i])
+			if err != nil {
+				return true, EXIT_FAIL_INVALID
+			}
+			result = res
 		}
 		m.pushValue(result)
 

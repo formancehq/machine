@@ -1005,19 +1005,7 @@ func TestSourceOverlapping(t *testing.T) {
 				},
 				{
 					Asset:       "COIN",
-					Amount:      12,
-					Source:      "a",
-					Destination: "world",
-				},
-				{
-					Asset:       "COIN",
-					Amount:      30,
-					Source:      "a",
-					Destination: "world",
-				},
-				{
-					Asset:       "COIN",
-					Amount:      54,
+					Amount:      96,
 					Source:      "a",
 					Destination: "world",
 				},

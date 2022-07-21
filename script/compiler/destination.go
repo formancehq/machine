@@ -9,8 +9,19 @@ import (
 )
 
 func (p *parseVisitor) VisitDestination(c parser.IDestinationContext) *CompileError {
+	err := p.VisitDestinationRecursive(c)
+	if err != nil {
+		return err
+	}
+	p.instructions = append(p.instructions, program.OP_REPAY)
+	return nil
+}
+
+func (p *parseVisitor) VisitDestinationRecursive(c parser.IDestinationContext) *CompileError {
 	switch c := c.(type) {
 	case *parser.DestAccountContext:
+		p.instructions = append(p.instructions, program.OP_FUNDING_SUM)
+		p.instructions = append(p.instructions, program.OP_TAKE)
 		ty, _, err := p.VisitExpr(c.Expression(), true)
 		if err != nil {
 			return err
@@ -26,11 +37,18 @@ func (p *parseVisitor) VisitDestination(c parser.IDestinationContext) *CompileEr
 		dests := c.DestinationInOrder().GetDests()
 		amounts := c.DestinationInOrder().GetAmounts()
 		n := len(dests)
+
+		// initialize the `kept` accumulator
+		p.instructions = append(p.instructions, program.OP_FUNDING_SUM)
+		p.instructions = append(p.instructions, program.OP_ASSET)
+		p.PushInteger(0)
+		p.instructions = append(p.instructions, program.OP_MONETARY_NEW)
+
+		p.PushInteger(1)
+		p.instructions = append(p.instructions, program.OP_BUMP)
+
 		for i := 0; i < n; i++ {
-			_, reversed := dests[i].(*parser.IsKeptContext)
-			if reversed {
-				p.instructions = append(p.instructions, program.OP_FUNDING_REVERSE)
-			}
+
 			ty, _, err := p.VisitExpr(amounts[i], true)
 			if err != nil {
 				return err
@@ -43,14 +61,33 @@ func (p *parseVisitor) VisitDestination(c parser.IDestinationContext) *CompileEr
 			if err != nil {
 				return err
 			}
-			if reversed {
-				p.instructions = append(p.instructions, program.OP_FUNDING_REVERSE)
-			}
+			p.instructions = append(p.instructions, program.OP_FUNDING_SUM)
+			p.PushInteger(3)
+			p.instructions = append(p.instructions, program.OP_BUMP)
+			p.instructions = append(p.instructions, program.OP_MONETARY_ADD)
+			p.PushInteger(1)
+			p.instructions = append(p.instructions, program.OP_BUMP)
+			p.PushInteger(2)
+			p.instructions = append(p.instructions, program.OP_BUMP)
+			p.PushInteger(2)
+			p.instructions = append(p.instructions, program.OP_FUNDING_ASSEMBLE)
 		}
+		p.instructions = append(p.instructions, program.OP_FUNDING_REVERSE)
+		p.PushInteger(1)
+		p.instructions = append(p.instructions, program.OP_BUMP)
+		p.instructions = append(p.instructions, program.OP_TAKE)
+		p.instructions = append(p.instructions, program.OP_FUNDING_REVERSE)
+		p.PushInteger(1)
+		p.instructions = append(p.instructions, program.OP_BUMP)
+		p.instructions = append(p.instructions, program.OP_FUNDING_REVERSE)
 		err := p.VisitKeptOrDestination(c.DestinationInOrder().GetRemainingDest())
 		if err != nil {
 			return err
 		}
+		p.PushInteger(1)
+		p.instructions = append(p.instructions, program.OP_BUMP)
+		p.PushInteger(2)
+		p.instructions = append(p.instructions, program.OP_FUNDING_ASSEMBLE)
 		return nil
 	case *parser.DestAllotmentContext:
 		err := p.VisitDestinationAllotment(c.DestinationAllotment())
@@ -63,10 +100,9 @@ func (p *parseVisitor) VisitDestination(c parser.IDestinationContext) *CompileEr
 func (p *parseVisitor) VisitKeptOrDestination(c parser.IKeptOrDestinationContext) *CompileError {
 	switch c := c.(type) {
 	case *parser.IsKeptContext:
-		p.instructions = append(p.instructions, program.OP_REPAY)
 		return nil
 	case *parser.IsDestinationContext:
-		err := p.VisitDestination(c.Destination())
+		err := p.VisitDestinationRecursive(c.Destination())
 		return err
 	default:
 		return InternalError(c)
@@ -84,7 +120,6 @@ func (p *parseVisitor) VisitDestinationAllotment(c parser.IDestinationAllotmentC
 	if err != nil {
 		return err
 	}
-	p.instructions = append(p.instructions, program.OP_REPAY) // funding should always be empty at this point
 	return nil
 }
 
@@ -92,10 +127,6 @@ func (p *parseVisitor) VisitAllocDestination(dests []parser.IKeptOrDestinationCo
 	p.PushInteger(core.Number(len(dests)))
 	p.instructions = append(p.instructions, program.OP_BUMP)
 	for _, dest := range dests {
-		_, reversed := dest.(*parser.IsKeptContext)
-		if reversed {
-			p.instructions = append(p.instructions, program.OP_FUNDING_REVERSE)
-		}
 		p.PushInteger(core.Number(1))
 		p.instructions = append(p.instructions, program.OP_BUMP)
 		p.instructions = append(p.instructions, program.OP_TAKE)
@@ -103,9 +134,10 @@ func (p *parseVisitor) VisitAllocDestination(dests []parser.IKeptOrDestinationCo
 		if err != nil {
 			return err
 		}
-		if reversed {
-			p.instructions = append(p.instructions, program.OP_FUNDING_REVERSE)
-		}
+		p.PushInteger(core.Number(1))
+		p.instructions = append(p.instructions, program.OP_BUMP)
+		p.PushInteger(2)
+		p.instructions = append(p.instructions, program.OP_FUNDING_ASSEMBLE)
 	}
 	return nil
 }

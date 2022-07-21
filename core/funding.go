@@ -37,7 +37,7 @@ func (f Funding) String() string {
 		out += fmt.Sprintf(" %v %v", part.Account, part.Amount)
 	}
 	if f.Infinite {
-		out += " * @world"
+		out += " @world *"
 	}
 	return out + "]"
 }
@@ -138,16 +138,24 @@ func (f Funding) TakeMax(amount uint64) (Funding, Funding) {
 	return result, remainder
 }
 
-func (f Funding) Concat(other Funding) Funding {
+func (f Funding) Concat(other Funding) (Funding, error) {
+	if f.Asset != other.Asset {
+		return Funding{}, errors.New("tried to concat different assets")
+	}
 	res := Funding{
 		Asset:    f.Asset,
 		Parts:    f.Parts,
 		Infinite: f.Infinite || other.Infinite,
 	}
 	if !f.Infinite {
-		res.Parts = append(res.Parts, other.Parts...)
+		if len(res.Parts) > 0 && len(other.Parts) > 0 && res.Parts[len(res.Parts)-1].Account == other.Parts[0].Account {
+			res.Parts[len(res.Parts)-1].Amount += other.Parts[0].Amount
+			res.Parts = append(res.Parts, other.Parts[1:]...)
+		} else {
+			res.Parts = append(res.Parts, other.Parts...)
+		}
 	}
-	return res
+	return res, nil
 }
 
 func (f Funding) Total() (uint64, error) {
