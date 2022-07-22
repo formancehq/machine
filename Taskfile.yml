@@ -10,6 +10,15 @@ tasks:
   tests:
     cmds:
       - go test -v {{.FAILFAST}} -coverpkg {{.PKG}} -coverprofile {{.COVERAGE_FILE}} -covermode atomic -timeout {{.TIMEOUT}} {{.PKG}}
+
   lint:
     cmds:
     - golangci-lint run -v --fix {{.PKG}}
+
+  generate_parser:
+    cmds:
+      - cd script && rm -r parser || sleep 1 && antlr4 -Dlanguage=Go -o parser NumScript.g4
+
+  bench:
+    cmds:
+      - go test -test.bench=. {{.PKG}}
