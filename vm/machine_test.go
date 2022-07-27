@@ -875,6 +875,48 @@ func TestTrackBalances2(t *testing.T) {
 	)
 }
 
+func TestTrackBalances3(t *testing.T) {
+	testJSON(t,
+		`send [COIN *] (
+			source = @foo
+			destination = {
+				max [COIN 1000] to @bar
+				remaining kept
+			}
+		)
+		send [COIN *] (
+			source = @foo
+			destination = @bar
+		)`,
+		`{}`,
+		map[string]map[string]core.Value{},
+		map[string]map[string]uint64{
+			"foo": {
+				"COIN": 2000,
+			},
+		},
+		CaseResult{
+			Printed: []core.Value{},
+			Postings: []ledger.Posting{
+				{
+					Asset:       "COIN",
+					Amount:      1000,
+					Source:      "foo",
+					Destination: "bar",
+				},
+
+				{
+					Asset:       "COIN",
+					Amount:      1000,
+					Source:      "foo",
+					Destination: "bar",
+				},
+			},
+			ExitCode: EXIT_OK,
+		},
+	)
+}
+
 func TestSourceAllotment(t *testing.T) {
 	testJSON(t,
 		`
@@ -963,19 +1005,7 @@ func TestSourceOverlapping(t *testing.T) {
 				},
 				{
 					Asset:       "COIN",
-					Amount:      12,
-					Source:      "a",
-					Destination: "world",
-				},
-				{
-					Asset:       "COIN",
-					Amount:      30,
-					Source:      "a",
-					Destination: "world",
-				},
-				{
-					Asset:       "COIN",
-					Amount:      54,
+					Amount:      96,
 					Source:      "a",
 					Destination: "world",
 				},
@@ -1063,10 +1093,11 @@ func TestDestinationComplex(t *testing.T) {
 		send [COIN 100] (
 			source = @world
 			destination = {
-				40% to @a
+				20% to @a
+				20% kept
 				60% to {
 					max [COIN 10] to @b
-					@c
+					remaining to @c
 				}
 			}
 		)
@@ -1079,7 +1110,7 @@ func TestDestinationComplex(t *testing.T) {
 			Postings: []ledger.Posting{
 				{
 					Asset:       "COIN",
-					Amount:      40,
+					Amount:      20,
 					Source:      "world",
 					Destination: "a",
 				},

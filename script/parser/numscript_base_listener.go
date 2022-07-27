@@ -1,4 +1,4 @@
-// Code generated from NumScript.g4 by ANTLR 4.9.3. DO NOT EDIT.
+// Code generated from NumScript.g4 by ANTLR 4.10.1. DO NOT EDIT.
 
 package parser // NumScript
 
@@ -113,29 +113,29 @@ func (s *BaseNumScriptListener) EnterDestinationInOrder(ctx *DestinationInOrderC
 // ExitDestinationInOrder is called when production destinationInOrder is exited.
 func (s *BaseNumScriptListener) ExitDestinationInOrder(ctx *DestinationInOrderContext) {}
 
-// EnterDestinationMaxed is called when production destinationMaxed is entered.
-func (s *BaseNumScriptListener) EnterDestinationMaxed(ctx *DestinationMaxedContext) {}
-
-// ExitDestinationMaxed is called when production destinationMaxed is exited.
-func (s *BaseNumScriptListener) ExitDestinationMaxed(ctx *DestinationMaxedContext) {}
-
 // EnterDestinationAllotment is called when production destinationAllotment is entered.
 func (s *BaseNumScriptListener) EnterDestinationAllotment(ctx *DestinationAllotmentContext) {}
 
 // ExitDestinationAllotment is called when production destinationAllotment is exited.
 func (s *BaseNumScriptListener) ExitDestinationAllotment(ctx *DestinationAllotmentContext) {}
 
+// EnterIsDestination is called when production isDestination is entered.
+func (s *BaseNumScriptListener) EnterIsDestination(ctx *IsDestinationContext) {}
+
+// ExitIsDestination is called when production isDestination is exited.
+func (s *BaseNumScriptListener) ExitIsDestination(ctx *IsDestinationContext) {}
+
+// EnterIsKept is called when production isKept is entered.
+func (s *BaseNumScriptListener) EnterIsKept(ctx *IsKeptContext) {}
+
+// ExitIsKept is called when production isKept is exited.
+func (s *BaseNumScriptListener) ExitIsKept(ctx *IsKeptContext) {}
+
 // EnterDestAccount is called when production DestAccount is entered.
 func (s *BaseNumScriptListener) EnterDestAccount(ctx *DestAccountContext) {}
 
 // ExitDestAccount is called when production DestAccount is exited.
 func (s *BaseNumScriptListener) ExitDestAccount(ctx *DestAccountContext) {}
-
-// EnterDestMaxed is called when production DestMaxed is entered.
-func (s *BaseNumScriptListener) EnterDestMaxed(ctx *DestMaxedContext) {}
-
-// ExitDestMaxed is called when production DestMaxed is exited.
-func (s *BaseNumScriptListener) ExitDestMaxed(ctx *DestMaxedContext) {}
 
 // EnterDestInOrder is called when production DestInOrder is entered.
 func (s *BaseNumScriptListener) EnterDestInOrder(ctx *DestInOrderContext) {}

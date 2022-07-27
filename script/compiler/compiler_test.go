@@ -45,7 +45,7 @@ func test(t *testing.T, c TestCase) {
 		} else if p == nil {
 			t.Error(errors.New("did not receive any output"))
 			return
-		} else if !bytes.Equal(p.Instructions, c.Expected.Instructions) {
+		} else if len(c.Expected.Instructions) > 0 && !bytes.Equal(p.Instructions, c.Expected.Instructions) {
 			t.Error(fmt.Errorf("generated program is incorrect: %v", *p))
 			fmt.Println("has:", p.Instructions, "want:", c.Expected.Instructions)
 			return
@@ -280,7 +280,7 @@ func TestInvalidTypeInSource(t *testing.T) {
 	})
 }
 
-func TestAllocationFractions(t *testing.T) {
+func TestDestinationAllotment(t *testing.T) {
 	test(t, TestCase{
 		Case: `send [EUR/2 43] (
 			source = @foo
@@ -291,24 +291,46 @@ func TestAllocationFractions(t *testing.T) {
 		)`,
 		Expected: CaseResult{
 			Instructions: []byte{
-				program.OP_APUSH, 01, 00,
-				program.OP_APUSH, 00, 00,
-				program.OP_ASSET,
-				program.OP_TAKE_ALL,
-				program.OP_APUSH, 00, 00,
-				program.OP_TAKE,
-				program.OP_IPUSH, 01, 00, 00, 00, 00, 00, 00, 00,
-				program.OP_BUMP,
-				program.OP_REPAY,
-				program.OP_APUSH, 02, 00,
-				program.OP_APUSH, 03, 00,
-				program.OP_IPUSH, 02, 00, 00, 00, 00, 00, 00, 00,
-				program.OP_MAKE_ALLOTMENT,
-				program.OP_ALLOC,
-				program.OP_APUSH, 04, 00,
-				program.OP_SEND,
-				program.OP_APUSH, 05, 00,
-				program.OP_SEND,
+				program.OP_APUSH, 01, 00, // @foo
+				program.OP_APUSH, 00, 00, // @foo, [EUR/2 43]
+				program.OP_ASSET,         // @foo, EUR/2
+				program.OP_TAKE_ALL,      // [EUR/2 @foo <?>]
+				program.OP_APUSH, 00, 00, // [EUR/2 @foo <?>], [EUR/2 43]
+				program.OP_TAKE,                                  // [EUR/2 @foo <?>], [EUR/2 @foo 43]
+				program.OP_IPUSH, 01, 00, 00, 00, 00, 00, 00, 00, // [EUR/2 @foo <?>], [EUR/2 @foo 43] 1
+				program.OP_BUMP,          // [EUR/2 @foo 43], [EUR/2 @foo <?>]
+				program.OP_REPAY,         // [EUR/2 @foo 43]
+				program.OP_FUNDING_SUM,   // [EUR/2 @foo 43], [EUR/2 43]
+				program.OP_APUSH, 02, 00, // [EUR/2 @foo 43], [EUR/2 43], 7/8
+				program.OP_APUSH, 03, 00, // [EUR/2 @foo 43], [EUR/2 43], 7/8, 1/8
+				program.OP_IPUSH, 02, 00, 00, 00, 00, 00, 00, 00, // [EUR/2 @foo 43], [EUR/2 43], 7/8, 1/8, 2
+				program.OP_MAKE_ALLOTMENT,                        // [EUR/2 @foo 43], [EUR/2 43], {1/8 : 7/8}
+				program.OP_ALLOC,                                 // [EUR/2 @foo 43], [EUR/2 37], [EUR/2 6]
+				program.OP_IPUSH, 02, 00, 00, 00, 00, 00, 00, 00, // [EUR/2 @foo 43], [EUR/2 37] [EUR/2 6], 2
+				program.OP_BUMP,                                  // [EUR/2 37], [EUR/2 6], [EUR/2 @foo 43]
+				program.OP_IPUSH, 01, 00, 00, 00, 00, 00, 00, 00, // [EUR/2 37], [EUR/2 6], [EUR/2 @foo 43] 1
+				program.OP_BUMP,          // [EUR/2 37], [EUR/2 @foo 43], [EUR/2 6]
+				program.OP_TAKE,          // [EUR/2 37], [EUR/2 @foo 37], [EUR/2 @foo 6]
+				program.OP_FUNDING_SUM,   // [EUR/2 37], [EUR/2 @foo 37], [EUR/2 @foo 6] [EUR/2 6]
+				program.OP_TAKE,          // [EUR/2 37], [EUR/2 @foo 37], [EUR/2] [EUR/2 @foo 6]
+				program.OP_APUSH, 04, 00, // [EUR/2 37], [EUR/2 @foo 37], [EUR/2] [EUR/2 @foo 6], @bar
+				program.OP_SEND,                                  // [EUR/2 37], [EUR/2 @foo 37], [EUR/2]
+				program.OP_IPUSH, 01, 00, 00, 00, 00, 00, 00, 00, // [EUR/2 37], [EUR/2 @foo 37], [EUR/2] 1
+				program.OP_BUMP,                                  // [EUR/2 37], [EUR/2], [EUR/2 @foo 37]
+				program.OP_IPUSH, 02, 00, 00, 00, 00, 00, 00, 00, // [EUR/2 37], [EUR/2], [EUR/2 @foo 37] 2
+				program.OP_FUNDING_ASSEMBLE,                      // [EUR/2 37], [EUR/2 @foo 37]
+				program.OP_IPUSH, 01, 00, 00, 00, 00, 00, 00, 00, // [EUR/2 37], [EUR/2 @foo 37], 1
+				program.OP_BUMP,          // [EUR/2 @foo 37], [EUR/2 37]
+				program.OP_TAKE,          // [EUR/2], [EUR/2 @foo 37]
+				program.OP_FUNDING_SUM,   // [EUR/2], [EUR/2 @foo 37], [EUR/2 37]
+				program.OP_TAKE,          // [EUR/2], [EUR/2], [EUR/2 @foo 37]
+				program.OP_APUSH, 05, 00, // [EUR/2], [EUR/2], [EUR/2 @foo 37], @baz
+				program.OP_SEND,                                  // [EUR/2], [EUR/2]
+				program.OP_IPUSH, 01, 00, 00, 00, 00, 00, 00, 00, // [EUR/2], [EUR/2], 1
+				program.OP_BUMP,                                  // [EUR/2], [EUR/2]
+				program.OP_IPUSH, 02, 00, 00, 00, 00, 00, 00, 00, // [EUR/2], [EUR/2], 2
+				program.OP_FUNDING_ASSEMBLE, // [EUR/2]
+				program.OP_REPAY,            //
 			},
 			Resources: []program.Resource{
 				program.Constant{Inner: core.Monetary{
@@ -326,58 +348,79 @@ func TestAllocationFractions(t *testing.T) {
 	})
 }
 
-func TestComplexDestination(t *testing.T) {
+func TestDestinationInOrder(t *testing.T) {
 	test(t, TestCase{
-		Case: `send [EUR/2 43] (
+		Case: `send [COIN 50] (
 			source = @a
 			destination = {
-				1/8 to {
-					max [EUR/2 10] to @b
-					@c
-				}
-				7/8 to @d
+				max [COIN 10] to @b
+				remaining to @c
 			}
 		)`,
 		Expected: CaseResult{
 			Instructions: []byte{
-				program.OP_APUSH, 01, 00,
-				program.OP_APUSH, 00, 00,
-				program.OP_ASSET,
-				program.OP_TAKE_ALL,
-				program.OP_APUSH, 00, 00,
-				program.OP_TAKE,
-				program.OP_IPUSH, 01, 00, 00, 00, 00, 00, 00, 00,
-				program.OP_BUMP,
-				program.OP_REPAY,
-				program.OP_APUSH, 02, 00,
-				program.OP_APUSH, 03, 00,
-				program.OP_IPUSH, 02, 00, 00, 00, 00, 00, 00, 00,
-				program.OP_MAKE_ALLOTMENT,
-				program.OP_ALLOC,
-				program.OP_APUSH, 04, 00,
-				program.OP_TAKE_MAX,
-				program.OP_APUSH, 05, 00,
-				program.OP_SEND,
-				program.OP_APUSH, 06, 00,
-				program.OP_SEND,
-				program.OP_APUSH, 07, 00,
-				program.OP_SEND,
+				program.OP_APUSH, 01, 00, // @a
+				program.OP_APUSH, 00, 00, // @a, [COIN 50]
+				program.OP_ASSET,         // @a, COIN
+				program.OP_TAKE_ALL,      // [COIN @a <?>]
+				program.OP_APUSH, 00, 00, // [COIN @a <?>], [COIN 50]
+				program.OP_TAKE,                                  // [COIN @a <?>], [COIN @a 50]
+				program.OP_IPUSH, 01, 00, 00, 00, 00, 00, 00, 00, // [COIN @a <?>], [COIN @a 50], 1
+				program.OP_BUMP,  // [COIN @a 50], [COIN @a <?>]
+				program.OP_REPAY, // [COIN @a 50]
+
+				program.OP_FUNDING_SUM,                           // [COIN @a 50], [COIN 50] <- start of DestinationInOrder
+				program.OP_ASSET,                                 // [COIN @a 50], COIN
+				program.OP_IPUSH, 00, 00, 00, 00, 00, 00, 00, 00, // [COIN @a 50], COIN, 0
+				program.OP_MONETARY_NEW,                          // [COIN @a 50], [COIN 0]
+				program.OP_IPUSH, 01, 00, 00, 00, 00, 00, 00, 00, // [COIN @a 50], [COIN 0], 1
+				program.OP_BUMP,          // [COIN 0], [COIN @a 50]
+				program.OP_APUSH, 02, 00, // [COIN 0], [COIN @a 50], [COIN 10] <- start processing max subdestinations
+				program.OP_TAKE_MAX,      // [COIN 0], [COIN @a 40], [COIN @a 10]
+				program.OP_FUNDING_SUM,   // [COIN 0], [COIN @a 40], [COIN @a 10], [COIN 10]
+				program.OP_TAKE,          // [COIN 0], [COIN @a 40], [COIN], [COIN @a 10]
+				program.OP_APUSH, 03, 00, // [COIN 0], [COIN @a 40], [COIN], [COIN @a 10], @b
+				program.OP_SEND,                                  // [COIN 0], [COIN @a 40], [COIN]
+				program.OP_FUNDING_SUM,                           // [COIN 0], [COIN @a 40], [COIN], [COIN 0]
+				program.OP_IPUSH, 03, 00, 00, 00, 00, 00, 00, 00, // [COIN 0], [COIN @a 40], [COIN], [COIN 0], 3
+				program.OP_BUMP,                                  // [COIN @a 40], [COIN], [COIN 0], [COIN 0]
+				program.OP_MONETARY_ADD,                          // [COIN @a 40], [COIN], [COIN 0]
+				program.OP_IPUSH, 01, 00, 00, 00, 00, 00, 00, 00, // [COIN @a 40], [COIN], [COIN 0], 1
+				program.OP_BUMP,                                  // [COIN @a 40], [COIN 0], [COIN]
+				program.OP_IPUSH, 02, 00, 00, 00, 00, 00, 00, 00, // [COIN @a 40], [COIN 0], [COIN] 2
+				program.OP_BUMP,                                  // [COIN 0], [COIN], [COIN @a 40]
+				program.OP_IPUSH, 02, 00, 00, 00, 00, 00, 00, 00, // [COIN 0], [COIN], [COIN @a 40], 2
+				program.OP_FUNDING_ASSEMBLE,                      // [COIN 0], [COIN @a 40]
+				program.OP_FUNDING_REVERSE,                       // [COIN 0], [COIN @a 40] <- start processing remaining subdestination
+				program.OP_IPUSH, 01, 00, 00, 00, 00, 00, 00, 00, // [COIN 0], [COIN @a 40], 1
+				program.OP_BUMP,                                  // [COIN @a 40], [COIN 0]
+				program.OP_TAKE,                                  // [COIN @a 40], [COIN]
+				program.OP_FUNDING_REVERSE,                       // [COIN @a 40], [COIN]
+				program.OP_IPUSH, 01, 00, 00, 00, 00, 00, 00, 00, // [COIN @a 40], [COIN], 1
+				program.OP_BUMP,            // [COIN], [COIN @a 40]
+				program.OP_FUNDING_REVERSE, // [COIN], [COIN @a 40]
+				program.OP_FUNDING_SUM,     // [COIN], [COIN @a 40], [COIN 40]
+				program.OP_TAKE,            // [COIN], [COIN], [COIN @a 40]
+				program.OP_APUSH, 04, 00,   // [COIN], [COIN], [COIN @a 40], @c
+				program.OP_SEND,                                  // [COIN], [COIN]
+				program.OP_IPUSH, 01, 00, 00, 00, 00, 00, 00, 00, // [COIN], [COIN], 1
+				program.OP_BUMP,                                  // [COIN], [COIN]
+				program.OP_IPUSH, 02, 00, 00, 00, 00, 00, 00, 00, // [COIN], [COIN], 2
+				program.OP_FUNDING_ASSEMBLE, // [COIN]
+				program.OP_REPAY,            //
 			},
 			Resources: []program.Resource{
 				program.Constant{Inner: core.Monetary{
-					Asset:  "EUR/2",
-					Amount: 43,
+					Asset:  "COIN",
+					Amount: 50,
 				}},
 				program.Constant{Inner: core.Account("a")},
-				program.Constant{Inner: core.Portion{Specific: big.NewRat(7, 8)}},
-				program.Constant{Inner: core.Portion{Specific: big.NewRat(1, 8)}},
 				program.Constant{Inner: core.Monetary{
-					Asset:  "EUR/2",
+					Asset:  "COIN",
 					Amount: 10,
 				}},
 				program.Constant{Inner: core.Account("b")},
 				program.Constant{Inner: core.Account("c")},
-				program.Constant{Inner: core.Account("d")},
 			},
 			Error: "",
 		},
@@ -395,29 +438,7 @@ func TestAllocationPercentages(t *testing.T) {
 			}
 		)`,
 		Expected: CaseResult{
-			Instructions: []byte{
-				program.OP_APUSH, 01, 00,
-				program.OP_APUSH, 00, 00,
-				program.OP_ASSET,
-				program.OP_TAKE_ALL,
-				program.OP_APUSH, 00, 00,
-				program.OP_TAKE,
-				program.OP_IPUSH, 01, 00, 00, 00, 00, 00, 00, 00,
-				program.OP_BUMP,
-				program.OP_REPAY,
-				program.OP_APUSH, 02, 00,
-				program.OP_APUSH, 03, 00,
-				program.OP_APUSH, 04, 00,
-				program.OP_IPUSH, 03, 00, 00, 00, 00, 00, 00, 00,
-				program.OP_MAKE_ALLOTMENT,
-				program.OP_ALLOC,
-				program.OP_APUSH, 05, 00,
-				program.OP_SEND,
-				program.OP_APUSH, 06, 00,
-				program.OP_SEND,
-				program.OP_APUSH, 07, 00,
-				program.OP_SEND,
-			},
+			Instructions: []byte{},
 			Resources: []program.Resource{
 				program.Constant{Inner: core.Monetary{
 					Asset:  "EUR/2",
@@ -446,17 +467,20 @@ func TestSend(t *testing.T) {
 )`,
 		Expected: CaseResult{
 			Instructions: []byte{
-				program.OP_APUSH, 01, 00,
-				program.OP_APUSH, 00, 00,
-				program.OP_ASSET,
-				program.OP_TAKE_ALL,
-				program.OP_APUSH, 00, 00,
-				program.OP_TAKE,
-				program.OP_IPUSH, 01, 00, 00, 00, 00, 00, 00, 00,
-				program.OP_BUMP,
-				program.OP_REPAY,
-				program.OP_APUSH, 02, 00,
-				program.OP_SEND,
+				program.OP_APUSH, 01, 00, // @alice
+				program.OP_APUSH, 00, 00, // @alice, [EUR/2 99]
+				program.OP_ASSET,         // @alice, EUR/2
+				program.OP_TAKE_ALL,      // [EUR/2 @alice <?>]
+				program.OP_APUSH, 00, 00, // [EUR/2 @alice <?>], [EUR/2 99]
+				program.OP_TAKE,                                  // [EUR/2 @alice <?>], [EUR/2 @alice 99]
+				program.OP_IPUSH, 01, 00, 00, 00, 00, 00, 00, 00, // [EUR/2 @alice <?>], [EUR/2 @alice 99], 1
+				program.OP_BUMP,          // [EUR/2 @alice 99], [EUR/2 @alice <?>]
+				program.OP_REPAY,         // [EUR/2 @alice 99]
+				program.OP_FUNDING_SUM,   // [EUR/2 @alice 99], [EUR/2 99]
+				program.OP_TAKE,          // [EUR/2], [EUR/2 @alice 99]
+				program.OP_APUSH, 02, 00, // [EUR/2], [EUR/2 @alice 99], @b
+				program.OP_SEND,  // [EUR/2]
+				program.OP_REPAY, //
 			}, Resources: []program.Resource{
 				program.Constant{Inner: core.Monetary{Asset: "EUR/2", Amount: 99}},
 				program.Constant{Inner: alice},
@@ -474,11 +498,14 @@ func TestSendAll(t *testing.T) {
 )`,
 		Expected: CaseResult{
 			Instructions: []byte{
-				program.OP_APUSH, 01, 00,
-				program.OP_APUSH, 00, 00,
-				program.OP_TAKE_ALL,
-				program.OP_APUSH, 02, 00,
-				program.OP_SEND,
+				program.OP_APUSH, 01, 00, // @alice
+				program.OP_APUSH, 00, 00, // @alice, EUR/2
+				program.OP_TAKE_ALL,      // [EUR/2 @alice <?>]
+				program.OP_FUNDING_SUM,   // [EUR/2 @alice <?>], [EUR/2 <?>]
+				program.OP_TAKE,          // [EUR/2], [EUR/2 @alice <?>]
+				program.OP_APUSH, 02, 00, // [EUR/2], [EUR/2 @alice <?>], @b
+				program.OP_SEND,  // [EUR/2]
+				program.OP_REPAY, //
 			}, Resources: []program.Resource{
 				program.Constant{Inner: core.Asset("EUR/2")},
 				program.Constant{Inner: core.Account("alice")},
@@ -499,31 +526,12 @@ func TestMetadata(t *testing.T) {
 		send [EUR/2 53] (
 			source = $sale
 			destination = {
-				remaining to $seller
 				$commission to @platform
+				remaining to $seller
 			}
 		)`,
 		Expected: CaseResult{
-			Instructions: []byte{
-				program.OP_APUSH, 00, 00,
-				program.OP_APUSH, 03, 00,
-				program.OP_ASSET,
-				program.OP_TAKE_ALL,
-				program.OP_APUSH, 03, 00,
-				program.OP_TAKE,
-				program.OP_IPUSH, 01, 00, 00, 00, 00, 00, 00, 00,
-				program.OP_BUMP,
-				program.OP_REPAY,
-				program.OP_APUSH, 02, 00,
-				program.OP_APUSH, 04, 00,
-				program.OP_IPUSH, 02, 00, 00, 00, 00, 00, 00, 00,
-				program.OP_MAKE_ALLOTMENT,
-				program.OP_ALLOC,
-				program.OP_APUSH, 01, 00,
-				program.OP_SEND,
-				program.OP_APUSH, 05, 00,
-				program.OP_SEND,
-			}, Resources: []program.Resource{
+			Instructions: []byte{}, Resources: []program.Resource{
 				program.Parameter{Typ: core.TYPE_ACCOUNT, Name: "sale"},
 				program.Metadata{Typ: core.TYPE_ACCOUNT, SourceAccount: core.NewAddress(0), Key: "seller"},
 				program.Metadata{Typ: core.TYPE_PORTION, SourceAccount: core.NewAddress(1), Key: "commission"},
@@ -780,7 +788,7 @@ func TestOverflowingAllocation(t *testing.T) {
 		Expected: CaseResult{
 			Instructions: nil,
 			Resources:    nil,
-			Error:        "remaining",
+			Error:        "100%",
 		},
 	})
 }
@@ -830,44 +838,6 @@ func TestAllocationInvalidPortion(t *testing.T) {
 			Instructions: nil,
 			Resources:    nil,
 			Error:        "type",
-		},
-	})
-}
-
-func TestCappedDestination(t *testing.T) {
-	test(t, TestCase{
-		Case: `
-		vars {
-			account $p
-		}
-		send [GEM 15] (
-			source = @world
-			destination = max [GEM 15] to @a
-		)`,
-		Expected: CaseResult{
-			Instructions: nil,
-			Resources:    nil,
-			Error:        "cap",
-		},
-	})
-}
-func TestCappedDestination2(t *testing.T) {
-	test(t, TestCase{
-		Case: `
-		vars {
-			account $p
-		}
-		send [GEM 15] (
-			source = @world
-			destination = {
-				50% to max [GEM 15] to @a
-				50% to @b
-			}
-		)`,
-		Expected: CaseResult{
-			Instructions: nil,
-			Resources:    nil,
-			Error:        "cap",
 		},
 	})
 }

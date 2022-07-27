@@ -35,7 +35,7 @@ func (p *parseVisitor) VisitValueAwareSource(c parser.IValueAwareSourceContext, 
 		}
 		p.PushAddress(*mon_addr)
 		p.VisitAllotment(c.SourceAllotment(), c.SourceAllotment().GetPortions())
-		p.instructions = append(p.instructions, program.OP_ALLOC_MON)
+		p.instructions = append(p.instructions, program.OP_ALLOC)
 
 		sources := c.SourceAllotment().GetSources()
 		n := len(sources)
@@ -55,7 +55,7 @@ func (p *parseVisitor) VisitValueAwareSource(c parser.IValueAwareSourceContext, 
 			p.instructions = append(p.instructions, program.OP_REPAY)
 		}
 		p.PushInteger(core.Number(n))
-		p.instructions = append(p.instructions, program.OP_ASSEMBLE)
+		p.instructions = append(p.instructions, program.OP_FUNDING_ASSEMBLE)
 	}
 	return needed_accounts, nil
 }
@@ -127,7 +127,7 @@ func (p *parseVisitor) VisitSource(c parser.ISourceContext, push_asset func(), i
 			}
 		}
 		p.PushInteger(core.Number(n))
-		p.instructions = append(p.instructions, program.OP_ASSEMBLE)
+		p.instructions = append(p.instructions, program.OP_FUNDING_ASSEMBLE)
 	}
 	return needed_accounts, emptied_accounts, bottomless, nil
 }

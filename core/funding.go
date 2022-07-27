@@ -34,10 +34,10 @@ func (lhs *Funding) Equals(rhs *Funding) bool {
 func (f Funding) String() string {
 	out := fmt.Sprintf("[%v", string(f.Asset))
 	for _, part := range f.Parts {
-		out += fmt.Sprintf(" %v %v", part.Amount, part.Account)
+		out += fmt.Sprintf(" %v %v", part.Account, part.Amount)
 	}
 	if f.Infinite {
-		out += " * @world"
+		out += " @world *"
 	}
 	return out + "]"
 }
@@ -138,22 +138,49 @@ func (f Funding) TakeMax(amount uint64) (Funding, Funding) {
 	return result, remainder
 }
 
-func (f Funding) Concat(other Funding) Funding {
+func (f Funding) Concat(other Funding) (Funding, error) {
+	if f.Asset != other.Asset {
+		return Funding{}, errors.New("tried to concat different assets")
+	}
 	res := Funding{
 		Asset:    f.Asset,
 		Parts:    f.Parts,
 		Infinite: f.Infinite || other.Infinite,
 	}
 	if !f.Infinite {
-		res.Parts = append(res.Parts, other.Parts...)
+		if len(res.Parts) > 0 && len(other.Parts) > 0 && res.Parts[len(res.Parts)-1].Account == other.Parts[0].Account {
+			res.Parts[len(res.Parts)-1].Amount += other.Parts[0].Amount
+			res.Parts = append(res.Parts, other.Parts[1:]...)
+		} else {
+			res.Parts = append(res.Parts, other.Parts...)
+		}
 	}
-	return res
+	return res, nil
 }
 
-func (f Funding) Total() uint64 {
+func (f Funding) Total() (uint64, error) {
+	if f.Infinite {
+		return 0, errors.New("tried to calculate total of infinite funding")
+	}
 	total := uint64(0)
 	for _, part := range f.Parts {
 		total += part.Amount
 	}
-	return total
+	return total, nil
+}
+
+func (f Funding) Reverse() (*Funding, error) {
+	if f.Infinite {
+		return nil, errors.New("tried to reverse an infinite funding")
+	}
+	new_parts := []FundingPart{}
+	for i := len(f.Parts) - 1; i >= 0; i-- {
+		new_parts = append(new_parts, f.Parts[i])
+	}
+	new_funding := Funding{
+		Asset:    f.Asset,
+		Parts:    new_parts,
+		Infinite: false,
+	}
+	return &new_funding, nil
 }
