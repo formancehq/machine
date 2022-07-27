@@ -6,9 +6,6 @@ on:
 jobs:
   Test:
     uses: numary/gh-workflows/.github/workflows/golang-test.yml@main
-    with:
-      go_version: 1.16
+
   Lint:
     uses: numary/gh-workflows/.github/workflows/golang-lint.yml@main
-    with:
-      go_version: 1.16
