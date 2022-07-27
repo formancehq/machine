@@ -37,7 +37,8 @@ PORTION:
   ( [0-9]+ [ ]? '/' [ ]? [0-9]+
   | [0-9]+     ('.'      [0-9]+)? '%'
   );
-PORTION_REMAINING: 'remaining';
+REMAINING: 'remaining';
+KEPT: 'kept';
 NUMBER: [0-9]+;
 PERCENT: '%';
 VARIABLE_NAME: '$' [a-z_]+ [a-z0-9_]*;
@@ -67,15 +68,24 @@ expression
 allotmentPortion
   : PORTION # allotmentPortionConst
   | por=variable # allotmentPortionVar
-  | PORTION_REMAINING # allotmentPortionRemaining
+  | REMAINING # allotmentPortionRemaining
   ;
 
-destinationInOrder: LBRACE NEWLINE (dests+=destination NEWLINE)+ RBRACE;
-destinationMaxed: MAX max=expression TO dest=destination;
-destinationAllotment: LBRACE NEWLINE (portions+=allotmentPortion TO dests+=destination NEWLINE)+ RBRACE;
+destinationInOrder: LBRACE NEWLINE
+  (MAX amounts+=expression dests+=keptOrDestination NEWLINE)+
+  REMAINING remainingDest=keptOrDestination NEWLINE
+RBRACE;
+destinationAllotment: LBRACE NEWLINE
+  (portions+=allotmentPortion dests+=keptOrDestination NEWLINE)+
+RBRACE;
+
+keptOrDestination
+  : TO destination # isDestination
+  | KEPT # isKept
+  ;
+
 destination
   : expression # DestAccount
-  | destinationMaxed # DestMaxed
   | destinationInOrder # DestInOrder
   | destinationAllotment # DestAllotment
   ;

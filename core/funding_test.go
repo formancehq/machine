@@ -241,3 +241,57 @@ func TestFundingTakeMaxInfinite(t *testing.T) {
 		t.Fatalf("unexpected remainder: %v", remainder)
 	}
 }
+
+func TestFundingReversal(t *testing.T) {
+	f := Funding{
+		Asset: Asset("COIN"),
+		Parts: []FundingPart{
+			{
+				Account: Account("aaa"),
+				Amount:  10,
+			},
+			{
+				Account: Account("bbb"),
+				Amount:  20,
+			},
+			{
+				Account: Account("ccc"),
+				Amount:  30,
+			},
+		},
+	}
+	rev, err := f.Reverse()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !ValueEquals(*rev, Funding{
+		Asset: Asset("COIN"),
+		Parts: []FundingPart{
+			{
+				Account: Account("ccc"),
+				Amount:  30,
+			},
+			{
+				Account: Account("bbb"),
+				Amount:  20,
+			},
+			{
+				Account: Account("aaa"),
+				Amount:  10,
+			},
+		},
+	}) {
+		t.Fatalf("unexpected result: %v", rev)
+	}
+}
+
+func TestInfiniteFundingReversal(t *testing.T) {
+	_, err := Funding{
+		Asset:    Asset("COIN"),
+		Parts:    []FundingPart{},
+		Infinite: true,
+	}.Reverse()
+	if err == nil {
+		t.Fatal("expected error")
+	}
+}
