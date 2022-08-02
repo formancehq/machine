@@ -24,10 +24,9 @@ func (p *parseVisitor) VisitValueAwareSource(c parser.IValueAwareSourceContext, 
 		}
 		if !is_all {
 			p.PushAddress(*mon_addr)
-			p.instructions = append(p.instructions, program.OP_TAKE)
-			p.PushInteger(core.Number(1))
-			p.instructions = append(p.instructions, program.OP_BUMP)
-			p.instructions = append(p.instructions, program.OP_REPAY)
+			p.AppendInstruction(program.OP_TAKE)
+			p.Bump(1)
+			p.AppendInstruction(program.OP_REPAY)
 		}
 	case *parser.SrcAllotmentContext:
 		if is_all {
@@ -35,7 +34,7 @@ func (p *parseVisitor) VisitValueAwareSource(c parser.IValueAwareSourceContext, 
 		}
 		p.PushAddress(*mon_addr)
 		p.VisitAllotment(c.SourceAllotment(), c.SourceAllotment().GetPortions())
-		p.instructions = append(p.instructions, program.OP_ALLOC)
+		p.AppendInstruction(program.OP_ALLOC)
 
 		sources := c.SourceAllotment().GetSources()
 		n := len(sources)
@@ -47,15 +46,13 @@ func (p *parseVisitor) VisitValueAwareSource(c parser.IValueAwareSourceContext, 
 			for k, v := range accounts {
 				needed_accounts[k] = v
 			}
-			p.PushInteger(core.Number(i + 1))
-			p.instructions = append(p.instructions, program.OP_BUMP)
-			p.instructions = append(p.instructions, program.OP_TAKE)
-			p.PushInteger(core.Number(1))
-			p.instructions = append(p.instructions, program.OP_BUMP)
-			p.instructions = append(p.instructions, program.OP_REPAY)
+			p.Bump(uint(i + 1))
+			p.AppendInstruction(program.OP_TAKE)
+			p.Bump(1)
+			p.AppendInstruction(program.OP_REPAY)
 		}
 		p.PushInteger(core.Number(n))
-		p.instructions = append(p.instructions, program.OP_FUNDING_ASSEMBLE)
+		p.AppendInstruction(program.OP_FUNDING_ASSEMBLE)
 	}
 	return needed_accounts, nil
 }
@@ -81,7 +78,7 @@ func (p *parseVisitor) VisitSource(c parser.ISourceContext, push_asset func(), i
 			return nil, nil, false, LogicError(c, errors.New("cannot take all balance of world"))
 		} else {
 			push_asset()
-			p.instructions = append(p.instructions, program.OP_TAKE_ALL)
+			p.AppendInstruction(program.OP_TAKE_ALL)
 			needed_accounts[*acc_addr] = struct{}{}
 			emptied_accounts[*acc_addr] = struct{}{}
 		}
@@ -100,10 +97,9 @@ func (p *parseVisitor) VisitSource(c parser.ISourceContext, push_asset func(), i
 		for k, v := range accounts {
 			needed_accounts[k] = v
 		}
-		p.instructions = append(p.instructions, program.OP_TAKE_MAX)
-		p.PushInteger(core.Number(1))
-		p.instructions = append(p.instructions, program.OP_BUMP)
-		p.instructions = append(p.instructions, program.OP_REPAY)
+		p.AppendInstruction(program.OP_TAKE_MAX)
+		p.Bump(1)
+		p.AppendInstruction(program.OP_REPAY)
 	case *parser.SrcInOrderContext:
 		sources := c.SourceInOrder().GetSources()
 		n := len(sources)
@@ -127,7 +123,7 @@ func (p *parseVisitor) VisitSource(c parser.ISourceContext, push_asset func(), i
 			}
 		}
 		p.PushInteger(core.Number(n))
-		p.instructions = append(p.instructions, program.OP_FUNDING_ASSEMBLE)
+		p.AppendInstruction(program.OP_FUNDING_ASSEMBLE)
 	}
 	return needed_accounts, emptied_accounts, bottomless, nil
 }
