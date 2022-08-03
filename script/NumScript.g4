@@ -90,10 +90,18 @@ destination
   | destinationAllotment # DestAllotment
   ;
 
+sourceAccountOverdraft
+  : 'allowing overdraft up to' specific=expression # SrcAccountOverdraftSpecific
+  | 'allowing overdraft up to its limit' # SrcAccountOverdraftDefault
+  | 'allowing unbounded overdraft' # SrcAccountOverdraftUnbounded
+  ;
+
+
+sourceAccount: account=expression (overdraft=sourceAccountOverdraft)?;
 sourceInOrder: LBRACE NEWLINE (sources+=source NEWLINE)+ RBRACE;
 sourceMaxed: MAX max=expression FROM src=source;
 source
-  : expression # SrcAccount
+  : sourceAccount # SrcAccount
   | sourceMaxed # SrcMaxed
   | sourceInOrder # SrcInOrder
   ;

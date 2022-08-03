@@ -1,10 +1,10 @@
 /*
-	Provides `Machine`, which executes programs and outputs postings.
-	1: Create New Machine
-	2: Set Variables (with `core.Value`s or JSON)
-	3: Resolve Resources (answer requests on channel)
-	4: Resolve Balances (answer requests on channel)
-	6: Execute
+Provides `Machine`, which executes programs and outputs postings.
+1: Create New Machine
+2: Set Variables (with `core.Value`s or JSON)
+3: Resolve Resources (answer requests on channel)
+4: Resolve Balances & Overdrafts (answer requests on channel)
+6: Execute
 */
 package vm
 
@@ -33,7 +33,7 @@ func StdOutPrinter(c chan core.Value) {
 	}
 }
 
-func NewMachine(p *program.Program) *Machine {
+func NewMachine(p program.Program) *Machine {
 	printc := make(chan core.Value)
 
 	m := Machine{
@@ -50,12 +50,13 @@ func NewMachine(p *program.Program) *Machine {
 
 type Machine struct {
 	P                   uint
-	Program             *program.Program
+	Program             program.Program
 	Vars                map[string]core.Value
 	UnresolvedResources []program.Resource
 	Resources           []core.Value // Constants and Variables
 	resolve_called      bool
-	Balances            map[string]map[string]uint64 // keeps tracks of balances througout execution
+	Balances            map[core.Account]map[core.Asset]int64 // keeps tracks of balances througout execution
+	Overdrafts          map[core.Account]map[core.Asset]int64
 	set_balance_called  bool
 	Stack               []core.Value
 	Postings            []ledger.Posting      // accumulates postings throughout execution
@@ -86,21 +87,21 @@ func (m *Machine) getResource(addr core.Address) (*core.Value, bool) {
 	return &m.Resources[a], true
 }
 
-func (m *Machine) withdrawAll(account core.Account, asset core.Asset) (*core.Funding, error) {
+func (m *Machine) withdrawAll(account core.Account, asset core.Asset, overdraft int64) (*core.Funding, error) {
 	if account == "world" {
 		return &core.Funding{
 			Asset:    asset,
 			Infinite: true,
 		}, nil
 	}
-	if acc_balance, ok := m.Balances[string(account)]; ok {
-		if balance, ok := acc_balance[string(asset)]; ok {
-			acc_balance[string(asset)] = 0
+	if acc_balance, ok := m.Balances[account]; ok {
+		if balance, ok := acc_balance[asset]; ok {
+			acc_balance[asset] = -overdraft
 			return &core.Funding{
 				Asset: asset,
 				Parts: []core.FundingPart{{
 					Account: account,
-					Amount:  balance,
+					Amount:  uint64(overdraft + balance), // overdraft >= balance
 				}},
 			}, nil
 		}
@@ -112,10 +113,10 @@ func (m *Machine) credit(account core.Account, funding core.Funding) {
 	if account == "world" {
 		return
 	}
-	if acc_balance, ok := m.Balances[string(account)]; ok {
-		if _, ok := acc_balance[string(funding.Asset)]; ok {
+	if acc_balance, ok := m.Balances[account]; ok {
+		if _, ok := acc_balance[funding.Asset]; ok {
 			for _, part := range funding.Parts {
-				acc_balance[string(funding.Asset)] += part.Amount
+				acc_balance[funding.Asset] += int64(part.Amount)
 			}
 		}
 	}
@@ -126,7 +127,7 @@ func (m *Machine) repay(funding core.Funding) {
 		if part.Account == "world" {
 			continue
 		}
-		m.Balances[string(part.Account)][string(funding.Asset)] += part.Amount
+		m.Balances[part.Account][funding.Asset] += int64(part.Amount)
 	}
 }
 
@@ -220,7 +221,11 @@ func (m *Machine) tick() (bool, byte) {
 	case program.OP_TAKE_ALL:
 		asset := m.popAsset()
 		account := m.popAccount()
-		funding, err := m.withdrawAll(account, asset)
+		overdraft := m.popMonetary()
+		if overdraft.Asset != asset {
+			return true, EXIT_FAIL_INVALID
+		}
+		funding, err := m.withdrawAll(account, asset, int64(overdraft.Amount))
 		if err != nil {
 			return true, EXIT_FAIL_INVALID
 		}
@@ -366,10 +371,15 @@ func (m *Machine) Execute() (byte, error) {
 	}
 }
 
+type BalanceAndOverdraft struct {
+	Balance   int64
+	Overdraft int64
+}
+
 type BalanceRequest struct {
 	Account  string
 	Asset    string
-	Response chan uint64
+	Response chan BalanceAndOverdraft
 	Error    error
 }
 
@@ -384,7 +394,8 @@ func (m *Machine) ResolveBalances() (chan BalanceRequest, error) {
 	ch := make(chan BalanceRequest)
 	go func() {
 		defer close(ch)
-		m.Balances = make(map[string]map[string]uint64)
+		m.Balances = make(map[core.Account]map[core.Asset]int64)
+		m.Overdrafts = make(map[core.Account]map[core.Asset]int64)
 		// for every account that we need balances of, check if it's there
 		for addr, needed_assets := range m.Program.NeededBalances {
 			account, ok := m.getResource(addr)
@@ -398,7 +409,8 @@ func (m *Machine) ResolveBalances() (chan BalanceRequest, error) {
 				if string(account) == "world" {
 					continue
 				}
-				m.Balances[string(account)] = make(map[string]uint64)
+				m.Balances[account] = make(map[core.Asset]int64)
+				m.Overdrafts[account] = make(map[core.Asset]int64)
 				// for every asset, send request
 				for addr := range needed_assets {
 					mon, ok := m.getResource(addr)
@@ -410,21 +422,22 @@ func (m *Machine) ResolveBalances() (chan BalanceRequest, error) {
 					}
 					if ha, ok := (*mon).(core.HasAsset); ok {
 						asset := ha.GetAsset()
-						resp := make(chan uint64)
+						resp_ch := make(chan BalanceAndOverdraft)
 						ch <- BalanceRequest{
 							Account:  string(account),
 							Asset:    string(asset),
-							Response: resp,
+							Response: resp_ch,
 						}
-						balance, ok := <-resp
-						close(resp)
+						resp, ok := <-resp_ch
+						close(resp_ch)
 						if !ok {
 							ch <- BalanceRequest{
 								Error: errors.New("error on response channel"),
 							}
 							return
 						}
-						m.Balances[string(account)][string(asset)] = balance
+						m.Balances[account][asset] = resp.Balance
+						m.Overdrafts[account][asset] = resp.Overdraft
 					} else {
 						ch <- BalanceRequest{
 							Error: errors.New("invalid program (resolve balances: not an asset)"),

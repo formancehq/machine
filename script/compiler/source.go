@@ -66,7 +66,7 @@ func (p *parseVisitor) VisitSource(c parser.ISourceContext, push_asset func(), i
 	bottomless := false
 	switch c := c.(type) {
 	case *parser.SrcAccountContext:
-		ty, acc_addr, err := p.VisitExpr(c.Expression(), true)
+		ty, acc_addr, err := p.VisitExpr(c.SourceAccount().GetAccount(), true)
 		if err != nil {
 			return nil, nil, false, err
 		}
@@ -78,7 +78,33 @@ func (p *parseVisitor) VisitSource(c parser.ISourceContext, push_asset func(), i
 			return nil, nil, false, LogicError(c, errors.New("cannot take all balance of world"))
 		} else {
 			push_asset()
-			p.AppendInstruction(program.OP_TAKE_ALL)
+			// overdraft_unbounded := false
+			// overdraft := 0
+			overdraft := c.SourceAccount().GetOverdraft()
+			if overdraft == nil {
+				// no overdraft: use zero monetary
+				push_asset()
+				p.PushInteger(0)
+				p.AppendInstruction(program.OP_MONETARY_NEW)
+				p.AppendInstruction(program.OP_TAKE_ALL)
+			} else {
+				switch c := overdraft.(type) {
+				case *parser.SrcAccountOverdraftSpecificContext:
+					ty, _, err := p.VisitExpr(c.GetSpecific(), true)
+					if err != nil {
+						return nil, nil, false, err
+					}
+					if ty != core.TYPE_MONETARY {
+						return nil, nil, false, LogicError(c, errors.New("wrong type: expected monetary"))
+					}
+					p.AppendInstruction(program.OP_TAKE_ALL)
+				case *parser.SrcAccountOverdraftDefaultContext:
+					p.AppendInstruction(program.OP_TAKE_ALL_DEFAULT_OVERDRAFT)
+				case *parser.SrcAccountOverdraftUnboundedContext:
+					p.AppendInstruction(program.OP_TAKE_ALL_UNBOUNDED_OVERDRAFT)
+					bottomless = true
+				}
+			}
 			needed_accounts[*acc_addr] = struct{}{}
 			emptied_accounts[*acc_addr] = struct{}{}
 		}
