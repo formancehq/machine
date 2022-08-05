@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	DEBUG bool = false
+	DEBUG bool = true
 )
 
 type CaseResult struct {
@@ -27,20 +27,18 @@ type CaseResult struct {
 }
 
 type TestCase struct {
-	program    *program.Program
-	vars       map[string]core.Value
-	meta       map[string]map[string]core.Value
-	balances   map[string]map[string]int64
-	overdrafts map[string]map[string]int64
-	expected   CaseResult
+	program  *program.Program
+	vars     map[string]core.Value
+	meta     map[string]map[string]core.Value
+	balances map[string]map[string]int64
+	expected CaseResult
 }
 
 func NewTestCase() TestCase {
 	return TestCase{
-		vars:       make(map[string]core.Value),
-		meta:       make(map[string]map[string]core.Value),
-		balances:   make(map[string]map[string]int64),
-		overdrafts: make(map[string]map[string]int64),
+		vars:     make(map[string]core.Value),
+		meta:     make(map[string]map[string]core.Value),
+		balances: make(map[string]map[string]int64),
 	}
 }
 
@@ -101,14 +99,7 @@ func test(
 				return 0, err
 			}
 			for req := range ch {
-				overdraft := int64(0)
-				if od, ok := test_case.overdrafts[req.Account][req.Asset]; ok {
-					overdraft = od
-				}
-				val := BalanceAndOverdraft{
-					Balance:   test_case.balances[req.Account][req.Asset],
-					Overdraft: overdraft,
-				}
+				val := test_case.balances[req.Account][req.Asset]
 				if req.Error != nil {
 					panic(req.Error)
 				}
@@ -1020,7 +1011,7 @@ func TestNeededBalances(t *testing.T) {
 				if len(expected[req.Account]) == 0 {
 					delete(expected, req.Account)
 				}
-				req.Response <- BalanceAndOverdraft{0, 0}
+				req.Response <- 0
 			} else {
 				t.Fatalf("did not expect to need %v balance of %v", req.Asset, req.Account)
 			}

@@ -92,7 +92,6 @@ destination
 
 sourceAccountOverdraft
   : 'allowing overdraft up to' specific=expression # SrcAccountOverdraftSpecific
-  | 'allowing overdraft up to its limit' # SrcAccountOverdraftDefault
   | 'allowing unbounded overdraft' # SrcAccountOverdraftUnbounded
   ;
 

@@ -88,12 +88,6 @@ func (m *Machine) getResource(addr core.Address) (*core.Value, bool) {
 }
 
 func (m *Machine) withdrawAll(account core.Account, asset core.Asset, overdraft int64) (*core.Funding, error) {
-	if account == "world" {
-		return &core.Funding{
-			Asset:    asset,
-			Infinite: true,
-		}, nil
-	}
 	if acc_balance, ok := m.Balances[account]; ok {
 		if balance, ok := acc_balance[asset]; ok {
 			acc_balance[asset] = -overdraft
@@ -161,6 +155,11 @@ func (m *Machine) tick() (bool, byte) {
 		v := m.Stack[idx]
 		m.Stack = append(m.Stack[:idx], m.Stack[idx+1:]...)
 		m.Stack = append(m.Stack, v)
+	case program.OP_DELETE:
+		n := m.popValue()
+		if n.GetType() == core.TYPE_FUNDING {
+			return true, EXIT_FAIL_INVALID
+		}
 	case program.OP_IADD:
 		b := m.popNumber()
 		a := m.popNumber()
@@ -219,9 +218,9 @@ func (m *Machine) tick() (bool, byte) {
 		}
 		m.pushValue(*allotment)
 	case program.OP_TAKE_ALL:
+		overdraft := m.popMonetary()
 		asset := m.popAsset()
 		account := m.popAccount()
-		overdraft := m.popMonetary()
 		if overdraft.Asset != asset {
 			return true, EXIT_FAIL_INVALID
 		}
@@ -230,6 +229,7 @@ func (m *Machine) tick() (bool, byte) {
 			return true, EXIT_FAIL_INVALID
 		}
 		m.pushValue(*funding)
+
 	case program.OP_TAKE:
 		mon := m.popMonetary()
 		funding := m.popFunding()
@@ -242,13 +242,19 @@ func (m *Machine) tick() (bool, byte) {
 		}
 		m.pushValue(remainder)
 		m.pushValue(result)
+
 	case program.OP_TAKE_MAX:
 		mon := m.popMonetary()
 		funding := m.popFunding()
 		if funding.Asset != mon.Asset {
 			return true, EXIT_FAIL_INVALID
 		}
+		missing := mon.Amount - funding.Total()
 		result, remainder := funding.TakeMax(mon.Amount)
+		m.pushValue(core.Monetary{
+			Asset:  mon.Asset,
+			Amount: missing,
+		})
 		m.pushValue(remainder)
 		m.pushValue(result)
 
@@ -281,10 +287,7 @@ func (m *Machine) tick() (bool, byte) {
 
 	case program.OP_FUNDING_SUM:
 		funding := m.popFunding()
-		sum, err := funding.Total()
-		if err != nil {
-			return true, EXIT_FAIL_INVALID
-		}
+		sum := funding.Total()
 		m.pushValue(funding)
 		m.pushValue(core.Monetary{
 			Asset:  funding.Asset,
@@ -293,11 +296,8 @@ func (m *Machine) tick() (bool, byte) {
 
 	case program.OP_FUNDING_REVERSE:
 		funding := m.popFunding()
-		result, err := funding.Reverse()
-		if err != nil {
-			return true, EXIT_FAIL_INVALID
-		}
-		m.pushValue(*result)
+		result := funding.Reverse()
+		m.pushValue(result)
 
 	case program.OP_ALLOC:
 		allotment := m.popAllotment()
@@ -371,15 +371,10 @@ func (m *Machine) Execute() (byte, error) {
 	}
 }
 
-type BalanceAndOverdraft struct {
-	Balance   int64
-	Overdraft int64
-}
-
 type BalanceRequest struct {
 	Account  string
 	Asset    string
-	Response chan BalanceAndOverdraft
+	Response chan int64
 	Error    error
 }
 
@@ -422,7 +417,7 @@ func (m *Machine) ResolveBalances() (chan BalanceRequest, error) {
 					}
 					if ha, ok := (*mon).(core.HasAsset); ok {
 						asset := ha.GetAsset()
-						resp_ch := make(chan BalanceAndOverdraft)
+						resp_ch := make(chan int64)
 						ch <- BalanceRequest{
 							Account:  string(account),
 							Asset:    string(asset),
@@ -436,8 +431,7 @@ func (m *Machine) ResolveBalances() (chan BalanceRequest, error) {
 							}
 							return
 						}
-						m.Balances[account][asset] = resp.Balance
-						m.Overdrafts[account][asset] = resp.Overdraft
+						m.Balances[account][asset] = resp
 					} else {
 						ch <- BalanceRequest{
 							Error: errors.New("invalid program (resolve balances: not an asset)"),

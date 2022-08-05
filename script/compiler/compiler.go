@@ -13,9 +13,8 @@ import (
 )
 
 type parseVisitor struct {
-	elistener    *ErrorListener
-	instructions []byte
-	// pb              *programBuilder
+	elistener       *ErrorListener
+	instructions    []byte
 	resources       []program.Resource                         // must not exceed 65536 elements
 	var_idx         map[string]core.Address                    // maps name to resource index
 	needed_balances map[core.Address]map[core.Address]struct{} // for each account, set of assets needed
