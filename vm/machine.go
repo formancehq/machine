@@ -56,7 +56,6 @@ type Machine struct {
 	Resources           []core.Value // Constants and Variables
 	resolve_called      bool
 	Balances            map[core.Account]map[core.Asset]int64 // keeps tracks of balances througout execution
-	Overdrafts          map[core.Account]map[core.Asset]int64
 	set_balance_called  bool
 	Stack               []core.Value
 	Postings            []ledger.Posting      // accumulates postings throughout execution
@@ -390,7 +389,6 @@ func (m *Machine) ResolveBalances() (chan BalanceRequest, error) {
 	go func() {
 		defer close(ch)
 		m.Balances = make(map[core.Account]map[core.Asset]int64)
-		m.Overdrafts = make(map[core.Account]map[core.Asset]int64)
 		// for every account that we need balances of, check if it's there
 		for addr, needed_assets := range m.Program.NeededBalances {
 			account, ok := m.getResource(addr)
@@ -401,11 +399,7 @@ func (m *Machine) ResolveBalances() (chan BalanceRequest, error) {
 				return
 			}
 			if account, ok := (*account).(core.Account); ok {
-				if string(account) == "world" {
-					continue
-				}
 				m.Balances[account] = make(map[core.Asset]int64)
-				m.Overdrafts[account] = make(map[core.Asset]int64)
 				// for every asset, send request
 				for addr := range needed_assets {
 					mon, ok := m.getResource(addr)
@@ -417,6 +411,10 @@ func (m *Machine) ResolveBalances() (chan BalanceRequest, error) {
 					}
 					if ha, ok := (*mon).(core.HasAsset); ok {
 						asset := ha.GetAsset()
+						if string(account) == "world" {
+							m.Balances[account][asset] = 0
+							continue
+						}
 						resp_ch := make(chan int64)
 						ch <- BalanceRequest{
 							Account:  string(account),

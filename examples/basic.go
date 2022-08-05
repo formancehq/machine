@@ -29,19 +29,22 @@ import (
 // )
 
 func main() {
-	program, err := compiler.Compile(`
-	send [GEM 40] (
-		source = {
-			50% from @foo allowing overdraft up to [GEM 10]
-			50% from @bar
+	program, err := compiler.Compile(`send [COIN 100] (
+		source = @world
+		destination = {
+			20% to @a
+			20% kept
+			60% to {
+				max [COIN 10] to @b
+				remaining to @c
+			}
 		}
-		destination = @world
-	)
-	`)
+	)`)
 	if err != nil {
 		panic(err)
 	}
 	fmt.Print(program)
+	fmt.Print(program.NeededBalances)
 
 	m := vm.NewMachine(*program)
 
@@ -58,14 +61,7 @@ func main() {
 	}
 
 	{
-		balances := map[string]map[string]int64{
-			"foo": {
-				"GEM": 10,
-			},
-			"bar": {
-				"GEM": 20,
-			},
-		}
+		balances := map[string]map[string]int64{}
 
 		ch, err := m.ResolveBalances()
 		if err != nil {

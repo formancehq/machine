@@ -56,6 +56,8 @@ func (p *parseVisitor) VisitDestinationRecursive(c parser.IDestinationContext) *
 				return LogicError(c, errors.New("wrong type: expected monetary as max"))
 			}
 			p.AppendInstruction(program.OP_TAKE_MAX)
+			p.Bump(2)
+			p.AppendInstruction(program.OP_DELETE)
 			err = p.VisitKeptOrDestination(dests[i])
 			if err != nil {
 				return err
