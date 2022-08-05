@@ -1,4 +1,4 @@
-version: "3"
+version: '3'
 
 vars:
   PKG: ./...
@@ -13,7 +13,7 @@ tasks:
 
   lint:
     cmds:
-      - golangci-lint run -v --fix {{.PKG}}
+    - golangci-lint run -v --fix {{.PKG}}
 
   generate_parser:
     cmds:

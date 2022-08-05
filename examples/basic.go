@@ -8,15 +8,32 @@ import (
 	"github.com/numary/machine/vm"
 )
 
+// send [GEM 50] (
+// 	source = {
+// 		@foo
+// 		@bar
+// 		@baz
+// 	}
+// 	destination = {
+// 		50% to {
+// 			max [GEM 4] to {
+// 				50% kept
+// 				25% to @arst
+// 				25% kept
+// 			}
+// 			remaining to @thing
+// 		}
+// 		25% to @qux
+// 		remaining to @quz
+// 	}
+// )
+
 func main() {
 	program, err := compiler.Compile(`
-	send [COIN 99] (
+	send [GEM 40] (
 		source = {
-			15% from {
-				@a
-				@b
-			}
-			remaining from @a
+			50% from @foo allowing overdraft up to [GEM 10]
+			50% from @bar
 		}
 		destination = @world
 	)
@@ -26,7 +43,7 @@ func main() {
 	}
 	fmt.Print(program)
 
-	m := vm.NewMachine(program)
+	m := vm.NewMachine(*program)
 
 	m.SetVars(map[string]core.Value{})
 
@@ -41,12 +58,12 @@ func main() {
 	}
 
 	{
-		balances := map[string]map[string]uint64{
-			"a": {
-				"COIN": 500000,
+		balances := map[string]map[string]int64{
+			"foo": {
+				"GEM": 10,
 			},
-			"b": {
-				"COIN": 3500000,
+			"bar": {
+				"GEM": 20,
 			},
 		}
 
