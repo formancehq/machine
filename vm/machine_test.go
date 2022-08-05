@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	DEBUG bool = true
+	DEBUG bool = false
 )
 
 type CaseResult struct {
@@ -302,27 +302,6 @@ func TestVariablesJSON(t *testing.T) {
 			"description": core.String("midnight ride"),
 		},
 		ExitCode: EXIT_OK,
-	}
-	test(t, tc)
-}
-
-func TestVariablesJSONInvalid(t *testing.T) {
-	tc := NewTestCase()
-	tc.compile(t, `vars {
-		portion $p
-	}
-	send [EUR/2 999] (
-		source = @world
-		destination = {
-			$p to @b
-			remaining to @c
-		}
-	)`)
-	tc.setVarsFromJSON(t, `{
-		"p": "3/2"
-	}`)
-	tc.expected = CaseResult{
-		Error: "portion must be",
 	}
 	test(t, tc)
 }

@@ -248,7 +248,10 @@ func (m *Machine) tick() (bool, byte) {
 		if funding.Asset != mon.Asset {
 			return true, EXIT_FAIL_INVALID
 		}
-		missing := mon.Amount - funding.Total()
+		missing := uint64(0)
+		if mon.Amount > funding.Total() {
+			missing = mon.Amount - funding.Total()
+		}
 		result, remainder := funding.TakeMax(mon.Amount)
 		m.pushValue(core.Monetary{
 			Asset:  mon.Asset,
@@ -361,7 +364,7 @@ func (m *Machine) Execute() (byte, error) {
 	for {
 		finished, exit_code := m.tick()
 		if finished {
-			if len(m.Stack) != 0 {
+			if exit_code == EXIT_OK && len(m.Stack) != 0 {
 				return EXIT_FAIL_INVALID, nil
 			} else {
 				return exit_code, nil

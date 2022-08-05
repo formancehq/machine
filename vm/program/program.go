@@ -11,7 +11,6 @@ import (
 type Program struct {
 	Instructions   []byte
 	Resources      []Resource
-	Parameters     map[string]core.Address
 	NeededBalances map[core.Address]map[core.Address]struct{}
 }
 
