@@ -11,10 +11,11 @@ import (
 	ledger "github.com/numary/ledger/pkg/core"
 	"github.com/numary/machine/core"
 	"github.com/numary/machine/script/compiler"
+	"github.com/numary/machine/vm/program"
 )
 
 const (
-	DEBUG bool = false
+	DEBUG bool = true
 )
 
 type CaseResult struct {
@@ -26,27 +27,56 @@ type CaseResult struct {
 }
 
 type TestCase struct {
-	Code      string
-	Variables map[string]core.Value
-	Expected  CaseResult
+	program  *program.Program
+	vars     map[string]core.Value
+	meta     map[string]map[string]core.Value
+	balances map[string]map[string]int64
+	expected CaseResult
 }
 
-type TestCaseJSON struct {
-	Code      string
-	Variables map[string]core.Value
-	Expected  CaseResult
+func NewTestCase() TestCase {
+	return TestCase{
+		vars:     make(map[string]core.Value),
+		meta:     make(map[string]map[string]core.Value),
+		balances: make(map[string]map[string]int64),
+	}
+}
+
+func (c *TestCase) compile(t *testing.T, code string) {
+	p, err := compiler.Compile(code)
+	if err != nil {
+		t.Fatalf("compile error: %v", err)
+		return
+	}
+	c.program = p
+}
+
+func (c *TestCase) setVarsFromJSON(t *testing.T, str string) {
+	var jvars map[string]json.RawMessage
+	err := json.Unmarshal([]byte(str), &jvars)
+	if err != nil {
+		t.Fatalf("unmarshal error: %v", err)
+	}
+	v, err := c.program.ParseVariablesJSON(jvars)
+	if err != nil {
+		t.Fatalf("parse variables error: %v", err)
+	}
+	c.vars = v
+}
+
+func (c *TestCase) setBalance(t *testing.T, account, asset string, amount int64) {
+	if _, ok := c.balances[account]; !ok {
+		c.balances[account] = make(map[string]int64)
+	}
+	c.balances[account][asset] = amount
 }
 
 func test(
 	t *testing.T,
-	code string,
-	variables map[string]core.Value,
-	meta map[string]map[string]core.Value,
-	balances map[string]map[string]uint64,
-	expected CaseResult,
+	test_case TestCase,
 ) {
-	testimpl(t, code, expected, func(m *Machine) (byte, error) {
-		err := m.SetVars(variables)
+	testimpl(t, test_case.program, test_case.expected, func(m *Machine) (byte, error) {
+		err := m.SetVars(test_case.vars)
 		if err != nil {
 			return 0, err
 		}
@@ -56,7 +86,7 @@ func test(
 				return 0, err
 			}
 			for req := range ch {
-				val := meta[req.Account][req.Key]
+				val := test_case.meta[req.Account][req.Key]
 				if req.Error != nil {
 					panic(req.Error)
 				}
@@ -69,7 +99,7 @@ func test(
 				return 0, err
 			}
 			for req := range ch {
-				val := balances[req.Account][req.Asset]
+				val := test_case.balances[req.Account][req.Asset]
 				if req.Error != nil {
 					panic(req.Error)
 				}
@@ -80,74 +110,17 @@ func test(
 	})
 }
 
-func testJSON(
-	t *testing.T,
-	code string,
-	variables string,
-	meta map[string]map[string]core.Value,
-	balances map[string]map[string]uint64,
-	expected CaseResult,
-) {
-	testimpl(t, code, expected, func(m *Machine) (byte, error) {
-		var v map[string]json.RawMessage
-		err := json.Unmarshal([]byte(variables), &v)
-		if err != nil {
-			return 0, err
-		}
-		err = m.SetVarsFromJSON(v)
-		if err != nil {
-			return 0, err
-		}
-		{
-			ch, err := m.ResolveResources()
-			if err != nil {
-				return 0, err
-			}
-			for req := range ch {
-				if req.Error != nil {
-					panic(req.Error)
-				}
-				val, ok := meta[req.Account][req.Key]
-				if !ok {
-					t.Fatalf("case error: missing metadata %q of %v", req.Key, req.Account)
-				}
-				req.Response <- val
-			}
-		}
-		{
-			ch, err := m.ResolveBalances()
-			if err != nil {
-				return 0, err
-			}
-			for req := range ch {
-				if req.Error != nil {
-					panic(req.Error)
-				}
-				val, ok := balances[req.Account][req.Asset]
-				if !ok {
-					t.Fatalf("case error: missing %v balance of %v", req.Asset, req.Account)
-				}
-				req.Response <- val
-			}
-		}
-		return m.Execute()
-	})
-}
-
-func testimpl(t *testing.T, code string, expected CaseResult, exec func(*Machine) (byte, error)) {
-	p, err := compiler.Compile(code)
-
-	if err != nil {
-		t.Error(fmt.Errorf("compile error: %v", err))
-		return
-	}
-
+func testimpl(t *testing.T, prog *program.Program, expected CaseResult, exec func(*Machine) (byte, error)) {
 	printed := []core.Value{}
 
 	var wg sync.WaitGroup
 	wg.Add(1)
 
-	machine := NewMachine(p)
+	if prog == nil {
+		t.Fatal("no program")
+	}
+
+	machine := NewMachine(*prog)
 	machine.Debug = DEBUG
 	machine.Printer = func(c chan core.Value) {
 		for v := range c {
@@ -225,911 +198,760 @@ func testimpl(t *testing.T, code string, expected CaseResult, exec func(*Machine
 }
 
 func TestFail(t *testing.T) {
-	test(t,
-		"fail",
-		map[string]core.Value{},
-		map[string]map[string]core.Value{},
-		map[string]map[string]uint64{},
-		CaseResult{
-			Printed:  []core.Value{},
-			Postings: []ledger.Posting{},
-			ExitCode: EXIT_FAIL,
-		},
-	)
+	tc := NewTestCase()
+	tc.compile(t, "fail")
+	tc.expected = CaseResult{
+		Printed:  []core.Value{},
+		Postings: []ledger.Posting{},
+		ExitCode: EXIT_FAIL,
+	}
+	test(t, tc)
 }
 
 func TestPrint(t *testing.T) {
-	test(t,
-		"print 29 + 15 - 2",
-		map[string]core.Value{},
-		map[string]map[string]core.Value{},
-		map[string]map[string]uint64{},
-		CaseResult{
-			Printed:  []core.Value{core.Number(42)},
-			Postings: []ledger.Posting{},
-			ExitCode: EXIT_OK,
-		},
-	)
+	tc := NewTestCase()
+	tc.compile(t, "print 29 + 15 - 2")
+	tc.expected = CaseResult{
+		Printed:  []core.Value{core.Number(42)},
+		Postings: []ledger.Posting{},
+		ExitCode: EXIT_OK,
+	}
+	test(t, tc)
 }
 
 func TestSend(t *testing.T) {
-	test(t,
-		`send [EUR/2 100] (
-			source=@alice
-			destination=@bob
-		)`,
-		map[string]core.Value{},
-		map[string]map[string]core.Value{},
-		map[string]map[string]uint64{
-			"alice": {
-				"EUR/2": 100,
+	tc := NewTestCase()
+	tc.compile(t, `send [EUR/2 100] (
+		source=@alice
+		destination=@bob
+	)`)
+	tc.setBalance(t, "alice", "EUR/2", 100)
+	tc.expected = CaseResult{
+		Printed: []core.Value{},
+		Postings: []ledger.Posting{
+			{
+				Asset:       "EUR/2",
+				Amount:      100,
+				Source:      "alice",
+				Destination: "bob",
 			},
 		},
-		CaseResult{
-			Printed: []core.Value{},
-			Postings: []ledger.Posting{
-				{
-					Asset:       "EUR/2",
-					Amount:      100,
-					Source:      "alice",
-					Destination: "bob",
-				},
-			},
-			ExitCode: EXIT_OK,
-		},
-	)
+		ExitCode: EXIT_OK,
+	}
+	test(t, tc)
 }
 
 func TestVariables(t *testing.T) {
-	test(t,
-		`vars {
-			account $rider
-			account $driver
-		}
-		send [EUR/2 999] (
-			source=$rider
-			destination=$driver
-		)`,
-		map[string]core.Value{
-			"rider":  core.Account("users:001"),
-			"driver": core.Account("users:002"),
-		},
-		map[string]map[string]core.Value{},
-		map[string]map[string]uint64{
-			"users:001": {
-				"EUR/2": 1000,
+	tc := NewTestCase()
+	tc.compile(t, `vars {
+		account $rider
+		account $driver
+	}
+	send [EUR/2 999] (
+		source=$rider
+		destination=$driver
+	)`)
+	tc.vars = map[string]core.Value{
+		"rider":  core.Account("users:001"),
+		"driver": core.Account("users:002"),
+	}
+	tc.setBalance(t, "users:001", "EUR/2", 1000)
+	tc.expected = CaseResult{
+		Printed: []core.Value{},
+		Postings: []ledger.Posting{
+			{
+				Asset:       "EUR/2",
+				Amount:      999,
+				Source:      "users:001",
+				Destination: "users:002",
 			},
 		},
-		CaseResult{
-			Printed: []core.Value{},
-			Postings: []ledger.Posting{
-				{
-					Asset:       "EUR/2",
-					Amount:      999,
-					Source:      "users:001",
-					Destination: "users:002",
-				},
-			},
-			ExitCode: EXIT_OK,
-		},
-	)
+		ExitCode: EXIT_OK,
+	}
 }
 
 func TestVariablesJSON(t *testing.T) {
-	testJSON(t,
-		`vars {
-			account $rider
-			account $driver
-			string 	$description
-		}
-		send [EUR/2 999] (
-			source=$rider
-			destination=$driver
-		)
-		set_tx_meta("description", $description)`,
-		`{
-			"rider": "users:001",
-			"driver": "users:002",
-			"description": "midnight ride"
-		}`,
-		map[string]map[string]core.Value{},
-		map[string]map[string]uint64{
-			"users:001": {
-				"EUR/2": 1000,
-			},
-		},
-		CaseResult{
-			Printed: []core.Value{},
-			Postings: []ledger.Posting{
-				{
-					Asset:       "EUR/2",
-					Amount:      999,
-					Source:      "users:001",
-					Destination: "users:002",
-				},
-			},
-			Metadata: map[string]core.Value{
-				"description": core.String("midnight ride"),
-			},
-			ExitCode: EXIT_OK,
-		},
+	tc := NewTestCase()
+	tc.compile(t, `vars {
+		account $rider
+		account $driver
+		string 	$description
+	}
+	send [EUR/2 999] (
+		source=$rider
+		destination=$driver
 	)
+	set_tx_meta("description", $description)`)
+	tc.setVarsFromJSON(t, `{
+		"rider": "users:001",
+		"driver": "users:002",
+		"description": "midnight ride"
+	}`)
+	tc.setBalance(t, "users:001", "EUR/2", 1000)
+	tc.expected = CaseResult{
+		Printed: []core.Value{},
+		Postings: []ledger.Posting{
+			{
+				Asset:       "EUR/2",
+				Amount:      999,
+				Source:      "users:001",
+				Destination: "users:002",
+			},
+		},
+		Metadata: map[string]core.Value{
+			"description": core.String("midnight ride"),
+		},
+		ExitCode: EXIT_OK,
+	}
+	test(t, tc)
 }
 
 func TestVariablesJSONInvalid(t *testing.T) {
-	testJSON(t,
-		`vars {
-			portion $p
+	tc := NewTestCase()
+	tc.compile(t, `vars {
+		portion $p
+	}
+	send [EUR/2 999] (
+		source = @world
+		destination = {
+			$p to @b
+			remaining to @c
 		}
-		send [EUR/2 999] (
-			source = @world
-			destination = {
-				$p to @b
-				remaining to @c
-			}
-		)`,
-		`{
-			"p": "3/2"
-		}`,
-		map[string]map[string]core.Value{},
-		map[string]map[string]uint64{},
-		CaseResult{
-			Error: "portion must be",
-		},
-	)
+	)`)
+	tc.setVarsFromJSON(t, `{
+		"p": "3/2"
+	}`)
+	tc.expected = CaseResult{
+		Error: "portion must be",
+	}
+	test(t, tc)
 }
 
 func TestSource(t *testing.T) {
-	testJSON(t,
-		`vars {
-	account $balance
-	account $payment
-	account $seller
-}
-send [GEM 15] (
-	source = {
-		$balance
-		$payment
+	tc := NewTestCase()
+	tc.compile(t, `vars {
+		account $balance
+		account $payment
+		account $seller
 	}
-	destination = $seller
-)`,
-		`{
-			"balance": "users:001",
-			"payment": "payments:001",
-			"seller": "users:002"
-		}`,
-		map[string]map[string]core.Value{},
-		map[string]map[string]uint64{
-			"users:001": {
-				"GEM": 3,
+	send [GEM 15] (
+		source = {
+			$balance
+			$payment
+		}
+		destination = $seller
+	)`)
+	tc.setVarsFromJSON(t, `{
+		"balance": "users:001",
+		"payment": "payments:001",
+		"seller": "users:002"
+	}`)
+	tc.setBalance(t, "users:001", "GEM", 3)
+	tc.setBalance(t, "payments:001", "GEM", 12)
+	tc.expected = CaseResult{
+		Printed: []core.Value{},
+		Postings: []ledger.Posting{
+			{
+				Asset:       "GEM",
+				Amount:      3,
+				Source:      "users:001",
+				Destination: "users:002",
 			},
-			"payments:001": {
-				"GEM": 12,
+			{
+				Asset:       "GEM",
+				Amount:      12,
+				Source:      "payments:001",
+				Destination: "users:002",
 			},
 		},
-		CaseResult{
-			Printed: []core.Value{},
-			Postings: []ledger.Posting{
-				{
-					Asset:       "GEM",
-					Amount:      3,
-					Source:      "users:001",
-					Destination: "users:002",
-				},
-				{
-					Asset:       "GEM",
-					Amount:      12,
-					Source:      "payments:001",
-					Destination: "users:002",
-				},
-			},
-			ExitCode: EXIT_OK,
-		},
-	)
+		ExitCode: EXIT_OK,
+	}
+	test(t, tc)
 }
 
 func TestAllocation(t *testing.T) {
-	testJSON(t,
-		`vars {
-	account $rider
-	account $driver
-}
-send [GEM 15] (
-	source = $rider
-	destination = {
-		80% to $driver
-		8% to @a
-		12% to @b
+	tc := NewTestCase()
+	tc.compile(t, `vars {
+		account $rider
+		account $driver
 	}
-)`,
-		`{
-			"rider": "users:001",
-			"driver": "users:002"
-		}`,
-		map[string]map[string]core.Value{},
-		map[string]map[string]uint64{
-			"users:001": {
-				"GEM": 15,
+	send [GEM 15] (
+		source = $rider
+		destination = {
+			80% to $driver
+			8% to @a
+			12% to @b
+		}
+	)`)
+	tc.setVarsFromJSON(t, `{
+		"rider": "users:001",
+		"driver": "users:002"
+	}`)
+	tc.setBalance(t, "users:001", "GEM", 15)
+	tc.expected = CaseResult{
+		Printed: []core.Value{},
+		Postings: []ledger.Posting{
+			{
+				Asset:       "GEM",
+				Amount:      13,
+				Source:      "users:001",
+				Destination: "users:002",
+			},
+			{
+				Asset:       "GEM",
+				Amount:      1,
+				Source:      "users:001",
+				Destination: "a",
+			},
+			{
+				Asset:       "GEM",
+				Amount:      1,
+				Source:      "users:001",
+				Destination: "b",
 			},
 		},
-		CaseResult{
-			Printed: []core.Value{},
-			Postings: []ledger.Posting{
-				{
-					Asset:       "GEM",
-					Amount:      13,
-					Source:      "users:001",
-					Destination: "users:002",
-				},
-				{
-					Asset:       "GEM",
-					Amount:      1,
-					Source:      "users:001",
-					Destination: "a",
-				},
-				{
-					Asset:       "GEM",
-					Amount:      1,
-					Source:      "users:001",
-					Destination: "b",
-				},
-			},
-			ExitCode: EXIT_OK,
-		},
-	)
+		ExitCode: EXIT_OK,
+	}
+	test(t, tc)
 }
 
 func TestDynamicAllocation(t *testing.T) {
-	testJSON(t,
-		`vars {
-	portion $p
-}
-send [GEM 15] (
-	source = @a
-	destination = {
-		80% to @b
-		$p to @c
-		remaining to @d
+	tc := NewTestCase()
+	tc.compile(t, `vars {
+		portion $p
 	}
-)`,
-		`{
-			"p": "15%"
-		}`,
-		map[string]map[string]core.Value{},
-		map[string]map[string]uint64{
-			"a": {
-				"GEM": 15,
+	send [GEM 15] (
+		source = @a
+		destination = {
+			80% to @b
+			$p to @c
+			remaining to @d
+		}
+	)`)
+	tc.setVarsFromJSON(t, `{
+		"p": "15%"
+	}`)
+	tc.setBalance(t, "a", "GEM", 15)
+	tc.expected = CaseResult{
+		Printed: []core.Value{},
+		Postings: []ledger.Posting{
+			{
+				Asset:       "GEM",
+				Amount:      13,
+				Source:      "a",
+				Destination: "b",
+			},
+			{
+				Asset:       "GEM",
+				Amount:      2,
+				Source:      "a",
+				Destination: "c",
 			},
 		},
-		CaseResult{
-			Printed: []core.Value{},
-			Postings: []ledger.Posting{
-				{
-					Asset:       "GEM",
-					Amount:      13,
-					Source:      "a",
-					Destination: "b",
-				},
-				{
-					Asset:       "GEM",
-					Amount:      2,
-					Source:      "a",
-					Destination: "c",
-				},
-			},
-			ExitCode: EXIT_OK,
-		},
-	)
+		ExitCode: EXIT_OK,
+	}
+	test(t, tc)
 }
 
 func TestSendAll(t *testing.T) {
-	testJSON(t,
-		`send [USD/2 *] (
-  source = @users:001
-  destination = @platform
-)`,
-		`{}`,
-		map[string]map[string]core.Value{},
-		map[string]map[string]uint64{
-			"users:001": {
-				"USD/2": 17,
+	tc := NewTestCase()
+	tc.compile(t, `send [USD/2 *] (
+		source = @users:001
+		destination = @platform
+	)`)
+	tc.setBalance(t, "users:001", "USD/2", 17)
+	tc.expected = CaseResult{
+		Printed: []core.Value{},
+		Postings: []ledger.Posting{
+			{
+				Asset:       "USD/2",
+				Amount:      17,
+				Source:      "users:001",
+				Destination: "platform",
 			},
 		},
-		CaseResult{
-			Printed: []core.Value{},
-			Postings: []ledger.Posting{
-				{
-					Asset:       "USD/2",
-					Amount:      17,
-					Source:      "users:001",
-					Destination: "platform",
-				},
-			},
-			ExitCode: EXIT_OK,
-		},
-	)
+		ExitCode: EXIT_OK,
+	}
+	test(t, tc)
 }
 
 func TestSendAllMulti(t *testing.T) {
-	testJSON(t,
-		`send [USD/2 *] (
-			source = {
-			  @users:001:wallet
-			  @users:001:credit
-			}
-			destination = @platform
-		  )
-		  `,
-		`{}`,
-		map[string]map[string]core.Value{},
-		map[string]map[string]uint64{
-			"users:001:wallet": {
-				"USD/2": 19,
-			},
-			"users:001:credit": {
-				"USD/2": 22,
-			},
-		},
-		CaseResult{
-			Printed: []core.Value{},
-			Postings: []ledger.Posting{
-				{
-					Asset:       "USD/2",
-					Amount:      19,
-					Source:      "users:001:wallet",
-					Destination: "platform",
-				},
-				{
-					Asset:       "USD/2",
-					Amount:      22,
-					Source:      "users:001:credit",
-					Destination: "platform",
-				},
-			},
-			ExitCode: EXIT_OK,
-		},
+	tc := NewTestCase()
+	tc.compile(t, `send [USD/2 *] (
+		source = {
+		  @users:001:wallet
+		  @users:001:credit
+		}
+		destination = @platform
 	)
+	`)
+	tc.setBalance(t, "users:001:wallet", "USD/2", 19)
+	tc.setBalance(t, "users:001:credit", "USD/2", 22)
+	tc.expected = CaseResult{
+		Printed: []core.Value{},
+		Postings: []ledger.Posting{
+			{
+				Asset:       "USD/2",
+				Amount:      19,
+				Source:      "users:001:wallet",
+				Destination: "platform",
+			},
+			{
+				Asset:       "USD/2",
+				Amount:      22,
+				Source:      "users:001:credit",
+				Destination: "platform",
+			},
+		},
+		ExitCode: EXIT_OK,
+	}
+	test(t, tc)
 }
 
 func TestInsufficientFunds(t *testing.T) {
-	testJSON(t,
-		`vars {
-	account $balance
-	account $payment
-	account $seller
-}
-send [GEM 16] (
-	source = {
-		$balance
-		$payment
+	tc := NewTestCase()
+	tc.compile(t, `vars {
+		account $balance
+		account $payment
+		account $seller
 	}
-	destination = $seller
-)`,
-		`{
-			"balance": "users:001",
-			"payment": "payments:001",
-			"seller": "users:002"
-		}`,
-		map[string]map[string]core.Value{},
-		map[string]map[string]uint64{
-			"users:001": {
-				"GEM": 3,
-			},
-			"payments:001": {
-				"GEM": 12,
-			},
-		},
-		CaseResult{
-			Printed:  []core.Value{},
-			Postings: []ledger.Posting{},
-			ExitCode: EXIT_FAIL_INSUFFICIENT_FUNDS,
-		},
-	)
+	send [GEM 16] (
+		source = {
+			$balance
+			$payment
+		}
+		destination = $seller
+	)`)
+	tc.setVarsFromJSON(t, `{
+		"balance": "users:001",
+		"payment": "payments:001",
+		"seller": "users:002"
+	}`)
+	tc.setBalance(t, "users:001", "GEM", 3)
+	tc.setBalance(t, "payments:001", "GEM", 12)
+	tc.expected = CaseResult{
+		Printed:  []core.Value{},
+		Postings: []ledger.Posting{},
+		ExitCode: EXIT_FAIL_INSUFFICIENT_FUNDS,
+	}
+	test(t, tc)
 }
 
 func TestWorldSource(t *testing.T) {
-	testJSON(t,
-		`send [GEM 15] (
-			source = {
-				@a
-				@world
-			}
-			destination = @b
-		)`,
-		`{}`,
-		map[string]map[string]core.Value{},
-		map[string]map[string]uint64{
-			"a": {
-				"GEM": 1,
+	tc := NewTestCase()
+	tc.compile(t, `send [GEM 15] (
+		source = {
+			@a
+			@world
+		}
+		destination = @b
+	)`)
+	tc.setBalance(t, "a", "GEM", 1)
+	tc.expected = CaseResult{
+		Printed: []core.Value{},
+		Postings: []ledger.Posting{
+			{
+				Asset:       "GEM",
+				Amount:      1,
+				Source:      "a",
+				Destination: "b",
+			},
+			{
+				Asset:       "GEM",
+				Amount:      14,
+				Source:      "world",
+				Destination: "b",
 			},
 		},
-		CaseResult{
-			Printed: []core.Value{},
-			Postings: []ledger.Posting{
-				{
-					Asset:       "GEM",
-					Amount:      1,
-					Source:      "a",
-					Destination: "b",
-				},
-				{
-					Asset:       "GEM",
-					Amount:      14,
-					Source:      "world",
-					Destination: "b",
-				},
-			},
-			ExitCode: EXIT_OK,
-		},
-	)
+		ExitCode: EXIT_OK,
+	}
+	test(t, tc)
 }
 
 func TestNoEmptyPostings(t *testing.T) {
-	testJSON(t,
-		`send [GEM 2] (
-			source = @world
-			destination = {
-				90% to @a
-				10% to @b
-			}
-		)`,
-		`{}`,
-		map[string]map[string]core.Value{},
-		map[string]map[string]uint64{},
-		CaseResult{
-			Printed: []core.Value{},
-			Postings: []ledger.Posting{
-				{
-					Asset:       "GEM",
-					Amount:      2,
-					Source:      "world",
-					Destination: "a",
-				},
+	tc := NewTestCase()
+	tc.compile(t, `send [GEM 2] (
+		source = @world
+		destination = {
+			90% to @a
+			10% to @b
+		}
+	)`)
+	tc.expected = CaseResult{
+		Printed: []core.Value{},
+		Postings: []ledger.Posting{
+			{
+				Asset:       "GEM",
+				Amount:      2,
+				Source:      "world",
+				Destination: "a",
 			},
-			ExitCode: EXIT_OK,
 		},
-	)
+		ExitCode: EXIT_OK,
+	}
+	test(t, tc)
 }
 
 func TestNoEmptyPostings2(t *testing.T) {
-	testJSON(t,
-		`send [GEM *] (
-			source = @foo
-			destination = @bar
-		)`,
-		`{}`,
-		map[string]map[string]core.Value{},
-		map[string]map[string]uint64{
-			"foo": {
-				"GEM": 0,
-			},
-		},
-		CaseResult{
-			Printed:  []core.Value{},
-			Postings: []ledger.Posting{},
-			ExitCode: EXIT_OK,
-		},
-	)
+	tc := NewTestCase()
+	tc.compile(t, `send [GEM *] (
+		source = @foo
+		destination = @bar
+	)`)
+	tc.setBalance(t, "foo", "GEM", 0)
+	tc.expected = CaseResult{
+		Printed:  []core.Value{},
+		Postings: []ledger.Posting{},
+		ExitCode: EXIT_OK,
+	}
+	test(t, tc)
 }
 
 func TestAllocateDontTakeTooMuch(t *testing.T) {
-	testJSON(t,
-		`send [CREDIT 200] (
-			source = {
-				@users:001
-				@users:002
-			}
-			destination = {
-				1/2 to @foo
-				1/2 to @bar
-			}
-		)`,
-		`{}`,
-		map[string]map[string]core.Value{},
-		map[string]map[string]uint64{
-			"users:001": {
-				"CREDIT": 100,
+	tc := NewTestCase()
+	tc.compile(t, `send [CREDIT 200] (
+		source = {
+			@users:001
+			@users:002
+		}
+		destination = {
+			1/2 to @foo
+			1/2 to @bar
+		}
+	)`)
+	tc.setBalance(t, "users:001", "CREDIT", 100)
+	tc.setBalance(t, "users:002", "CREDIT", 110)
+	tc.expected = CaseResult{
+		Printed: []core.Value{},
+		Postings: []ledger.Posting{
+			{
+				Asset:       "CREDIT",
+				Amount:      100,
+				Source:      "users:001",
+				Destination: "foo",
 			},
-			"users:002": {
-				"CREDIT": 110,
+			{
+				Asset:       "CREDIT",
+				Amount:      100,
+				Source:      "users:002",
+				Destination: "bar",
 			},
 		},
-		CaseResult{
-			Printed: []core.Value{},
-			Postings: []ledger.Posting{
-				{
-					Asset:       "CREDIT",
-					Amount:      100,
-					Source:      "users:001",
-					Destination: "foo",
-				},
-				{
-					Asset:       "CREDIT",
-					Amount:      100,
-					Source:      "users:002",
-					Destination: "bar",
-				},
-			},
-			ExitCode: EXIT_OK,
-		},
-	)
+		ExitCode: EXIT_OK,
+	}
+	test(t, tc)
 }
 
 func TestMetadata(t *testing.T) {
 	commission, _ := core.NewPortionSpecific(*big.NewRat(125, 1000))
-	testJSON(t,
-		`vars {
-			account $sale
-			account $seller = meta($sale, "seller")
-			portion $commission = meta($seller, "commission")
+	tc := NewTestCase()
+	tc.compile(t, `vars {
+		account $sale
+		account $seller = meta($sale, "seller")
+		portion $commission = meta($seller, "commission")
+	}
+	send [EUR/2 100] (
+		source = $sale
+		destination = {
+			remaining to $seller
+			$commission to @platform
 		}
-		send [EUR/2 100] (
-			source = $sale
-			destination = {
-				remaining to $seller
-				$commission to @platform
-			}
-		)`,
-		`{
-			"sale": "sales:042"
-		}`,
-		map[string]map[string]core.Value{
-			"sales:042": {
-				"seller": core.Account("users:053"),
+	)`)
+	tc.setVarsFromJSON(t, `{
+		"sale": "sales:042"
+	}`)
+	tc.meta = map[string]map[string]core.Value{
+		"sales:042": {
+			"seller": core.Account("users:053"),
+		},
+		"users:053": {
+			"commission": *commission,
+		},
+	}
+	tc.setBalance(t, "sales:042", "EUR/2", 2500)
+	tc.setBalance(t, "users:053", "EUR/2", 500)
+	tc.expected = CaseResult{
+		Printed: []core.Value{},
+		Postings: []ledger.Posting{
+			{
+				Asset:       "EUR/2",
+				Amount:      88,
+				Source:      "sales:042",
+				Destination: "users:053",
 			},
-			"users:053": {
-				"commission": *commission,
+			{
+				Asset:       "EUR/2",
+				Amount:      12,
+				Source:      "sales:042",
+				Destination: "platform",
 			},
 		},
-		map[string]map[string]uint64{
-			"sales:042": {
-				"EUR/2": 2500,
-			},
-			"users:053": {
-				"EUR/2": 500,
-			},
-		},
-		CaseResult{
-			Printed: []core.Value{},
-			Postings: []ledger.Posting{
-				{
-					Asset:       "EUR/2",
-					Amount:      88,
-					Source:      "sales:042",
-					Destination: "users:053",
-				},
-				{
-					Asset:       "EUR/2",
-					Amount:      12,
-					Source:      "sales:042",
-					Destination: "platform",
-				},
-			},
-			ExitCode: EXIT_OK,
-		},
-	)
+		ExitCode: EXIT_OK,
+	}
+	test(t, tc)
 }
 
 func TestTrackBalances(t *testing.T) {
-	testJSON(t,
-		`
-		send [COIN 50] (
-			source = @world
-			destination = @a
-		)
-		send [COIN 100] (
-			source = @a
-			destination = @b
-		)`,
-		`{}`,
-		map[string]map[string]core.Value{},
-		map[string]map[string]uint64{
-			"a": {
-				"COIN": 50,
-			},
-		},
-		CaseResult{
-			Printed: []core.Value{},
-			Postings: []ledger.Posting{
-				{
-					Asset:       "COIN",
-					Amount:      50,
-					Source:      "world",
-					Destination: "a",
-				},
-				{
-					Asset:       "COIN",
-					Amount:      100,
-					Source:      "a",
-					Destination: "b",
-				},
-			},
-			ExitCode: EXIT_OK,
-		},
+	tc := NewTestCase()
+	tc.compile(t, `
+	send [COIN 50] (
+		source = @world
+		destination = @a
 	)
+	send [COIN 100] (
+		source = @a
+		destination = @b
+	)`)
+	tc.setBalance(t, "a", "COIN", 50)
+	tc.expected = CaseResult{
+		Printed: []core.Value{},
+		Postings: []ledger.Posting{
+			{
+				Asset:       "COIN",
+				Amount:      50,
+				Source:      "world",
+				Destination: "a",
+			},
+			{
+				Asset:       "COIN",
+				Amount:      100,
+				Source:      "a",
+				Destination: "b",
+			},
+		},
+		ExitCode: EXIT_OK,
+	}
+	test(t, tc)
 }
 
 func TestTrackBalances2(t *testing.T) {
-	testJSON(t,
-		`
-		send [COIN 50] (
-			source = @a
-			destination = @z
-		)
-		send [COIN 50] (
-			source = @a
-			destination = @z
-		)`,
-		`{}`,
-		map[string]map[string]core.Value{},
-		map[string]map[string]uint64{
-			"a": {
-				"COIN": 60,
-			},
-		},
-		CaseResult{
-			Printed:  []core.Value{},
-			Postings: []ledger.Posting{},
-			ExitCode: EXIT_FAIL_INSUFFICIENT_FUNDS,
-		},
+	tc := NewTestCase()
+	tc.compile(t, `
+	send [COIN 50] (
+		source = @a
+		destination = @z
 	)
+	send [COIN 50] (
+		source = @a
+		destination = @z
+	)`)
+	tc.setBalance(t, "a", "COIN", 60)
+	tc.expected = CaseResult{
+		Printed:  []core.Value{},
+		Postings: []ledger.Posting{},
+		ExitCode: EXIT_FAIL_INSUFFICIENT_FUNDS,
+	}
+	test(t, tc)
 }
 
 func TestTrackBalances3(t *testing.T) {
-	testJSON(t,
-		`send [COIN *] (
-			source = @foo
-			destination = {
-				max [COIN 1000] to @bar
-				remaining kept
-			}
-		)
-		send [COIN *] (
-			source = @foo
-			destination = @bar
-		)`,
-		`{}`,
-		map[string]map[string]core.Value{},
-		map[string]map[string]uint64{
-			"foo": {
-				"COIN": 2000,
-			},
-		},
-		CaseResult{
-			Printed: []core.Value{},
-			Postings: []ledger.Posting{
-				{
-					Asset:       "COIN",
-					Amount:      1000,
-					Source:      "foo",
-					Destination: "bar",
-				},
-
-				{
-					Asset:       "COIN",
-					Amount:      1000,
-					Source:      "foo",
-					Destination: "bar",
-				},
-			},
-			ExitCode: EXIT_OK,
-		},
+	tc := NewTestCase()
+	tc.compile(t, `send [COIN *] (
+		source = @foo
+		destination = {
+			max [COIN 1000] to @bar
+			remaining kept
+		}
 	)
+	send [COIN *] (
+		source = @foo
+		destination = @bar
+	)`)
+	tc.setBalance(t, "foo", "COIN", 2000)
+	tc.expected = CaseResult{
+		Printed: []core.Value{},
+		Postings: []ledger.Posting{
+			{
+				Asset:       "COIN",
+				Amount:      1000,
+				Source:      "foo",
+				Destination: "bar",
+			},
+			{
+				Asset:       "COIN",
+				Amount:      1000,
+				Source:      "foo",
+				Destination: "bar",
+			},
+		},
+		ExitCode: EXIT_OK,
+	}
+	test(t, tc)
 }
 
 func TestSourceAllotment(t *testing.T) {
-	testJSON(t,
-		`
-		send [COIN 100] (
-			source = {
-				60% from @a
-				35.5% from @b
-				4.5% from @c
-			}
-			destination = @d
-		)
-		`,
-		`{}`,
-		map[string]map[string]core.Value{},
-		map[string]map[string]uint64{
-			"a": {
-				"COIN": 100,
+	tc := NewTestCase()
+	tc.compile(t, `send [COIN 100] (
+		source = {
+			60% from @a
+			35.5% from @b
+			4.5% from @c
+		}
+		destination = @d
+	)`)
+	tc.setBalance(t, "a", "COIN", 100)
+	tc.setBalance(t, "b", "COIN", 100)
+	tc.setBalance(t, "c", "COIN", 100)
+	tc.expected = CaseResult{
+		Printed: []core.Value{},
+		Postings: []ledger.Posting{
+			{
+				Asset:       "COIN",
+				Amount:      61,
+				Source:      "a",
+				Destination: "d",
 			},
-			"b": {
-				"COIN": 100,
+			{
+				Asset:       "COIN",
+				Amount:      35,
+				Source:      "b",
+				Destination: "d",
 			},
-			"c": {
-				"COIN": 100,
+			{
+				Asset:       "COIN",
+				Amount:      4,
+				Source:      "c",
+				Destination: "d",
 			},
 		},
-		CaseResult{
-			Printed: []core.Value{},
-			Postings: []ledger.Posting{
-				{
-					Asset:       "COIN",
-					Amount:      61,
-					Source:      "a",
-					Destination: "d",
-				},
-				{
-					Asset:       "COIN",
-					Amount:      35,
-					Source:      "b",
-					Destination: "d",
-				},
-				{
-					Asset:       "COIN",
-					Amount:      4,
-					Source:      "c",
-					Destination: "d",
-				},
-			},
-			ExitCode: EXIT_OK,
-		},
-	)
+		ExitCode: EXIT_OK,
+	}
+	test(t, tc)
 }
 
 func TestSourceOverlapping(t *testing.T) {
-	testJSON(t,
-		`
-		send [COIN 99] (
-			source = {
-				15% from {
-					@b
-					@a
-				}
-				30% from @a
-				remaining from @a
+	tc := NewTestCase()
+	tc.compile(t, `send [COIN 99] (
+		source = {
+			15% from {
+				@b
+				@a
 			}
-			destination = @world
-		)
-		`,
-		`{}`,
-		map[string]map[string]core.Value{},
-		map[string]map[string]uint64{
-			"a": {
-				"COIN": 99,
+			30% from @a
+			remaining from @a
+		}
+		destination = @world
+	)`)
+	tc.setBalance(t, "a", "COIN", 99)
+	tc.setBalance(t, "b", "COIN", 3)
+	tc.expected = CaseResult{
+		Printed: []core.Value{},
+		Postings: []ledger.Posting{
+			{
+				Asset:       "COIN",
+				Amount:      3,
+				Source:      "b",
+				Destination: "world",
 			},
-			"b": {
-				"COIN": 3,
+			{
+				Asset:       "COIN",
+				Amount:      96,
+				Source:      "a",
+				Destination: "world",
 			},
 		},
-		CaseResult{
-			Printed: []core.Value{},
-			Postings: []ledger.Posting{
-				{
-					Asset:       "COIN",
-					Amount:      3,
-					Source:      "b",
-					Destination: "world",
-				},
-				{
-					Asset:       "COIN",
-					Amount:      96,
-					Source:      "a",
-					Destination: "world",
-				},
-			},
-			ExitCode: EXIT_OK,
-		},
-	)
+		ExitCode: EXIT_OK,
+	}
+	test(t, tc)
 }
 
 func TestSourceComplex(t *testing.T) {
-	testJSON(t,
-		`
-		vars {
-			monetary $max
+	tc := NewTestCase()
+	tc.compile(t, `vars {
+		monetary $max
+	}
+	send [COIN 200] (
+		source = {
+			50% from {
+				max [COIN 4] from @a
+				@b
+				@c
+			}
+			remaining from max $max from @d
 		}
-		send [COIN 200] (
-			source = {
-				50% from {
-					max [COIN 4] from @a
-					@b
-					@c
-				}
-				remaining from max $max from @d
-			}
-			destination = @platform
-		)
-		`,
-		`{
-			"max": {
-				"asset": "COIN",
-				"amount": 120
-			}
-		}`,
-		map[string]map[string]core.Value{},
-		map[string]map[string]uint64{
-			"a": {
-				"COIN": 1000,
+		destination = @platform
+	)`)
+	tc.setVarsFromJSON(t, `{
+		"max": {
+			"asset": "COIN",
+			"amount": 120
+		}
+	}`)
+	tc.setBalance(t, "a", "COIN", 1000)
+	tc.setBalance(t, "b", "COIN", 40)
+	tc.setBalance(t, "c", "COIN", 1000)
+	tc.setBalance(t, "d", "COIN", 1000)
+	tc.expected = CaseResult{
+		Printed: []core.Value{},
+		Postings: []ledger.Posting{
+			{
+				Asset:       "COIN",
+				Amount:      4,
+				Source:      "a",
+				Destination: "platform",
 			},
-			"b": {
-				"COIN": 40,
+			{
+				Asset:       "COIN",
+				Amount:      40,
+				Source:      "b",
+				Destination: "platform",
 			},
-			"c": {
-				"COIN": 1000,
+			{
+				Asset:       "COIN",
+				Amount:      56,
+				Source:      "c",
+				Destination: "platform",
 			},
-			"d": {
-				"COIN": 1000,
+			{
+				Asset:       "COIN",
+				Amount:      100,
+				Source:      "d",
+				Destination: "platform",
 			},
 		},
-		CaseResult{
-			Printed: []core.Value{},
-			Postings: []ledger.Posting{
-				{
-					Asset:       "COIN",
-					Amount:      4,
-					Source:      "a",
-					Destination: "platform",
-				},
-				{
-					Asset:       "COIN",
-					Amount:      40,
-					Source:      "b",
-					Destination: "platform",
-				},
-				{
-					Asset:       "COIN",
-					Amount:      56,
-					Source:      "c",
-					Destination: "platform",
-				},
-				{
-					Asset:       "COIN",
-					Amount:      100,
-					Source:      "d",
-					Destination: "platform",
-				},
-			},
-			ExitCode: EXIT_OK,
-		},
-	)
+		ExitCode: EXIT_OK,
+	}
+	test(t, tc)
 }
 
 func TestDestinationComplex(t *testing.T) {
-	testJSON(t,
-		`
-		send [COIN 100] (
-			source = @world
-			destination = {
-				20% to @a
-				20% kept
-				60% to {
-					max [COIN 10] to @b
-					remaining to @c
-				}
+	tc := NewTestCase()
+	tc.compile(t, `send [COIN 100] (
+		source = @world
+		destination = {
+			20% to @a
+			20% kept
+			60% to {
+				max [COIN 10] to @b
+				remaining to @c
 			}
-		)
-		`,
-		`{}`,
-		map[string]map[string]core.Value{},
-		map[string]map[string]uint64{},
-		CaseResult{
-			Printed: []core.Value{},
-			Postings: []ledger.Posting{
-				{
-					Asset:       "COIN",
-					Amount:      20,
-					Source:      "world",
-					Destination: "a",
-				},
-				{
-					Asset:       "COIN",
-					Amount:      10,
-					Source:      "world",
-					Destination: "b",
-				},
-				{
-					Asset:       "COIN",
-					Amount:      50,
-					Source:      "world",
-					Destination: "c",
-				},
+		}
+	)`)
+	tc.expected = CaseResult{
+		Printed: []core.Value{},
+		Postings: []ledger.Posting{
+			{
+				Asset:       "COIN",
+				Amount:      20,
+				Source:      "world",
+				Destination: "a",
 			},
-			ExitCode: EXIT_OK,
+			{
+				Asset:       "COIN",
+				Amount:      10,
+				Source:      "world",
+				Destination: "b",
+			},
+			{
+				Asset:       "COIN",
+				Amount:      50,
+				Source:      "world",
+				Destination: "c",
+			},
 		},
-	)
+		ExitCode: EXIT_OK,
+	}
+	test(t, tc)
 }
 
 func TestNeededBalances(t *testing.T) {
@@ -1149,7 +971,7 @@ func TestNeededBalances(t *testing.T) {
 		t.Fatalf("did not expect error on Compile, got: %v", err)
 	}
 
-	m := NewMachine(p)
+	m := NewMachine(*p)
 
 	err = m.SetVars(map[string]core.Value{
 		"a": core.Account("a"),
@@ -1213,7 +1035,7 @@ func TestSetTxMeta(t *testing.T) {
 		t.Fatalf("did not expect error on Compile, got: %v", err)
 	}
 
-	m := NewMachine(p)
+	m := NewMachine(*p)
 
 	{
 		ch, _ := m.ResolveResources()

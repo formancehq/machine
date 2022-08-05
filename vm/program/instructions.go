@@ -4,6 +4,7 @@ const (
 	OP_APUSH = byte(iota + 1)
 	OP_IPUSH
 	OP_BUMP             // <value_to_bump: any> <any>*N <int N> => <any>*N <value_to_bump>
+	OP_DELETE           // <value: not funding>
 	OP_IADD             // <number> <number> => <number>
 	OP_ISUB             // <number> <number> => <number>
 	OP_PRINT            // <any>
@@ -12,10 +13,10 @@ const (
 	OP_MONETARY_NEW     // <asset> <number> => <monetary>
 	OP_MONETARY_ADD     // <monetary> <monetary> => <monetary>   // panics if not same asset
 	OP_MAKE_ALLOTMENT   // <portion>*N <int N> => <allotment(N)>
-	OP_TAKE_ALL         // <account> <asset> => <funding>
+	OP_TAKE_ALL         // <account> <asset> <monetary> => <funding>
 	OP_TAKE             // <funding> <monetary> => <remaining: funding> <taken: funding>
-	OP_TAKE_MAX         // <funding> <monetary> => <remaining: funding> <taken: funding> (doesn't fail on insufficient funds)
-	OP_FUNDING_ASSEMBLE // <funding>*N <int N> => <funding>
+	OP_TAKE_MAX         // <funding> <monetary> => <missing: monetary> <remaining: funding> <taken: funding> (doesn't fail on insufficient funds)
+	OP_FUNDING_ASSEMBLE // <funding>*N <int N> => <funding> (first has highest priority)
 	OP_FUNDING_SUM      // <funding> => <funding> <sum: monetary>
 	OP_FUNDING_REVERSE  // <funding> => <funding>
 	OP_REPAY            // <funding>
@@ -32,6 +33,8 @@ func OpcodeName(op byte) string {
 		return "OP_IPUSH"
 	case OP_BUMP:
 		return "OP_BUMP"
+	case OP_DELETE:
+		return "OP_DELETE"
 	case OP_IADD:
 		return "OP_IADD"
 	case OP_ISUB:

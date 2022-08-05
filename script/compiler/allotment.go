@@ -76,6 +76,6 @@ func (p *parseVisitor) VisitAllotment(c antlr.ParserRuleContext, portions []pars
 		)
 	}
 	p.PushInteger(core.Number(len(portions)))
-	p.instructions = append(p.instructions, program.OP_MAKE_ALLOTMENT)
+	p.AppendInstruction(program.OP_MAKE_ALLOTMENT)
 	return nil
 }

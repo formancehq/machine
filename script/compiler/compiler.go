@@ -1,7 +1,6 @@
 package compiler
 
 import (
-	"encoding/binary"
 	"errors"
 	"fmt"
 	"strconv"
@@ -50,19 +49,6 @@ func (p *parseVisitor) AllocateResource(res program.Resource) (*core.Address, er
 	return &addr, nil
 }
 
-func (p *parseVisitor) PushAddress(addr core.Address) {
-	p.instructions = append(p.instructions, program.OP_APUSH)
-	bytes := addr.ToBytes()
-	p.instructions = append(p.instructions, bytes...)
-}
-
-func (p *parseVisitor) PushInteger(val core.Number) {
-	p.instructions = append(p.instructions, program.OP_IPUSH)
-	bytes := make([]byte, 8)
-	binary.LittleEndian.PutUint64(bytes, uint64(val))
-	p.instructions = append(p.instructions, bytes...)
-}
-
 func (p *parseVisitor) isWorld(addr core.Address) bool {
 	idx := int(addr)
 	if idx < len(p.resources) {
@@ -82,9 +68,7 @@ func (p *parseVisitor) VisitVariable(c parser.IVariableContext, push bool) (core
 	if idx, ok := p.var_idx[name]; ok {
 		res := p.resources[idx]
 		if push {
-			p.instructions = append(p.instructions, program.OP_APUSH)
-			bytes := idx.ToBytes()
-			p.instructions = append(p.instructions, bytes...)
+			p.PushAddress(idx)
 		}
 		return res.GetType(), &idx, nil
 	} else {
@@ -112,9 +96,9 @@ func (p *parseVisitor) VisitExpr(c parser.IExpressionContext, push bool) (core.T
 		if push {
 			switch c.GetOp().GetTokenType() {
 			case parser.NumScriptLexerOP_ADD:
-				p.instructions = append(p.instructions, program.OP_IADD)
+				p.AppendInstruction(program.OP_IADD)
 			case parser.NumScriptLexerOP_SUB:
-				p.instructions = append(p.instructions, program.OP_ISUB)
+				p.AppendInstruction(program.OP_ISUB)
 			}
 		}
 		return core.TYPE_NUMBER, nil, nil
@@ -229,7 +213,7 @@ func (p *parseVisitor) VisitSend(c *parser.SendContext) *CompileError {
 		asset_addr = *mon_addr
 		accounts, err := p.VisitValueAwareSource(c.GetSrc(), func() {
 			p.PushAddress(*mon_addr)
-			p.instructions = append(p.instructions, program.OP_ASSET)
+			p.AppendInstruction(program.OP_ASSET)
 		}, mon_addr)
 		if err != nil {
 			return err
@@ -265,7 +249,7 @@ func (p *parseVisitor) VisitSetTxMeta(ctx *parser.SetTxMetaContext) *CompileErro
 	})
 	p.PushAddress(*keyAddr)
 
-	p.instructions = append(p.instructions, program.OP_TX_META)
+	p.AppendInstruction(program.OP_TX_META)
 
 	return nil
 }
@@ -276,7 +260,7 @@ func (p *parseVisitor) VisitPrint(ctx *parser.PrintContext) *CompileError {
 	if err != nil {
 		return err
 	}
-	p.instructions = append(p.instructions, program.OP_PRINT)
+	p.AppendInstruction(program.OP_PRINT)
 	return nil
 }
 
@@ -359,7 +343,7 @@ func (p *parseVisitor) VisitScript(c parser.IScriptContext) *CompileError {
 					return err
 				}
 			case *parser.FailContext:
-				p.instructions = append(p.instructions, program.OP_FAIL)
+				p.AppendInstruction(program.OP_FAIL)
 			case *parser.SendContext:
 				err := p.VisitSend(c)
 				if err != nil {
