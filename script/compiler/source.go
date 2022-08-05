@@ -65,8 +65,7 @@ func (p *parseVisitor) TakeFromSource(fallback *FallbackAccount, push_asset func
 		p.Bump(1)
 		p.AppendInstruction(program.OP_REPAY)
 		p.PushAddress(core.Address(*fallback))
-		push_asset()
-		p.Bump(3)
+		p.Bump(2)
 		p.AppendInstruction(program.OP_TAKE_ALL)
 		p.PushInteger(2)
 		p.AppendInstruction(program.OP_FUNDING_ASSEMBLE)
@@ -94,7 +93,6 @@ func (p *parseVisitor) VisitSource(c parser.ISourceContext, push_asset func(), i
 			fallback = &f
 		}
 
-		push_asset()
 		overdraft := c.SourceAccount().GetOverdraft()
 		if overdraft == nil {
 			// no overdraft: use zero monetary
@@ -152,8 +150,7 @@ func (p *parseVisitor) VisitSource(c parser.ISourceContext, push_asset func(), i
 		p.AppendInstruction(program.OP_REPAY)
 		if subsource_fallback != nil {
 			p.PushAddress(core.Address(*subsource_fallback))
-			push_asset()
-			p.Bump(3)
+			p.Bump(2)
 			p.AppendInstruction(program.OP_TAKE_ALL)
 			p.PushInteger(2)
 			p.AppendInstruction(program.OP_FUNDING_ASSEMBLE)

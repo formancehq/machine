@@ -13,9 +13,9 @@ const (
 	OP_MONETARY_NEW     // <asset> <number> => <monetary>
 	OP_MONETARY_ADD     // <monetary> <monetary> => <monetary>   // panics if not same asset
 	OP_MAKE_ALLOTMENT   // <portion>*N <int N> => <allotment(N)>
-	OP_TAKE_ALL         // <account> <asset> <monetary> => <funding>
-	OP_TAKE             // <funding> <monetary> => <remaining: funding> <taken: funding>
-	OP_TAKE_MAX         // <funding> <monetary> => <missing: monetary> <remaining: funding> <taken: funding> (doesn't fail on insufficient funds)
+	OP_TAKE_ALL         // <source: account> <overdraft: monetary> => <funding>
+	OP_TAKE             // <funding> <monetary> => <remaining: funding> <taken: funding> // fails with EXIT_INSUFFICIENT_FUNDS if not enough
+	OP_TAKE_MAX         // <funding> <monetary> => <missing: monetary> <remaining: funding> <taken: funding> // (doesn't fail on insufficient funds)
 	OP_FUNDING_ASSEMBLE // <funding>*N <int N> => <funding> (first has highest priority)
 	OP_FUNDING_SUM      // <funding> => <funding> <sum: monetary>
 	OP_FUNDING_REVERSE  // <funding> => <funding>

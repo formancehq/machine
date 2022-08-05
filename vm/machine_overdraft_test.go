@@ -130,3 +130,18 @@ func TestOverdraftComplexFailure(t *testing.T) {
 	}
 	test(t, tc)
 }
+
+func TestNegativeBalance(t *testing.T) {
+	tc := NewTestCase()
+	tc.compile(t, `send [GEM 100] (
+			source = @foo
+			destination = @world
+		)`)
+	tc.setBalance(t, "foo", "GEM", -50)
+	tc.expected = CaseResult{
+		Printed:  []core.Value{},
+		Postings: []ledger.Posting{},
+		ExitCode: EXIT_FAIL_INSUFFICIENT_FUNDS,
+	}
+	test(t, tc)
+}

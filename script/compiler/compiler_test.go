@@ -294,6 +294,10 @@ package compiler
 // 				program.OP_APUSH, 01, 00, // @foo
 // 				program.OP_APUSH, 00, 00, // @foo, [EUR/2 43]
 // 				program.OP_ASSET,         // @foo, EUR/2
+// 				program.OP_APUSH, 00, 00, // @foo, EUR/2, [EUR/2 43]
+// 				program.OP_ASSET,                                 // @foo, EUR/2, EUR/2
+// 				program.OP_IPUSH, 00, 00, 00, 00, 00, 00, 00, 00, // @foo, EUR/2, EUR/2, 0
+// 				program.OP_MONETARY_NEW,  // @foo, EUR/2, [EUR/2 0]
 // 				program.OP_TAKE_ALL,      // [EUR/2 @foo <?>]
 // 				program.OP_APUSH, 00, 00, // [EUR/2 @foo <?>], [EUR/2 43]
 // 				program.OP_TAKE,                                  // [EUR/2 @foo <?>], [EUR/2 @foo 43]

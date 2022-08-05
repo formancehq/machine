@@ -89,12 +89,16 @@ func (m *Machine) getResource(addr core.Address) (*core.Value, bool) {
 func (m *Machine) withdrawAll(account core.Account, asset core.Asset, overdraft int64) (*core.Funding, error) {
 	if acc_balance, ok := m.Balances[account]; ok {
 		if balance, ok := acc_balance[asset]; ok {
-			acc_balance[asset] = -overdraft
+			amount_taken := uint64(0)
+			if balance+overdraft > 0 {
+				amount_taken = uint64(balance + overdraft)
+				acc_balance[asset] = -overdraft
+			}
 			return &core.Funding{
 				Asset: asset,
 				Parts: []core.FundingPart{{
 					Account: account,
-					Amount:  uint64(overdraft + balance), // overdraft >= balance
+					Amount:  amount_taken, // overdraft >= balance
 				}},
 			}, nil
 		}
@@ -218,12 +222,8 @@ func (m *Machine) tick() (bool, byte) {
 		m.pushValue(*allotment)
 	case program.OP_TAKE_ALL:
 		overdraft := m.popMonetary()
-		asset := m.popAsset()
 		account := m.popAccount()
-		if overdraft.Asset != asset {
-			return true, EXIT_FAIL_INVALID
-		}
-		funding, err := m.withdrawAll(account, asset, int64(overdraft.Amount))
+		funding, err := m.withdrawAll(account, overdraft.Asset, int64(overdraft.Amount))
 		if err != nil {
 			return true, EXIT_FAIL_INVALID
 		}
