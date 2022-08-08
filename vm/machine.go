@@ -3,7 +3,7 @@ Provides `Machine`, which executes programs and outputs postings.
 1: Create New Machine
 2: Set Variables (with `core.Value`s or JSON)
 3: Resolve Resources (answer requests on channel)
-4: Resolve Balances & Overdrafts (answer requests on channel)
+4: Resolve Balances (answer requests on channel)
 6: Execute
 */
 package vm
@@ -98,7 +98,7 @@ func (m *Machine) withdrawAll(account core.Account, asset core.Asset, overdraft 
 				Asset: asset,
 				Parts: []core.FundingPart{{
 					Account: account,
-					Amount:  amount_taken, // overdraft >= balance
+					Amount:  amount_taken,
 				}},
 			}, nil
 		}
