@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+
+	ledger "github.com/numary/ledger/pkg/core"
 )
 
 type ValueJSON struct {
@@ -68,8 +70,8 @@ func NewValueFromJSON(typ Type, data json.RawMessage) (*Value, error) {
 		value = number
 	case TYPE_MONETARY:
 		var mon struct {
-			Asset  string `json:"asset"`
-			Amount uint64 `json:"amount"`
+			Asset  string             `json:"asset"`
+			Amount ledger.MonetaryInt `json:"amount"`
 		}
 		err := json.Unmarshal(data, &mon)
 		if err != nil {

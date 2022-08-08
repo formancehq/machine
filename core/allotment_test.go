@@ -3,6 +3,8 @@ package core
 import (
 	"math/big"
 	"testing"
+
+	ledger "github.com/numary/ledger/pkg/core"
 )
 
 func TestAllocate(t *testing.T) {
@@ -14,13 +16,13 @@ func TestAllocate(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	parts := allotment.Allocate(15)
-	expected_parts := []uint64{13, 1, 1}
+	parts := allotment.Allocate(*ledger.NewMonetaryInt(15))
+	expected_parts := []ledger.MonetaryInt{*ledger.NewMonetaryInt(13), *ledger.NewMonetaryInt(1), *ledger.NewMonetaryInt(1)}
 	if len(parts) != len(expected_parts) {
 		t.Fatalf("unexpected output %v != %v", parts, expected_parts)
 	}
 	for i := range parts {
-		if parts[i] != expected_parts[i] {
+		if !parts[i].Equal(&expected_parts[i]) {
 			t.Fatalf("unexpected output %v != %v", parts, expected_parts)
 		}
 	}

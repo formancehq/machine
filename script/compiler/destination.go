@@ -41,7 +41,7 @@ func (p *parseVisitor) VisitDestinationRecursive(c parser.IDestinationContext) *
 		// initialize the `kept` accumulator
 		p.AppendInstruction(program.OP_FUNDING_SUM)
 		p.AppendInstruction(program.OP_ASSET)
-		p.PushInteger(0)
+		p.PushInteger(*core.NewNumber(0))
 		p.AppendInstruction(program.OP_MONETARY_NEW)
 
 		p.Bump(1)
@@ -67,7 +67,7 @@ func (p *parseVisitor) VisitDestinationRecursive(c parser.IDestinationContext) *
 			p.AppendInstruction(program.OP_MONETARY_ADD)
 			p.Bump(1)
 			p.Bump(2)
-			p.PushInteger(2)
+			p.PushInteger(*core.NewNumber(2))
 			p.AppendInstruction(program.OP_FUNDING_ASSEMBLE)
 		}
 		p.AppendInstruction(program.OP_FUNDING_REVERSE)
@@ -81,7 +81,7 @@ func (p *parseVisitor) VisitDestinationRecursive(c parser.IDestinationContext) *
 			return err
 		}
 		p.Bump(1)
-		p.PushInteger(2)
+		p.PushInteger(*core.NewNumber(2))
 		p.AppendInstruction(program.OP_FUNDING_ASSEMBLE)
 		return nil
 	case *parser.DestAllotmentContext:
@@ -119,7 +119,7 @@ func (p *parseVisitor) VisitDestinationAllotment(c parser.IDestinationAllotmentC
 }
 
 func (p *parseVisitor) VisitAllocDestination(dests []parser.IKeptOrDestinationContext) *CompileError {
-	p.Bump(uint(len(dests)))
+	p.Bump(int64(len(dests)))
 	for _, dest := range dests {
 		p.Bump(1)
 		p.AppendInstruction(program.OP_TAKE)
@@ -128,7 +128,7 @@ func (p *parseVisitor) VisitAllocDestination(dests []parser.IKeptOrDestinationCo
 			return err
 		}
 		p.Bump(1)
-		p.PushInteger(2)
+		p.PushInteger(*core.NewNumber(2))
 		p.AppendInstruction(program.OP_FUNDING_ASSEMBLE)
 	}
 	return nil

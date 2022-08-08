@@ -3,13 +3,14 @@ package compiler
 import (
 	"errors"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/antlr/antlr4/runtime/Go/antlr"
 	"github.com/numary/machine/core"
 	"github.com/numary/machine/script/parser"
 	"github.com/numary/machine/vm/program"
+
+	ledger "github.com/numary/ledger/pkg/core"
 )
 
 type parseVisitor struct {
@@ -140,13 +141,12 @@ func (p *parseVisitor) VisitLit(c parser.ILiteralContext, push bool) (core.Type,
 		}
 		return core.TYPE_ASSET, addr, nil
 	case *parser.LitNumberContext:
-		n, err := strconv.ParseUint(c.GetText(), 10, 64)
+		number, err := core.ParseNumber(c.GetText())
 		if err != nil {
 			return 0, nil, LogicError(c, err)
 		}
-		number := core.Number(n)
 		if push {
-			p.PushInteger(number)
+			p.PushInteger(*number)
 		}
 		return core.TYPE_NUMBER, nil, nil
 	case *parser.LitStringContext:
@@ -162,13 +162,13 @@ func (p *parseVisitor) VisitLit(c parser.ILiteralContext, push bool) (core.Type,
 		return core.TYPE_STRING, addr, nil
 	case *parser.LitMonetaryContext:
 		asset := c.Monetary().GetAsset().GetText()
-		amt, err := strconv.ParseUint(c.Monetary().GetAmt().GetText(), 10, 64)
+		amt, err := ledger.ParseMonetaryInt(c.Monetary().GetAmt().GetText())
 		if err != nil {
 			return 0, nil, LogicError(c, err)
 		}
 		monetary := core.Monetary{
 			Asset:  core.Asset(asset),
-			Amount: amt,
+			Amount: *amt,
 		}
 		addr, err := p.AllocateResource(program.Constant{Inner: monetary})
 		if err != nil {

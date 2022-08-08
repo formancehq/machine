@@ -17,7 +17,7 @@ type Constant struct {
 
 func (Constant) isResource()          {}
 func (c Constant) GetType() core.Type { return c.Inner.GetType() }
-func (c Constant) String() string     { return fmt.Sprint(c.Inner) }
+func (c Constant) String() string     { return fmt.Sprintf("%v", c.Inner) }
 
 type Parameter struct {
 	Typ  core.Type

@@ -3,6 +3,8 @@ package core
 import (
 	"encoding/json"
 	"testing"
+
+	ledger "github.com/numary/ledger/pkg/core"
 )
 
 func TestAccountTypedJSON(t *testing.T) {
@@ -33,7 +35,7 @@ func TestMonetaryTypedJSON(t *testing.T) {
 	}
 	if !ValueEquals(*value, Monetary{
 		Asset:  Asset("EUR/2"),
-		Amount: 123456,
+		Amount: *ledger.NewMonetaryInt(123456),
 	}) {
 		t.Fatalf("unexpected value: %v", *value)
 	}

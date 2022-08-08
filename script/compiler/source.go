@@ -46,10 +46,10 @@ func (p *parseVisitor) VisitValueAwareSource(c parser.IValueAwareSourceContext, 
 			for k, v := range accounts {
 				needed_accounts[k] = v
 			}
-			p.Bump(uint(i + 1))
+			p.Bump(int64(i + 1))
 			p.TakeFromSource(fallback, push_asset)
 		}
-		p.PushInteger(core.Number(n))
+		p.PushInteger(*core.NewNumber(int64(n)))
 		p.AppendInstruction(program.OP_FUNDING_ASSEMBLE)
 	}
 	return needed_accounts, nil
@@ -67,7 +67,7 @@ func (p *parseVisitor) TakeFromSource(fallback *FallbackAccount, push_asset func
 		p.PushAddress(core.Address(*fallback))
 		p.Bump(2)
 		p.AppendInstruction(program.OP_TAKE_ALL)
-		p.PushInteger(2)
+		p.PushInteger(*core.NewNumber(2))
 		p.AppendInstruction(program.OP_FUNDING_ASSEMBLE)
 	}
 }
@@ -97,7 +97,7 @@ func (p *parseVisitor) VisitSource(c parser.ISourceContext, push_asset func(), i
 		if overdraft == nil {
 			// no overdraft: use zero monetary
 			push_asset()
-			p.PushInteger(0)
+			p.PushInteger(*core.NewNumber(0))
 			p.AppendInstruction(program.OP_MONETARY_NEW)
 			p.AppendInstruction(program.OP_TAKE_ALL)
 		} else {
@@ -116,7 +116,7 @@ func (p *parseVisitor) VisitSource(c parser.ISourceContext, push_asset func(), i
 				p.AppendInstruction(program.OP_TAKE_ALL)
 			case *parser.SrcAccountOverdraftUnboundedContext:
 				push_asset()
-				p.PushInteger(0)
+				p.PushInteger(*core.NewNumber(0))
 				p.AppendInstruction(program.OP_MONETARY_NEW)
 				p.AppendInstruction(program.OP_TAKE_ALL)
 				f := FallbackAccount(*acc_addr)
@@ -152,7 +152,7 @@ func (p *parseVisitor) VisitSource(c parser.ISourceContext, push_asset func(), i
 			p.PushAddress(core.Address(*subsource_fallback))
 			p.Bump(2)
 			p.AppendInstruction(program.OP_TAKE_ALL)
-			p.PushInteger(2)
+			p.PushInteger(*core.NewNumber(2))
 			p.AppendInstruction(program.OP_FUNDING_ASSEMBLE)
 		} else {
 			p.Bump(1)
@@ -180,7 +180,7 @@ func (p *parseVisitor) VisitSource(c parser.ISourceContext, push_asset func(), i
 				emptied_accounts[k] = v
 			}
 		}
-		p.PushInteger(core.Number(n))
+		p.PushInteger(*core.NewNumber(int64(n)))
 		p.AppendInstruction(program.OP_FUNDING_ASSEMBLE)
 	}
 	return needed_accounts, emptied_accounts, fallback, nil

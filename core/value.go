@@ -3,6 +3,8 @@ package core
 import (
 	"fmt"
 	"reflect"
+
+	ledger "github.com/numary/ledger/pkg/core"
 )
 
 type Type byte
@@ -63,14 +65,6 @@ func (a Asset) String() string {
 	return fmt.Sprintf("%v", string(a))
 }
 
-type Number uint64
-
-func (Number) isValue()      {}
-func (Number) GetType() Type { return TYPE_NUMBER }
-func (n Number) String() string {
-	return fmt.Sprintf("%v", uint64(n))
-}
-
 type String string
 
 func (String) isValue()      {}
@@ -80,8 +74,8 @@ func (s String) String() string {
 }
 
 type Monetary struct {
-	Asset  Asset  `json:"asset"`
-	Amount uint64 `json:"amount"`
+	Asset  Asset              `json:"asset"`
+	Amount ledger.MonetaryInt `json:"amount"`
 }
 
 func (a Monetary) String() string {
@@ -112,7 +106,13 @@ func ValueEquals(lhs, rhs Value) bool {
 	if reflect.TypeOf(lhs) != reflect.TypeOf(rhs) {
 		return false
 	}
-	if lhsa, ok := lhs.(Allotment); ok {
+	if lhsn, ok := lhs.(Number); ok {
+		rhsn := rhs.(Number)
+		return lhsn.Equal(&rhsn)
+	} else if lhsm, ok := lhs.(Monetary); ok {
+		rhsm := rhs.(Monetary)
+		return lhsm.Asset == rhsm.Asset && lhsm.Amount.Equal(&rhsm.Amount)
+	} else if lhsa, ok := lhs.(Allotment); ok {
 		rhsa := rhs.(Allotment)
 		if len(lhsa) != len(rhsa) {
 			return false

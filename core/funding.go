@@ -3,11 +3,17 @@ package core
 import (
 	"errors"
 	"fmt"
+
+	ledger "github.com/numary/ledger/pkg/core"
 )
 
 type FundingPart struct {
-	Amount  uint64
+	Amount  ledger.MonetaryInt
 	Account Account
+}
+
+func (lhs *FundingPart) Equals(rhs *FundingPart) bool {
+	return lhs.Account == rhs.Account && lhs.Amount.Equal(&rhs.Amount)
 }
 
 type Funding struct {
@@ -23,7 +29,7 @@ func (lhs *Funding) Equals(rhs *Funding) bool {
 		return false
 	}
 	for i := range lhs.Parts {
-		if lhs.Parts[i] != rhs.Parts[i] {
+		if !lhs.Parts[i].Equals(&rhs.Parts[i]) {
 			return false
 		}
 	}
@@ -38,7 +44,7 @@ func (f Funding) String() string {
 	return out + "]"
 }
 
-func (f Funding) Take(amount uint64) (Funding, Funding, error) {
+func (f Funding) Take(amount ledger.MonetaryInt) (Funding, Funding, error) {
 	result := Funding{
 		Asset: f.Asset,
 	}
@@ -47,18 +53,18 @@ func (f Funding) Take(amount uint64) (Funding, Funding, error) {
 	}
 	remaining_to_withdraw := amount
 	i := 0
-	for remaining_to_withdraw > 0 && i < len(f.Parts) {
+	for remaining_to_withdraw.Gt(ledger.NewMonetaryInt(0)) && i < len(f.Parts) {
 		amt_to_withdraw := f.Parts[i].Amount
 		// if this part has excess balance, put it in the remainder & only take what's needed
-		if amt_to_withdraw > remaining_to_withdraw {
-			rem := amt_to_withdraw - remaining_to_withdraw
+		if amt_to_withdraw.Gt(&remaining_to_withdraw) {
+			rem := *amt_to_withdraw.Sub(&remaining_to_withdraw)
 			amt_to_withdraw = remaining_to_withdraw
 			remainder.Parts = append(remainder.Parts, FundingPart{
 				Account: f.Parts[i].Account,
 				Amount:  rem,
 			})
 		}
-		remaining_to_withdraw -= amt_to_withdraw
+		remaining_to_withdraw = *remaining_to_withdraw.Sub(&amt_to_withdraw)
 		result.Parts = append(result.Parts, FundingPart{
 			Account: f.Parts[i].Account,
 			Amount:  amt_to_withdraw,
@@ -72,13 +78,13 @@ func (f Funding) Take(amount uint64) (Funding, Funding, error) {
 		})
 		i++
 	}
-	if remaining_to_withdraw != 0 {
+	if !remaining_to_withdraw.Eq(ledger.NewMonetaryInt(0)) {
 		return Funding{}, Funding{}, errors.New("insufficient funding")
 	}
 	return result, remainder, nil
 }
 
-func (f Funding) TakeMax(amount uint64) (Funding, Funding) {
+func (f Funding) TakeMax(amount ledger.MonetaryInt) (Funding, Funding) {
 	result := Funding{
 		Asset: f.Asset,
 	}
@@ -87,18 +93,18 @@ func (f Funding) TakeMax(amount uint64) (Funding, Funding) {
 	}
 	remaining_to_withdraw := amount
 	i := 0
-	for remaining_to_withdraw > 0 && i < len(f.Parts) {
+	for remaining_to_withdraw.Gt(ledger.NewMonetaryInt(0)) && i < len(f.Parts) {
 		amt_to_withdraw := f.Parts[i].Amount
 		// if this part has excess balance, put it in the remainder & only take what's needed
-		if amt_to_withdraw > remaining_to_withdraw {
-			rem := amt_to_withdraw - remaining_to_withdraw
+		if amt_to_withdraw.Gt(&remaining_to_withdraw) {
+			rem := *amt_to_withdraw.Sub(&remaining_to_withdraw)
 			amt_to_withdraw = remaining_to_withdraw
 			remainder.Parts = append(remainder.Parts, FundingPart{
 				Account: f.Parts[i].Account,
 				Amount:  rem,
 			})
 		}
-		remaining_to_withdraw -= amt_to_withdraw
+		remaining_to_withdraw = *remaining_to_withdraw.Sub(&amt_to_withdraw)
 		result.Parts = append(result.Parts, FundingPart{
 			Account: f.Parts[i].Account,
 			Amount:  amt_to_withdraw,
@@ -124,7 +130,7 @@ func (f Funding) Concat(other Funding) (Funding, error) {
 		Parts: f.Parts,
 	}
 	if len(res.Parts) > 0 && len(other.Parts) > 0 && res.Parts[len(res.Parts)-1].Account == other.Parts[0].Account {
-		res.Parts[len(res.Parts)-1].Amount += other.Parts[0].Amount
+		res.Parts[len(res.Parts)-1].Amount = *res.Parts[len(res.Parts)-1].Amount.Add(&other.Parts[0].Amount)
 		res.Parts = append(res.Parts, other.Parts[1:]...)
 	} else {
 		res.Parts = append(res.Parts, other.Parts...)
@@ -132,10 +138,10 @@ func (f Funding) Concat(other Funding) (Funding, error) {
 	return res, nil
 }
 
-func (f Funding) Total() uint64 {
-	total := uint64(0)
+func (f Funding) Total() ledger.MonetaryInt {
+	total := *ledger.NewMonetaryInt(0)
 	for _, part := range f.Parts {
-		total += part.Amount
+		total = *total.Add(&part.Amount)
 	}
 	return total
 }

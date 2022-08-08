@@ -13,6 +13,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math/big"
 
 	"github.com/logrusorgru/aurora"
 	ledger "github.com/numary/ledger/pkg/core"
@@ -42,6 +43,7 @@ func NewMachine(p program.Program) *Machine {
 		Resources:           make([]core.Value, 0),
 		print_chan:          printc,
 		Printer:             StdOutPrinter,
+		Postings:            make([]ledger.Posting, 0),
 		TxMeta:              map[string]core.Value{},
 	}
 
@@ -55,7 +57,7 @@ type Machine struct {
 	UnresolvedResources []program.Resource
 	Resources           []core.Value // Constants and Variables
 	resolve_called      bool
-	Balances            map[core.Account]map[core.Asset]int64 // keeps tracks of balances througout execution
+	Balances            map[core.Account]map[core.Asset]ledger.MonetaryInt // keeps tracks of balances througout execution
 	set_balance_called  bool
 	Stack               []core.Value
 	Postings            []ledger.Posting      // accumulates postings throughout execution
@@ -86,13 +88,13 @@ func (m *Machine) getResource(addr core.Address) (*core.Value, bool) {
 	return &m.Resources[a], true
 }
 
-func (m *Machine) withdrawAll(account core.Account, asset core.Asset, overdraft int64) (*core.Funding, error) {
+func (m *Machine) withdrawAll(account core.Account, asset core.Asset, overdraft ledger.MonetaryInt) (*core.Funding, error) {
 	if acc_balance, ok := m.Balances[account]; ok {
 		if balance, ok := acc_balance[asset]; ok {
-			amount_taken := uint64(0)
-			if balance+overdraft > 0 {
-				amount_taken = uint64(balance + overdraft)
-				acc_balance[asset] = -overdraft
+			amount_taken := *ledger.NewMonetaryInt(0)
+			if balance.Add(&overdraft).Gt(ledger.NewMonetaryInt(0)) {
+				amount_taken = *balance.Add(&overdraft)
+				acc_balance[asset] = *overdraft.Neg()
 			}
 			return &core.Funding{
 				Asset: asset,
@@ -113,7 +115,8 @@ func (m *Machine) credit(account core.Account, funding core.Funding) {
 	if acc_balance, ok := m.Balances[account]; ok {
 		if _, ok := acc_balance[funding.Asset]; ok {
 			for _, part := range funding.Parts {
-				acc_balance[funding.Asset] += int64(part.Amount)
+				balance := acc_balance[funding.Asset]
+				acc_balance[funding.Asset] = *balance.Add(&part.Amount)
 			}
 		}
 	}
@@ -124,7 +127,8 @@ func (m *Machine) repay(funding core.Funding) {
 		if part.Account == "world" {
 			continue
 		}
-		m.Balances[part.Account][funding.Asset] += int64(part.Amount)
+		balance := m.Balances[part.Account][funding.Asset]
+		m.Balances[part.Account][funding.Asset] = *balance.Add(&part.Amount)
 	}
 }
 
@@ -149,12 +153,12 @@ func (m *Machine) tick() (bool, byte) {
 		m.P += 2
 	case program.OP_IPUSH:
 		bytes := m.Program.Instructions[m.P+1 : m.P+9]
-		v := core.Number(binary.LittleEndian.Uint64(bytes))
+		v := core.Number(*big.NewInt(int64(binary.LittleEndian.Uint64(bytes))))
 		m.Stack = append(m.Stack, v)
 		m.P += 8
 	case program.OP_BUMP:
-		n := m.popNumber()
-		idx := len(m.Stack) - int(n) - 1
+		n := big.Int(m.popNumber())
+		idx := len(m.Stack) - int(n.Uint64()) - 1
 		v := m.Stack[idx]
 		m.Stack = append(m.Stack[:idx], m.Stack[idx+1:]...)
 		m.Stack = append(m.Stack, v)
@@ -166,11 +170,12 @@ func (m *Machine) tick() (bool, byte) {
 	case program.OP_IADD:
 		b := m.popNumber()
 		a := m.popNumber()
-		m.pushValue(core.Number(a + b))
+
+		m.pushValue(*a.Add(&b))
 	case program.OP_ISUB:
 		b := m.popNumber()
 		a := m.popNumber()
-		m.pushValue(core.Number(a - b))
+		m.pushValue(*a.Sub(&b))
 	case program.OP_PRINT:
 		a := m.popValue()
 		m.print_chan <- a
@@ -194,7 +199,7 @@ func (m *Machine) tick() (bool, byte) {
 		asset := m.popAsset()
 		m.pushValue(core.Monetary{
 			Asset:  asset,
-			Amount: amount,
+			Amount: ledger.MonetaryInt(amount),
 		})
 
 	case program.OP_MONETARY_ADD:
@@ -205,13 +210,13 @@ func (m *Machine) tick() (bool, byte) {
 		}
 		m.pushValue(core.Monetary{
 			Asset:  a.Asset,
-			Amount: a.Amount + b.Amount,
+			Amount: *a.Amount.Add(&b.Amount),
 		})
 
 	case program.OP_MAKE_ALLOTMENT:
 		n := m.popNumber()
-		portions := make([]core.Portion, n)
-		for i := uint64(0); i < n; i++ {
+		portions := make([]core.Portion, n.Uint64())
+		for i := uint64(0); i < n.Uint64(); i++ {
 			p := m.popPortion()
 			portions[i] = p
 		}
@@ -223,7 +228,7 @@ func (m *Machine) tick() (bool, byte) {
 	case program.OP_TAKE_ALL:
 		overdraft := m.popMonetary()
 		account := m.popAccount()
-		funding, err := m.withdrawAll(account, overdraft.Asset, int64(overdraft.Amount))
+		funding, err := m.withdrawAll(account, overdraft.Asset, overdraft.Amount)
 		if err != nil {
 			return true, EXIT_FAIL_INVALID
 		}
@@ -248,9 +253,10 @@ func (m *Machine) tick() (bool, byte) {
 		if funding.Asset != mon.Asset {
 			return true, EXIT_FAIL_INVALID
 		}
-		missing := uint64(0)
-		if mon.Amount > funding.Total() {
-			missing = mon.Amount - funding.Total()
+		missing := *ledger.NewMonetaryInt(0)
+		total := funding.Total()
+		if mon.Amount.Gt(&total) {
+			missing = *mon.Amount.Sub(&total)
 		}
 		result, remainder := funding.TakeMax(mon.Amount)
 		m.pushValue(core.Monetary{
@@ -261,7 +267,8 @@ func (m *Machine) tick() (bool, byte) {
 		m.pushValue(result)
 
 	case program.OP_FUNDING_ASSEMBLE:
-		n := int(m.popNumber())
+		num := m.popNumber()
+		n := int(num.Uint64())
 		if n == 0 {
 			return true, EXIT_FAIL_INVALID
 		}
@@ -323,14 +330,14 @@ func (m *Machine) tick() (bool, byte) {
 		for _, part := range funding.Parts {
 			src := part.Account
 			amt := part.Amount
-			if amt == 0 {
+			if amt.Eq(ledger.NewMonetaryInt(0)) {
 				continue
 			}
 			m.Postings = append(m.Postings, ledger.Posting{
 				Source:      string(src),
 				Destination: string(dest),
 				Asset:       string(funding.Asset),
-				Amount:      int64(amt),
+				Amount:      &amt,
 			})
 		}
 	case program.OP_TX_META:
@@ -391,7 +398,7 @@ func (m *Machine) ResolveBalances() (chan BalanceRequest, error) {
 	ch := make(chan BalanceRequest)
 	go func() {
 		defer close(ch)
-		m.Balances = make(map[core.Account]map[core.Asset]int64)
+		m.Balances = make(map[core.Account]map[core.Asset]ledger.MonetaryInt)
 		// for every account that we need balances of, check if it's there
 		for addr, needed_assets := range m.Program.NeededBalances {
 			account, ok := m.getResource(addr)
@@ -402,7 +409,7 @@ func (m *Machine) ResolveBalances() (chan BalanceRequest, error) {
 				return
 			}
 			if account, ok := (*account).(core.Account); ok {
-				m.Balances[account] = make(map[core.Asset]int64)
+				m.Balances[account] = make(map[core.Asset]ledger.MonetaryInt)
 				// for every asset, send request
 				for addr := range needed_assets {
 					mon, ok := m.getResource(addr)
@@ -415,7 +422,7 @@ func (m *Machine) ResolveBalances() (chan BalanceRequest, error) {
 					if ha, ok := (*mon).(core.HasAsset); ok {
 						asset := ha.GetAsset()
 						if string(account) == "world" {
-							m.Balances[account][asset] = 0
+							m.Balances[account][asset] = *ledger.NewMonetaryInt(0)
 							continue
 						}
 						resp_ch := make(chan int64)
@@ -432,7 +439,7 @@ func (m *Machine) ResolveBalances() (chan BalanceRequest, error) {
 							}
 							return
 						}
-						m.Balances[account][asset] = resp
+						m.Balances[account][asset] = *ledger.NewMonetaryInt(resp)
 					} else {
 						ch <- BalanceRequest{
 							Error: errors.New("invalid program (resolve balances: not an asset)"),

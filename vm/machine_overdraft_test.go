@@ -34,7 +34,7 @@ func TestOverdraftEnough(t *testing.T) {
 		Postings: []ledger.Posting{
 			{
 				Asset:       "GEM",
-				Amount:      100,
+				Amount:      ledger.NewMonetaryInt(100),
 				Source:      "foo",
 				Destination: "world",
 			},
@@ -56,7 +56,7 @@ func TestOverdraftUnbounded(t *testing.T) {
 		Postings: []ledger.Posting{
 			{
 				Asset:       "GEM",
-				Amount:      1000,
+				Amount:      ledger.NewMonetaryInt(1000),
 				Source:      "foo",
 				Destination: "world",
 			},
@@ -86,19 +86,19 @@ func TestOverdraftComplexSuccess(t *testing.T) {
 		Postings: []ledger.Posting{
 			{
 				Asset:       "GEM",
-				Amount:      50,
+				Amount:      ledger.NewMonetaryInt(50),
 				Source:      "foo",
 				Destination: "world",
 			},
 			{
 				Asset:       "GEM",
-				Amount:      40,
+				Amount:      ledger.NewMonetaryInt(40),
 				Source:      "bar",
 				Destination: "world",
 			},
 			{
 				Asset:       "GEM",
-				Amount:      10,
+				Amount:      ledger.NewMonetaryInt(10),
 				Source:      "baz",
 				Destination: "world",
 			},

@@ -12,6 +12,7 @@ import (
 	"github.com/numary/machine/core"
 	"github.com/numary/machine/script/compiler"
 	"github.com/numary/machine/vm/program"
+	"github.com/stretchr/testify/assert"
 )
 
 const (
@@ -39,6 +40,13 @@ func NewTestCase() TestCase {
 		vars:     make(map[string]core.Value),
 		meta:     make(map[string]map[string]core.Value),
 		balances: make(map[string]map[string]int64),
+		expected: CaseResult{
+			Printed:  []core.Value{},
+			Postings: []ledger.Posting{},
+			Metadata: make(map[string]core.Value),
+			ExitCode: EXIT_OK,
+			Error:    "",
+		},
 	}
 }
 
@@ -153,48 +161,19 @@ func testimpl(t *testing.T, prog *program.Program, expected CaseResult, exec fun
 		return
 	}
 
-	if len(machine.Postings) != len(expected.Postings) {
-		t.Error(fmt.Errorf("unexpected postings output: %v", machine.Postings))
-		return
-	} else {
-		for i := range machine.Postings {
-			if machine.Postings[i] != expected.Postings[i] {
-				t.Error(fmt.Errorf("unexpected postings output: %v", machine.Postings[i]))
-				return
-			}
-		}
+	if expected.Postings == nil {
+		expected.Postings = make([]ledger.Posting, 0)
+	}
+	if expected.Metadata == nil {
+		expected.Metadata = make(map[string]core.Value)
 	}
 
-	if len(machine.TxMeta) != len(expected.Metadata) {
-		t.Error(fmt.Errorf("unexpected metadata output: %v", machine.TxMeta))
-		return
-	} else {
-		for k := range machine.TxMeta {
-			if machine.TxMeta[k] != expected.Metadata[k] {
-				t.Error(fmt.Errorf(
-					"unexpected metadata output value for key %s, got: %v, expected: %v",
-					k,
-					machine.TxMeta[k],
-					expected.Metadata[k],
-				))
-				return
-			}
-		}
-	}
+	assert.Equalf(t, expected.Postings, machine.Postings, "unexpected postings output: %v", machine.Postings)
+	assert.Equalf(t, expected.Metadata, machine.TxMeta, "unexpected metadata output: %v", machine.TxMeta)
 
 	wg.Wait()
 
-	if len(printed) != len(expected.Printed) {
-		t.Error(fmt.Errorf("unexpected print output: %v", printed))
-		return
-	} else {
-		for i := range printed {
-			if printed[i] != expected.Printed[i] {
-				t.Error(fmt.Errorf("unexpected print output: %v", printed[i]))
-				return
-			}
-		}
-	}
+	assert.Equalf(t, expected.Printed, printed, "unexpected metadata output: %v", printed)
 }
 
 func TestFail(t *testing.T) {
@@ -212,7 +191,7 @@ func TestPrint(t *testing.T) {
 	tc := NewTestCase()
 	tc.compile(t, "print 29 + 15 - 2")
 	tc.expected = CaseResult{
-		Printed:  []core.Value{core.Number(42)},
+		Printed:  []core.Value{core.Number(*big.NewInt(42))},
 		Postings: []ledger.Posting{},
 		ExitCode: EXIT_OK,
 	}
@@ -231,7 +210,7 @@ func TestSend(t *testing.T) {
 		Postings: []ledger.Posting{
 			{
 				Asset:       "EUR/2",
-				Amount:      100,
+				Amount:      ledger.NewMonetaryInt(100),
 				Source:      "alice",
 				Destination: "bob",
 			},
@@ -261,7 +240,7 @@ func TestVariables(t *testing.T) {
 		Postings: []ledger.Posting{
 			{
 				Asset:       "EUR/2",
-				Amount:      999,
+				Amount:      ledger.NewMonetaryInt(999),
 				Source:      "users:001",
 				Destination: "users:002",
 			},
@@ -293,7 +272,7 @@ func TestVariablesJSON(t *testing.T) {
 		Postings: []ledger.Posting{
 			{
 				Asset:       "EUR/2",
-				Amount:      999,
+				Amount:      ledger.NewMonetaryInt(999),
 				Source:      "users:001",
 				Destination: "users:002",
 			},
@@ -332,13 +311,13 @@ func TestSource(t *testing.T) {
 		Postings: []ledger.Posting{
 			{
 				Asset:       "GEM",
-				Amount:      3,
+				Amount:      ledger.NewMonetaryInt(3),
 				Source:      "users:001",
 				Destination: "users:002",
 			},
 			{
 				Asset:       "GEM",
-				Amount:      12,
+				Amount:      ledger.NewMonetaryInt(12),
 				Source:      "payments:001",
 				Destination: "users:002",
 			},
@@ -372,19 +351,19 @@ func TestAllocation(t *testing.T) {
 		Postings: []ledger.Posting{
 			{
 				Asset:       "GEM",
-				Amount:      13,
+				Amount:      ledger.NewMonetaryInt(13),
 				Source:      "users:001",
 				Destination: "users:002",
 			},
 			{
 				Asset:       "GEM",
-				Amount:      1,
+				Amount:      ledger.NewMonetaryInt(1),
 				Source:      "users:001",
 				Destination: "a",
 			},
 			{
 				Asset:       "GEM",
-				Amount:      1,
+				Amount:      ledger.NewMonetaryInt(1),
 				Source:      "users:001",
 				Destination: "b",
 			},
@@ -416,13 +395,13 @@ func TestDynamicAllocation(t *testing.T) {
 		Postings: []ledger.Posting{
 			{
 				Asset:       "GEM",
-				Amount:      13,
+				Amount:      ledger.NewMonetaryInt(13),
 				Source:      "a",
 				Destination: "b",
 			},
 			{
 				Asset:       "GEM",
-				Amount:      2,
+				Amount:      ledger.NewMonetaryInt(2),
 				Source:      "a",
 				Destination: "c",
 			},
@@ -444,7 +423,7 @@ func TestSendAll(t *testing.T) {
 		Postings: []ledger.Posting{
 			{
 				Asset:       "USD/2",
-				Amount:      17,
+				Amount:      ledger.NewMonetaryInt(17),
 				Source:      "users:001",
 				Destination: "platform",
 			},
@@ -471,13 +450,13 @@ func TestSendAllMulti(t *testing.T) {
 		Postings: []ledger.Posting{
 			{
 				Asset:       "USD/2",
-				Amount:      19,
+				Amount:      ledger.NewMonetaryInt(19),
 				Source:      "users:001:wallet",
 				Destination: "platform",
 			},
 			{
 				Asset:       "USD/2",
-				Amount:      22,
+				Amount:      ledger.NewMonetaryInt(22),
 				Source:      "users:001:credit",
 				Destination: "platform",
 			},
@@ -531,13 +510,13 @@ func TestWorldSource(t *testing.T) {
 		Postings: []ledger.Posting{
 			{
 				Asset:       "GEM",
-				Amount:      1,
+				Amount:      ledger.NewMonetaryInt(1),
 				Source:      "a",
 				Destination: "b",
 			},
 			{
 				Asset:       "GEM",
-				Amount:      14,
+				Amount:      ledger.NewMonetaryInt(14),
 				Source:      "world",
 				Destination: "b",
 			},
@@ -561,7 +540,7 @@ func TestNoEmptyPostings(t *testing.T) {
 		Postings: []ledger.Posting{
 			{
 				Asset:       "GEM",
-				Amount:      2,
+				Amount:      ledger.NewMonetaryInt(2),
 				Source:      "world",
 				Destination: "a",
 			},
@@ -605,13 +584,13 @@ func TestAllocateDontTakeTooMuch(t *testing.T) {
 		Postings: []ledger.Posting{
 			{
 				Asset:       "CREDIT",
-				Amount:      100,
+				Amount:      ledger.NewMonetaryInt(100),
 				Source:      "users:001",
 				Destination: "foo",
 			},
 			{
 				Asset:       "CREDIT",
-				Amount:      100,
+				Amount:      ledger.NewMonetaryInt(100),
 				Source:      "users:002",
 				Destination: "bar",
 			},
@@ -654,13 +633,13 @@ func TestMetadata(t *testing.T) {
 		Postings: []ledger.Posting{
 			{
 				Asset:       "EUR/2",
-				Amount:      88,
+				Amount:      ledger.NewMonetaryInt(88),
 				Source:      "sales:042",
 				Destination: "users:053",
 			},
 			{
 				Asset:       "EUR/2",
-				Amount:      12,
+				Amount:      ledger.NewMonetaryInt(12),
 				Source:      "sales:042",
 				Destination: "platform",
 			},
@@ -687,13 +666,13 @@ func TestTrackBalances(t *testing.T) {
 		Postings: []ledger.Posting{
 			{
 				Asset:       "COIN",
-				Amount:      50,
+				Amount:      ledger.NewMonetaryInt(50),
 				Source:      "world",
 				Destination: "a",
 			},
 			{
 				Asset:       "COIN",
-				Amount:      100,
+				Amount:      ledger.NewMonetaryInt(100),
 				Source:      "a",
 				Destination: "b",
 			},
@@ -742,13 +721,13 @@ func TestTrackBalances3(t *testing.T) {
 		Postings: []ledger.Posting{
 			{
 				Asset:       "COIN",
-				Amount:      1000,
+				Amount:      ledger.NewMonetaryInt(1000),
 				Source:      "foo",
 				Destination: "bar",
 			},
 			{
 				Asset:       "COIN",
-				Amount:      1000,
+				Amount:      ledger.NewMonetaryInt(1000),
 				Source:      "foo",
 				Destination: "bar",
 			},
@@ -776,19 +755,19 @@ func TestSourceAllotment(t *testing.T) {
 		Postings: []ledger.Posting{
 			{
 				Asset:       "COIN",
-				Amount:      61,
+				Amount:      ledger.NewMonetaryInt(61),
 				Source:      "a",
 				Destination: "d",
 			},
 			{
 				Asset:       "COIN",
-				Amount:      35,
+				Amount:      ledger.NewMonetaryInt(35),
 				Source:      "b",
 				Destination: "d",
 			},
 			{
 				Asset:       "COIN",
-				Amount:      4,
+				Amount:      ledger.NewMonetaryInt(4),
 				Source:      "c",
 				Destination: "d",
 			},
@@ -818,13 +797,13 @@ func TestSourceOverlapping(t *testing.T) {
 		Postings: []ledger.Posting{
 			{
 				Asset:       "COIN",
-				Amount:      3,
+				Amount:      ledger.NewMonetaryInt(3),
 				Source:      "b",
 				Destination: "world",
 			},
 			{
 				Asset:       "COIN",
-				Amount:      96,
+				Amount:      ledger.NewMonetaryInt(96),
 				Source:      "a",
 				Destination: "world",
 			},
@@ -865,25 +844,25 @@ func TestSourceComplex(t *testing.T) {
 		Postings: []ledger.Posting{
 			{
 				Asset:       "COIN",
-				Amount:      4,
+				Amount:      ledger.NewMonetaryInt(4),
 				Source:      "a",
 				Destination: "platform",
 			},
 			{
 				Asset:       "COIN",
-				Amount:      40,
+				Amount:      ledger.NewMonetaryInt(40),
 				Source:      "b",
 				Destination: "platform",
 			},
 			{
 				Asset:       "COIN",
-				Amount:      56,
+				Amount:      ledger.NewMonetaryInt(56),
 				Source:      "c",
 				Destination: "platform",
 			},
 			{
 				Asset:       "COIN",
-				Amount:      100,
+				Amount:      ledger.NewMonetaryInt(100),
 				Source:      "d",
 				Destination: "platform",
 			},
@@ -911,19 +890,19 @@ func TestDestinationComplex(t *testing.T) {
 		Postings: []ledger.Posting{
 			{
 				Asset:       "COIN",
-				Amount:      20,
+				Amount:      ledger.NewMonetaryInt(20),
 				Source:      "world",
 				Destination: "a",
 			},
 			{
 				Asset:       "COIN",
-				Amount:      10,
+				Amount:      ledger.NewMonetaryInt(10),
 				Source:      "world",
 				Destination: "b",
 			},
 			{
 				Asset:       "COIN",
-				Amount:      50,
+				Amount:      ledger.NewMonetaryInt(50),
 				Source:      "world",
 				Destination: "c",
 			},
@@ -1052,10 +1031,12 @@ func TestSetTxMeta(t *testing.T) {
 
 	for k, v := range meta {
 		if expected, ok := expected_meta[k]; ok {
-			if string(v) != string(expected) {
-				fmt.Printf("%v\n", string(v))
-				fmt.Printf("%v\n", string(expected))
-				t.Fatalf("unexpected transaction metadata")
+			if rm, ok := v.(json.RawMessage); ok {
+				if string(rm) != string(expected) {
+					fmt.Printf("%v\n", string(rm))
+					fmt.Printf("%v\n", string(expected))
+					t.Fatalf("unexpected transaction metadata")
+				}
 			}
 		}
 	}

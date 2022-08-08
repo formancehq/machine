@@ -26,19 +26,19 @@ func TestKeptDestinationAllotment(t *testing.T) {
 		Postings: []ledger.Posting{
 			{
 				Asset:       "GEM",
-				Amount:      1,
+				Amount:      ledger.NewMonetaryInt(1),
 				Source:      "a",
 				Destination: "x",
 			},
 			{
 				Asset:       "GEM",
-				Amount:      24,
+				Amount:      ledger.NewMonetaryInt(24),
 				Source:      "world",
 				Destination: "x",
 			},
 			{
 				Asset:       "GEM",
-				Amount:      25,
+				Amount:      ledger.NewMonetaryInt(25),
 				Source:      "world",
 				Destination: "y",
 			},
@@ -78,37 +78,37 @@ func TestKeptComplex(t *testing.T) {
 		Postings: []ledger.Posting{
 			{
 				Asset:       "GEM",
-				Amount:      2,
+				Amount:      ledger.NewMonetaryInt(2),
 				Source:      "foo",
 				Destination: "arst",
 			},
 			{
 				Asset:       "GEM",
-				Amount:      18,
+				Amount:      ledger.NewMonetaryInt(18),
 				Source:      "foo",
 				Destination: "thing",
 			},
 			{
 				Asset:       "GEM",
-				Amount:      24,
+				Amount:      ledger.NewMonetaryInt(24),
 				Source:      "bar",
 				Destination: "thing",
 			},
 			{
 				Asset:       "GEM",
-				Amount:      16,
+				Amount:      ledger.NewMonetaryInt(16),
 				Source:      "bar",
 				Destination: "qux",
 			},
 			{
 				Asset:       "GEM",
-				Amount:      4,
+				Amount:      ledger.NewMonetaryInt(4),
 				Source:      "baz",
 				Destination: "qux",
 			},
 			{
 				Asset:       "GEM",
-				Amount:      25,
+				Amount:      ledger.NewMonetaryInt(25),
 				Source:      "baz",
 				Destination: "quz",
 			},
