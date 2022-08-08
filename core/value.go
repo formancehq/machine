@@ -79,7 +79,7 @@ type Monetary struct {
 }
 
 func (a Monetary) String() string {
-	return fmt.Sprintf("[%v %v]", a.Asset, a.Amount)
+	return fmt.Sprintf("[%v %v]", a.Asset, &a.Amount)
 }
 
 func (Monetary) isValue()      {}
