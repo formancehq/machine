@@ -26,7 +26,7 @@ func main() {
 	}
 	fmt.Print(program)
 
-	m := vm.NewMachine(program)
+	m := vm.NewMachine(*program)
 
 	m.SetVars(map[string]core.Value{})
 
@@ -41,7 +41,7 @@ func main() {
 	}
 
 	{
-		balances := map[string]map[string]uint64{
+		balances := map[string]map[string]int64{
 			"a": {
 				"COIN": 500000,
 			},

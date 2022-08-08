@@ -1,0 +1,32 @@
+package compiler
+
+import (
+	"github.com/numary/machine/core"
+	"github.com/numary/machine/vm/program"
+)
+
+func (p *parseVisitor) AppendInstruction(instructions byte) {
+	p.instructions = append(p.instructions, instructions)
+}
+
+func (p *parseVisitor) PushAddress(addr core.Address) {
+	p.instructions = append(p.instructions, program.OP_APUSH)
+	bytes := addr.ToBytes()
+	p.instructions = append(p.instructions, bytes...)
+}
+
+func (p *parseVisitor) PushInteger(val core.Number) error {
+	addr, err := p.AllocateResource(program.Constant{Inner: val})
+	if err != nil {
+		return err
+	}
+	p.instructions = append(p.instructions, program.OP_APUSH)
+	bytes := addr.ToBytes()
+	p.instructions = append(p.instructions, bytes...)
+	return nil
+}
+
+func (p *parseVisitor) Bump(n int64) {
+	p.PushInteger(*core.NewNumber(n))
+	p.instructions = append(p.instructions, program.OP_BUMP)
+}
