@@ -31,7 +31,7 @@ type TestCase struct {
 	program  *program.Program
 	vars     map[string]core.Value
 	meta     map[string]map[string]core.Value
-	balances map[string]map[string]int64
+	balances map[string]map[string]ledger.MonetaryInt
 	expected CaseResult
 }
 
@@ -39,7 +39,7 @@ func NewTestCase() TestCase {
 	return TestCase{
 		vars:     make(map[string]core.Value),
 		meta:     make(map[string]map[string]core.Value),
-		balances: make(map[string]map[string]int64),
+		balances: make(map[string]map[string]ledger.MonetaryInt),
 		expected: CaseResult{
 			Printed:  []core.Value{},
 			Postings: []ledger.Posting{},
@@ -74,9 +74,9 @@ func (c *TestCase) setVarsFromJSON(t *testing.T, str string) {
 
 func (c *TestCase) setBalance(t *testing.T, account, asset string, amount int64) {
 	if _, ok := c.balances[account]; !ok {
-		c.balances[account] = make(map[string]int64)
+		c.balances[account] = make(map[string]ledger.MonetaryInt)
 	}
-	c.balances[account][asset] = amount
+	c.balances[account][asset] = *ledger.NewMonetaryInt(amount)
 }
 
 func test(
@@ -969,7 +969,7 @@ func TestNeededBalances(t *testing.T) {
 				if len(expected[req.Account]) == 0 {
 					delete(expected, req.Account)
 				}
-				req.Response <- 0
+				req.Response <- *ledger.NewMonetaryInt(0)
 			} else {
 				t.Fatalf("did not expect to need %v balance of %v", req.Asset, req.Account)
 			}

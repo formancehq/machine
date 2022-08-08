@@ -383,7 +383,7 @@ func (m *Machine) Execute() (byte, error) {
 type BalanceRequest struct {
 	Account  string
 	Asset    string
-	Response chan int64
+	Response chan ledger.MonetaryInt
 	Error    error
 }
 
@@ -425,7 +425,7 @@ func (m *Machine) ResolveBalances() (chan BalanceRequest, error) {
 							m.Balances[account][asset] = *ledger.NewMonetaryInt(0)
 							continue
 						}
-						resp_ch := make(chan int64)
+						resp_ch := make(chan ledger.MonetaryInt)
 						ch <- BalanceRequest{
 							Account:  string(account),
 							Asset:    string(asset),
@@ -439,7 +439,7 @@ func (m *Machine) ResolveBalances() (chan BalanceRequest, error) {
 							}
 							return
 						}
-						m.Balances[account][asset] = *ledger.NewMonetaryInt(resp)
+						m.Balances[account][asset] = resp
 					} else {
 						ch <- BalanceRequest{
 							Error: errors.New("invalid program (resolve balances: not an asset)"),
