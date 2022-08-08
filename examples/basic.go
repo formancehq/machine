@@ -6,6 +6,8 @@ import (
 	"github.com/numary/machine/core"
 	"github.com/numary/machine/script/compiler"
 	"github.com/numary/machine/vm"
+
+	ledger "github.com/numary/ledger/pkg/core"
 )
 
 func main() {
@@ -41,12 +43,12 @@ func main() {
 	}
 
 	{
-		balances := map[string]map[string]int64{
+		balances := map[string]map[string]ledger.MonetaryInt{
 			"a": {
-				"COIN": 500000,
+				"COIN": *ledger.NewMonetaryInt(500000),
 			},
 			"b": {
-				"COIN": 3500000,
+				"COIN": *ledger.NewMonetaryInt(3500000),
 			},
 		}
 
