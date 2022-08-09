@@ -26,7 +26,10 @@ func (p *parseVisitor) VisitValueAwareSource(c parser.IValueAwareSourceContext, 
 		}
 		if !is_all {
 			p.PushAddress(*mon_addr)
-			p.TakeFromSource(unbounded, push_asset)
+			err := p.TakeFromSource(unbounded, push_asset)
+			if err != nil {
+				return nil, LogicError(c, err)
+			}
 		}
 	case *parser.SrcAllotmentContext:
 		if is_all {
@@ -50,7 +53,10 @@ func (p *parseVisitor) VisitValueAwareSource(c parser.IValueAwareSourceContext, 
 			if err != nil {
 				return nil, LogicError(c, err)
 			}
-			p.TakeFromSource(fallback, push_asset)
+			err = p.TakeFromSource(fallback, push_asset)
+			if err != nil {
+				return nil, LogicError(c, err)
+			}
 		}
 		err := p.PushInteger(*core.NewNumber(int64(n)))
 		if err != nil {
