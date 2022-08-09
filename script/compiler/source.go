@@ -39,37 +39,56 @@ func (p *parseVisitor) VisitValueAwareSource(c parser.IValueAwareSourceContext, 
 		sources := c.SourceAllotment().GetSources()
 		n := len(sources)
 		for i := 0; i < n; i++ {
-			accounts, _, fallback, err := p.VisitSource(sources[i], push_asset, is_all)
-			if err != nil {
-				return nil, err
+			accounts, _, fallback, cerr := p.VisitSource(sources[i], push_asset, is_all)
+			if cerr != nil {
+				return nil, cerr
 			}
 			for k, v := range accounts {
 				needed_accounts[k] = v
 			}
-			p.Bump(int64(i + 1))
+			err := p.Bump(int64(i + 1))
+			if err != nil {
+				return nil, LogicError(c, err)
+			}
 			p.TakeFromSource(fallback, push_asset)
 		}
-		p.PushInteger(*core.NewNumber(int64(n)))
+		err := p.PushInteger(*core.NewNumber(int64(n)))
+		if err != nil {
+			return nil, LogicError(c, err)
+		}
 		p.AppendInstruction(program.OP_FUNDING_ASSEMBLE)
 	}
 	return needed_accounts, nil
 }
 
-func (p *parseVisitor) TakeFromSource(fallback *FallbackAccount, push_asset func()) {
+func (p *parseVisitor) TakeFromSource(fallback *FallbackAccount, push_asset func()) error {
 	if fallback == nil {
 		p.AppendInstruction(program.OP_TAKE)
-		p.Bump(1)
+		err := p.Bump(1)
+		if err != nil {
+			return err
+		}
 		p.AppendInstruction(program.OP_REPAY)
 	} else {
 		p.AppendInstruction(program.OP_TAKE_MAX)
-		p.Bump(1)
+		err := p.Bump(1)
+		if err != nil {
+			return err
+		}
 		p.AppendInstruction(program.OP_REPAY)
 		p.PushAddress(core.Address(*fallback))
-		p.Bump(2)
+		err = p.Bump(2)
+		if err != nil {
+			return err
+		}
 		p.AppendInstruction(program.OP_TAKE_ALL)
-		p.PushInteger(*core.NewNumber(2))
+		err = p.PushInteger(*core.NewNumber(2))
+		if err != nil {
+			return err
+		}
 		p.AppendInstruction(program.OP_FUNDING_ASSEMBLE)
 	}
+	return nil
 }
 
 // Returns the resource addresses of all the accounts,
@@ -97,7 +116,10 @@ func (p *parseVisitor) VisitSource(c parser.ISourceContext, push_asset func(), i
 		if overdraft == nil {
 			// no overdraft: use zero monetary
 			push_asset()
-			p.PushInteger(*core.NewNumber(0))
+			err := p.PushInteger(*core.NewNumber(0))
+			if err != nil {
+				return nil, nil, nil, LogicError(c, err)
+			}
 			p.AppendInstruction(program.OP_MONETARY_NEW)
 			p.AppendInstruction(program.OP_TAKE_ALL)
 		} else {
@@ -116,7 +138,10 @@ func (p *parseVisitor) VisitSource(c parser.ISourceContext, push_asset func(), i
 				p.AppendInstruction(program.OP_TAKE_ALL)
 			case *parser.SrcAccountOverdraftUnboundedContext:
 				push_asset()
-				p.PushInteger(*core.NewNumber(0))
+				err := p.PushInteger(*core.NewNumber(0))
+				if err != nil {
+					return nil, nil, nil, LogicError(c, err)
+				}
 				p.AppendInstruction(program.OP_MONETARY_NEW)
 				p.AppendInstruction(program.OP_TAKE_ALL)
 				f := FallbackAccount(*acc_addr)
@@ -131,13 +156,13 @@ func (p *parseVisitor) VisitSource(c parser.ISourceContext, push_asset func(), i
 		}
 
 	case *parser.SrcMaxedContext:
-		accounts, _, subsource_fallback, err := p.VisitSource(c.SourceMaxed().GetSrc(), push_asset, false)
-		if err != nil {
-			return nil, nil, nil, err
+		accounts, _, subsource_fallback, cerr := p.VisitSource(c.SourceMaxed().GetSrc(), push_asset, false)
+		if cerr != nil {
+			return nil, nil, nil, cerr
 		}
-		ty, _, err := p.VisitExpr(c.SourceMaxed().GetMax(), true)
-		if err != nil {
-			return nil, nil, nil, err
+		ty, _, cerr := p.VisitExpr(c.SourceMaxed().GetMax(), true)
+		if cerr != nil {
+			return nil, nil, nil, cerr
 		}
 		if ty != core.TYPE_MONETARY {
 			return nil, nil, nil, LogicError(c, errors.New("wrong type: expected monetary as max"))
@@ -146,16 +171,28 @@ func (p *parseVisitor) VisitSource(c parser.ISourceContext, push_asset func(), i
 			needed_accounts[k] = v
 		}
 		p.AppendInstruction(program.OP_TAKE_MAX)
-		p.Bump(1)
+		err := p.Bump(1)
+		if err != nil {
+			return nil, nil, nil, LogicError(c, err)
+		}
 		p.AppendInstruction(program.OP_REPAY)
 		if subsource_fallback != nil {
 			p.PushAddress(core.Address(*subsource_fallback))
-			p.Bump(2)
+			err := p.Bump(2)
+			if err != nil {
+				return nil, nil, nil, LogicError(c, err)
+			}
 			p.AppendInstruction(program.OP_TAKE_ALL)
-			p.PushInteger(*core.NewNumber(2))
+			err = p.PushInteger(*core.NewNumber(2))
+			if err != nil {
+				return nil, nil, nil, LogicError(c, err)
+			}
 			p.AppendInstruction(program.OP_FUNDING_ASSEMBLE)
 		} else {
-			p.Bump(1)
+			err := p.Bump(1)
+			if err != nil {
+				return nil, nil, nil, LogicError(c, err)
+			}
 			p.AppendInstruction(program.OP_DELETE)
 		}
 	case *parser.SrcInOrderContext:
@@ -180,7 +217,10 @@ func (p *parseVisitor) VisitSource(c parser.ISourceContext, push_asset func(), i
 				emptied_accounts[k] = v
 			}
 		}
-		p.PushInteger(*core.NewNumber(int64(n)))
+		err := p.PushInteger(*core.NewNumber(int64(n)))
+		if err != nil {
+			return nil, nil, nil, LogicError(c, err)
+		}
 		p.AppendInstruction(program.OP_FUNDING_ASSEMBLE)
 	}
 	return needed_accounts, emptied_accounts, fallback, nil

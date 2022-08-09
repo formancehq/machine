@@ -26,7 +26,11 @@ func (p *parseVisitor) PushInteger(val core.Number) error {
 	return nil
 }
 
-func (p *parseVisitor) Bump(n int64) {
-	p.PushInteger(*core.NewNumber(n))
+func (p *parseVisitor) Bump(n int64) error {
+	err := p.PushInteger(*core.NewNumber(n))
+	if err != nil {
+		return err
+	}
 	p.instructions = append(p.instructions, program.OP_BUMP)
+	return nil
 }

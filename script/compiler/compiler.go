@@ -146,7 +146,10 @@ func (p *parseVisitor) VisitLit(c parser.ILiteralContext, push bool) (core.Type,
 			return 0, nil, LogicError(c, err)
 		}
 		if push {
-			p.PushInteger(*number)
+			err := p.PushInteger(*number)
+			if err != nil {
+				return 0, nil, LogicError(c, err)
+			}
 		}
 		return core.TYPE_NUMBER, nil, nil
 	case *parser.LitStringContext:

@@ -41,47 +41,80 @@ func (p *parseVisitor) VisitDestinationRecursive(c parser.IDestinationContext) *
 		// initialize the `kept` accumulator
 		p.AppendInstruction(program.OP_FUNDING_SUM)
 		p.AppendInstruction(program.OP_ASSET)
-		p.PushInteger(*core.NewNumber(0))
+		err := p.PushInteger(*core.NewNumber(0))
+		if err != nil {
+			return LogicError(c, err)
+		}
 		p.AppendInstruction(program.OP_MONETARY_NEW)
 
-		p.Bump(1)
+		err = p.Bump(1)
+		if err != nil {
+			return LogicError(c, err)
+		}
 
 		for i := 0; i < n; i++ {
 
-			ty, _, err := p.VisitExpr(amounts[i], true)
-			if err != nil {
-				return err
+			ty, _, cerr := p.VisitExpr(amounts[i], true)
+			if cerr != nil {
+				return cerr
 			}
 			if ty != core.TYPE_MONETARY {
 				return LogicError(c, errors.New("wrong type: expected monetary as max"))
 			}
 			p.AppendInstruction(program.OP_TAKE_MAX)
-			p.Bump(2)
-			p.AppendInstruction(program.OP_DELETE)
-			err = p.VisitKeptOrDestination(dests[i])
+			err := p.Bump(2)
 			if err != nil {
-				return err
+				return LogicError(c, err)
+			}
+			p.AppendInstruction(program.OP_DELETE)
+			cerr = p.VisitKeptOrDestination(dests[i])
+			if cerr != nil {
+				return cerr
 			}
 			p.AppendInstruction(program.OP_FUNDING_SUM)
-			p.Bump(3)
+			err = p.Bump(3)
+			if err != nil {
+				return LogicError(c, err)
+			}
 			p.AppendInstruction(program.OP_MONETARY_ADD)
-			p.Bump(1)
-			p.Bump(2)
-			p.PushInteger(*core.NewNumber(2))
+			err = p.Bump(1)
+			if err != nil {
+				return LogicError(c, err)
+			}
+			err = p.Bump(2)
+			if err != nil {
+				return LogicError(c, err)
+			}
+			err = p.PushInteger(*core.NewNumber(2))
+			if err != nil {
+				return LogicError(c, err)
+			}
 			p.AppendInstruction(program.OP_FUNDING_ASSEMBLE)
 		}
 		p.AppendInstruction(program.OP_FUNDING_REVERSE)
-		p.Bump(1)
+		err = p.Bump(1)
+		if err != nil {
+			return LogicError(c, err)
+		}
 		p.AppendInstruction(program.OP_TAKE)
 		p.AppendInstruction(program.OP_FUNDING_REVERSE)
-		p.Bump(1)
-		p.AppendInstruction(program.OP_FUNDING_REVERSE)
-		err := p.VisitKeptOrDestination(c.DestinationInOrder().GetRemainingDest())
+		err = p.Bump(1)
 		if err != nil {
-			return err
+			return LogicError(c, err)
 		}
-		p.Bump(1)
-		p.PushInteger(*core.NewNumber(2))
+		p.AppendInstruction(program.OP_FUNDING_REVERSE)
+		cerr := p.VisitKeptOrDestination(c.DestinationInOrder().GetRemainingDest())
+		if cerr != nil {
+			return cerr
+		}
+		err = p.Bump(1)
+		if err != nil {
+			return LogicError(c, err)
+		}
+		err = p.PushInteger(*core.NewNumber(2))
+		if err != nil {
+			return LogicError(c, err)
+		}
 		p.AppendInstruction(program.OP_FUNDING_ASSEMBLE)
 		return nil
 	case *parser.DestAllotmentContext:
@@ -119,16 +152,28 @@ func (p *parseVisitor) VisitDestinationAllotment(c parser.IDestinationAllotmentC
 }
 
 func (p *parseVisitor) VisitAllocDestination(dests []parser.IKeptOrDestinationContext) *CompileError {
-	p.Bump(int64(len(dests)))
+	err := p.Bump(int64(len(dests)))
+	if err != nil {
+		return LogicError(dests[0], err)
+	}
 	for _, dest := range dests {
-		p.Bump(1)
-		p.AppendInstruction(program.OP_TAKE)
-		err := p.VisitKeptOrDestination(dest)
+		err := p.Bump(1)
 		if err != nil {
-			return err
+			return LogicError(dest, err)
 		}
-		p.Bump(1)
-		p.PushInteger(*core.NewNumber(2))
+		p.AppendInstruction(program.OP_TAKE)
+		cerr := p.VisitKeptOrDestination(dest)
+		if cerr != nil {
+			return cerr
+		}
+		err = p.Bump(1)
+		if err != nil {
+			return LogicError(dest, err)
+		}
+		perr := p.PushInteger(*core.NewNumber(2))
+		if perr != nil {
+			return LogicError(dest, perr)
+		}
 		p.AppendInstruction(program.OP_FUNDING_ASSEMBLE)
 	}
 	return nil
