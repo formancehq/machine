@@ -66,7 +66,7 @@ func TestOverdraftUnbounded(t *testing.T) {
 	test(t, tc)
 }
 
-func TestOverdraftComplexSuccess(t *testing.T) {
+func TestOverdraftSourceAllotmentSuccess(t *testing.T) {
 	tc := NewTestCase()
 	tc.compile(t, `send [GEM 100] (
 			source = {
@@ -100,6 +100,56 @@ func TestOverdraftComplexSuccess(t *testing.T) {
 				Asset:       "GEM",
 				Amount:      ledger.NewMonetaryInt(10),
 				Source:      "baz",
+				Destination: "world",
+			},
+		},
+		ExitCode: EXIT_OK,
+	}
+	test(t, tc)
+}
+
+func TestOverdraftSourceInOrderSuccess(t *testing.T) {
+	tc := NewTestCase()
+	tc.compile(t, `send [GEM 100] (
+			source = {
+				max [GEM 50] from {
+					@foo allowing overdraft up to [GEM 10]
+					@bar allowing overdraft up to [GEM 20]
+					@baz allowing unbounded overdraft
+				}
+				@qux allowing unbounded overdraft
+			}
+			destination = @world
+		)`)
+	tc.setBalance(t, "foo", "GEM", 0)
+	tc.setBalance(t, "bar", "GEM", 0)
+	tc.setBalance(t, "baz", "GEM", 0)
+	tc.setBalance(t, "qux", "GEM", 0)
+	tc.expected = CaseResult{
+		Printed: []core.Value{},
+		Postings: []ledger.Posting{
+			{
+				Asset:       "GEM",
+				Amount:      ledger.NewMonetaryInt(10),
+				Source:      "foo",
+				Destination: "world",
+			},
+			{
+				Asset:       "GEM",
+				Amount:      ledger.NewMonetaryInt(20),
+				Source:      "bar",
+				Destination: "world",
+			},
+			{
+				Asset:       "GEM",
+				Amount:      ledger.NewMonetaryInt(20),
+				Source:      "baz",
+				Destination: "world",
+			},
+			{
+				Asset:       "GEM",
+				Amount:      ledger.NewMonetaryInt(50),
+				Source:      "qux",
 				Destination: "world",
 			},
 		},

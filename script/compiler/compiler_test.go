@@ -666,7 +666,7 @@ func TestPreventSourceAlreadyEmptied(t *testing.T) {
 			source = {
 				{
 					@a
-					@world
+					@b
 				}
 				@a
 			}
@@ -675,7 +675,7 @@ func TestPreventSourceAlreadyEmptied(t *testing.T) {
 		Expected: CaseResult{
 			Instructions: nil,
 			Resources:    nil,
-			Error:        "@a",
+			Error:        "empt",
 		},
 	})
 }
@@ -693,6 +693,24 @@ func TestPreventTakeAllFromAllocation(t *testing.T) {
 			Instructions: nil,
 			Resources:    nil,
 			Error:        "all",
+		},
+	})
+}
+
+func TestWrongTypeSourceMax(t *testing.T) {
+	test(t, TestCase{
+		Case: `
+		send [GEM 15] (
+			source = {
+				max @foo from @bar
+				@world
+			}
+			destination = @baz
+		)`,
+		Expected: CaseResult{
+			Instructions: nil,
+			Resources:    nil,
+			Error:        "type",
 		},
 	})
 }
@@ -868,6 +886,54 @@ func TestAllocationInvalidPortion(t *testing.T) {
 			destination = {
 				10% to @a
 				$p to @b
+			}
+		)`,
+		Expected: CaseResult{
+			Instructions: nil,
+			Resources:    nil,
+			Error:        "type",
+		},
+	})
+}
+
+func TestOverdraftOnWorld(t *testing.T) {
+	test(t, TestCase{
+		Case: `
+		send [GEM 15] (
+			source = @world allowing overdraft up to [GEM 10]
+			destination = @foo
+		)`,
+		Expected: CaseResult{
+			Instructions: nil,
+			Resources:    nil,
+			Error:        "overdraft",
+		},
+	})
+}
+
+func TestOverdraftWrongType(t *testing.T) {
+	test(t, TestCase{
+		Case: `
+		send [GEM 15] (
+			source = @foo allowing overdraft up to @baz
+			destination = @bar
+		)`,
+		Expected: CaseResult{
+			Instructions: nil,
+			Resources:    nil,
+			Error:        "type",
+		},
+	})
+}
+
+func TestDestinationInOrderWrongType(t *testing.T) {
+	test(t, TestCase{
+		Case: `
+		send [GEM 15] (
+			source = @foo
+			destination = {
+				max @bar to @baz
+				remaining to @qux
 			}
 		)`,
 		Expected: CaseResult{

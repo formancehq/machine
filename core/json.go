@@ -17,6 +17,10 @@ func TypenameToType(name string) (Type, bool) {
 	switch name {
 	case "account":
 		return TYPE_ACCOUNT, true
+	case "asset":
+		return TYPE_ASSET, true
+	case "number":
+		return TYPE_NUMBER, true
 	case "portion":
 		return TYPE_PORTION, true
 	case "monetary":
@@ -33,8 +37,6 @@ func NewValueFromTypedJSON(raw_input json.RawMessage) (*Value, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	fmt.Println(input.Type)
 
 	typ, ok := TypenameToType(input.Type)
 	if !ok {
