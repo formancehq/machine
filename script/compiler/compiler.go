@@ -1,16 +1,16 @@
 package compiler
 
 import (
-	"encoding/binary"
 	"errors"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/antlr/antlr4/runtime/Go/antlr"
 	"github.com/numary/machine/core"
 	"github.com/numary/machine/script/parser"
 	"github.com/numary/machine/vm/program"
+
+	ledger "github.com/numary/ledger/pkg/core"
 )
 
 type parseVisitor struct {
@@ -50,19 +50,6 @@ func (p *parseVisitor) AllocateResource(res program.Resource) (*core.Address, er
 	return &addr, nil
 }
 
-func (p *parseVisitor) PushAddress(addr core.Address) {
-	p.instructions = append(p.instructions, program.OP_APUSH)
-	bytes := addr.ToBytes()
-	p.instructions = append(p.instructions, bytes...)
-}
-
-func (p *parseVisitor) PushInteger(val core.Number) {
-	p.instructions = append(p.instructions, program.OP_IPUSH)
-	bytes := make([]byte, 8)
-	binary.LittleEndian.PutUint64(bytes, uint64(val))
-	p.instructions = append(p.instructions, bytes...)
-}
-
 func (p *parseVisitor) isWorld(addr core.Address) bool {
 	idx := int(addr)
 	if idx < len(p.resources) {
@@ -82,9 +69,7 @@ func (p *parseVisitor) VisitVariable(c parser.IVariableContext, push bool) (core
 	if idx, ok := p.var_idx[name]; ok {
 		res := p.resources[idx]
 		if push {
-			p.instructions = append(p.instructions, program.OP_APUSH)
-			bytes := idx.ToBytes()
-			p.instructions = append(p.instructions, bytes...)
+			p.PushAddress(idx)
 		}
 		return res.GetType(), &idx, nil
 	} else {
@@ -112,9 +97,9 @@ func (p *parseVisitor) VisitExpr(c parser.IExpressionContext, push bool) (core.T
 		if push {
 			switch c.GetOp().GetTokenType() {
 			case parser.NumScriptLexerOP_ADD:
-				p.instructions = append(p.instructions, program.OP_IADD)
+				p.AppendInstruction(program.OP_IADD)
 			case parser.NumScriptLexerOP_SUB:
-				p.instructions = append(p.instructions, program.OP_ISUB)
+				p.AppendInstruction(program.OP_ISUB)
 			}
 		}
 		return core.TYPE_NUMBER, nil, nil
@@ -156,13 +141,15 @@ func (p *parseVisitor) VisitLit(c parser.ILiteralContext, push bool) (core.Type,
 		}
 		return core.TYPE_ASSET, addr, nil
 	case *parser.LitNumberContext:
-		n, err := strconv.ParseUint(c.GetText(), 10, 64)
+		number, err := core.ParseNumber(c.GetText())
 		if err != nil {
 			return 0, nil, LogicError(c, err)
 		}
-		number := core.Number(n)
 		if push {
-			p.PushInteger(number)
+			err := p.PushInteger(*number)
+			if err != nil {
+				return 0, nil, LogicError(c, err)
+			}
 		}
 		return core.TYPE_NUMBER, nil, nil
 	case *parser.LitStringContext:
@@ -178,13 +165,13 @@ func (p *parseVisitor) VisitLit(c parser.ILiteralContext, push bool) (core.Type,
 		return core.TYPE_STRING, addr, nil
 	case *parser.LitMonetaryContext:
 		asset := c.Monetary().GetAsset().GetText()
-		amt, err := strconv.ParseUint(c.Monetary().GetAmt().GetText(), 10, 64)
+		amt, err := ledger.ParseMonetaryInt(c.Monetary().GetAmt().GetText())
 		if err != nil {
 			return 0, nil, LogicError(c, err)
 		}
 		monetary := core.Monetary{
 			Asset:  core.Asset(asset),
-			Amount: amt,
+			Amount: *amt,
 		}
 		addr, err := p.AllocateResource(program.Constant{Inner: monetary})
 		if err != nil {
@@ -229,7 +216,7 @@ func (p *parseVisitor) VisitSend(c *parser.SendContext) *CompileError {
 		asset_addr = *mon_addr
 		accounts, err := p.VisitValueAwareSource(c.GetSrc(), func() {
 			p.PushAddress(*mon_addr)
-			p.instructions = append(p.instructions, program.OP_ASSET)
+			p.AppendInstruction(program.OP_ASSET)
 		}, mon_addr)
 		if err != nil {
 			return err
@@ -265,7 +252,7 @@ func (p *parseVisitor) VisitSetTxMeta(ctx *parser.SetTxMetaContext) *CompileErro
 	})
 	p.PushAddress(*keyAddr)
 
-	p.instructions = append(p.instructions, program.OP_TX_META)
+	p.AppendInstruction(program.OP_TX_META)
 
 	return nil
 }
@@ -276,7 +263,7 @@ func (p *parseVisitor) VisitPrint(ctx *parser.PrintContext) *CompileError {
 	if err != nil {
 		return err
 	}
-	p.instructions = append(p.instructions, program.OP_PRINT)
+	p.AppendInstruction(program.OP_PRINT)
 	return nil
 }
 
@@ -359,7 +346,7 @@ func (p *parseVisitor) VisitScript(c parser.IScriptContext) *CompileError {
 					return err
 				}
 			case *parser.FailContext:
-				p.instructions = append(p.instructions, program.OP_FAIL)
+				p.AppendInstruction(program.OP_FAIL)
 			case *parser.SendContext:
 				err := p.VisitSend(c)
 				if err != nil {
