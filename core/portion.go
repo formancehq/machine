@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/big"
 	"regexp"
+	"strings"
 )
 
 type Portion struct {
@@ -42,8 +43,10 @@ func (lhs *Portion) Equals(rhs *Portion) bool {
 func ParsePortionSpecific(input string) (*Portion, error) {
 	var res *big.Rat
 
+	input_clean := strings.ReplaceAll(input, "_", "")
+
 	re := regexp.MustCompile(`^([0-9]+)(?:[.]([0-9]+))?[%]$`)
-	percent_match := re.FindStringSubmatch(input)
+	percent_match := re.FindStringSubmatch(input_clean)
 	if len(percent_match) != 0 {
 		integral := percent_match[1]
 		fractional := percent_match[2]
@@ -55,7 +58,7 @@ func ParsePortionSpecific(input string) (*Portion, error) {
 		res = rat
 	} else {
 		re = regexp.MustCompile(`^([0-9]+)\s?[/]\s?([0-9]+)$`)
-		fraction_match := re.FindStringSubmatch(input)
+		fraction_match := re.FindStringSubmatch(input_clean)
 		if len(fraction_match) != 0 {
 			numerator := fraction_match[1]
 			denominator := fraction_match[2]

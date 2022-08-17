@@ -944,6 +944,48 @@ func TestDestinationInOrderWrongType(t *testing.T) {
 	})
 }
 
+func TestUnderscoreInNumbers(t *testing.T) {
+	portion0, err := core.NewPortionSpecific(*big.NewRat(15, 10_000))
+	if err != nil {
+		t.Fatal(err)
+	}
+	portion1, err := core.NewPortionSpecific(*big.NewRat(15_000_250, 100_000_000))
+	if err != nil {
+		t.Fatal(err)
+	}
+	test(t, TestCase{
+		Case: `
+		print 1_000
+		send [EUR/2 100_00] (
+			source = @world
+			destination = {
+				15/10_000 to @world
+				15.000_25% to @world
+				remaining to @world
+			}
+		)`,
+		Expected: CaseResult{
+			Instructions: []byte{},
+			Resources: []program.Resource{
+				program.Constant{Inner: *core.NewNumber(1_000)},
+				program.Constant{Inner: core.Monetary{
+					Asset:  core.Asset("EUR/2"),
+					Amount: *ledger.NewMonetaryInt(100_00),
+				}},
+				program.Constant{Inner: core.Account("world")},
+				program.Constant{Inner: *core.NewNumber(0)},
+				program.Constant{Inner: *core.NewNumber(1)},
+				program.Constant{Inner: *core.NewNumber(2)},
+				program.Constant{Inner: core.NewPortionRemaining()},
+				program.Constant{Inner: *portion1},
+				program.Constant{Inner: *portion0},
+				program.Constant{Inner: *core.NewNumber(3)},
+			},
+			Error: "",
+		},
+	})
+}
+
 // func TestTooManyConstants(t *testing.T) {
 // 	script := ""
 // 	for i := 0; i < 11000; i++ {
