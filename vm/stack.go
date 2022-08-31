@@ -17,9 +17,9 @@ func (m *Machine) popAccount() core.Account {
 	}
 }
 
-func (m *Machine) popNumber() uint64 {
+func (m *Machine) popNumber() core.Number {
 	if n, ok := m.popValue().(core.Number); ok {
-		return uint64(n)
+		return n
 	} else {
 		panic("unexpected type on stack")
 	}

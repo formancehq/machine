@@ -75,7 +75,10 @@ func (p *parseVisitor) VisitAllotment(c antlr.ParserRuleContext, portions []pars
 			errors.New("known portions are already equal to 100%"),
 		)
 	}
-	p.PushInteger(core.Number(len(portions)))
-	p.instructions = append(p.instructions, program.OP_MAKE_ALLOTMENT)
+	err := p.PushInteger(*core.NewNumber(int64(len(portions))))
+	if err != nil {
+		return LogicError(c, err)
+	}
+	p.AppendInstruction(program.OP_MAKE_ALLOTMENT)
 	return nil
 }

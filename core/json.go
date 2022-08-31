@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+
+	ledger "github.com/numary/ledger/pkg/core"
 )
 
 type ValueJSON struct {
@@ -15,6 +17,10 @@ func TypenameToType(name string) (Type, bool) {
 	switch name {
 	case "account":
 		return TYPE_ACCOUNT, true
+	case "asset":
+		return TYPE_ASSET, true
+	case "number":
+		return TYPE_NUMBER, true
 	case "portion":
 		return TYPE_PORTION, true
 	case "monetary":
@@ -31,8 +37,6 @@ func NewValueFromTypedJSON(raw_input json.RawMessage) (*Value, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	fmt.Println(input.Type)
 
 	typ, ok := TypenameToType(input.Type)
 	if !ok {
@@ -68,8 +72,8 @@ func NewValueFromJSON(typ Type, data json.RawMessage) (*Value, error) {
 		value = number
 	case TYPE_MONETARY:
 		var mon struct {
-			Asset  string `json:"asset"`
-			Amount uint64 `json:"amount"`
+			Asset  string             `json:"asset"`
+			Amount ledger.MonetaryInt `json:"amount"`
 		}
 		err := json.Unmarshal(data, &mon)
 		if err != nil {
