@@ -54,6 +54,8 @@ func OpcodeName(op byte) string {
 		return "OP_MAKE_ALLOTMENT"
 	case OP_TAKE_ALL:
 		return "OP_TAKE_ALL"
+	case OP_TAKE_ALWAYS:
+		return "OP_TAKE_ALWAYS"
 	case OP_TAKE:
 		return "OP_TAKE"
 	case OP_TAKE_MAX:
