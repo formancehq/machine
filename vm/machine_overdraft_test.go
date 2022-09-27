@@ -158,6 +158,81 @@ func TestOverdraftSourceInOrderSuccess(t *testing.T) {
 	test(t, tc)
 }
 
+func TestOverdraftBalanceTracking(t *testing.T) {
+	tc := NewTestCase()
+	tc.compile(t, `send [GEM 100] (
+		source = @foo allowing unbounded overdraft
+		destination = @world
+	)
+	send [GEM 200] (
+		source = @foo allowing overdraft up to [GEM 300]
+		destination = @world
+	)
+	send [GEM 300] (
+		source = @foo allowing unbounded overdraft
+		destination = @world
+	)
+	`)
+	tc.setBalance(t, "foo", "GEM", 0)
+	tc.expected = CaseResult{
+		Printed: []core.Value{},
+		Postings: []ledger.Posting{
+			{
+				Asset:       "GEM",
+				Amount:      ledger.NewMonetaryInt(100),
+				Source:      "foo",
+				Destination: "world",
+			},
+			{
+				Asset:       "GEM",
+				Amount:      ledger.NewMonetaryInt(200),
+				Source:      "foo",
+				Destination: "world",
+			},
+			{
+				Asset:       "GEM",
+				Amount:      ledger.NewMonetaryInt(300),
+				Source:      "foo",
+				Destination: "world",
+			},
+		},
+		ExitCode: EXIT_OK,
+	}
+	test(t, tc)
+}
+
+func TestWorldIsUnbounded(t *testing.T) {
+	tc := NewTestCase()
+	tc.compile(t, `send [GEM 100] (
+		source = @world
+		destination = @foo
+	)
+	send [GEM 200] (
+		source = @world
+		destination = @foo
+	)
+	`)
+	tc.expected = CaseResult{
+		Printed: []core.Value{},
+		Postings: []ledger.Posting{
+			{
+				Asset:       "GEM",
+				Amount:      ledger.NewMonetaryInt(100),
+				Source:      "world",
+				Destination: "foo",
+			},
+			{
+				Asset:       "GEM",
+				Amount:      ledger.NewMonetaryInt(200),
+				Source:      "world",
+				Destination: "foo",
+			},
+		},
+		ExitCode: EXIT_OK,
+	}
+	test(t, tc)
+}
+
 func TestOverdraftComplexFailure(t *testing.T) {
 	tc := NewTestCase()
 	tc.compile(t, `send [GEM 100] (
