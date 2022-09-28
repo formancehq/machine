@@ -87,7 +87,7 @@ func (p *parseVisitor) TakeFromSource(fallback *FallbackAccount, push_asset func
 		if err != nil {
 			return err
 		}
-		p.AppendInstruction(program.OP_TAKE_ALL)
+		p.AppendInstruction(program.OP_TAKE_ALWAYS)
 		err = p.PushInteger(*core.NewNumber(2))
 		if err != nil {
 			return err

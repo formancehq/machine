@@ -96,6 +96,7 @@ func (m *Machine) withdrawAll(account core.Account, asset core.Asset, overdraft 
 				amount_taken = *balance.Add(&overdraft)
 				acc_balance[asset] = *overdraft.Neg()
 			}
+
 			return &core.Funding{
 				Asset: asset,
 				Parts: []core.FundingPart{{
@@ -106,6 +107,22 @@ func (m *Machine) withdrawAll(account core.Account, asset core.Asset, overdraft 
 		}
 	}
 	return nil, fmt.Errorf("missing %v balance from %v", asset, account)
+}
+
+func (m *Machine) withdrawAlways(account core.Account, mon core.Monetary) (*core.Funding, error) {
+	if acc_balance, ok := m.Balances[account]; ok {
+		if balance, ok := acc_balance[mon.Asset]; ok {
+			acc_balance[mon.Asset] = *balance.Sub(&mon.Amount)
+			return &core.Funding{
+				Asset: mon.Asset,
+				Parts: []core.FundingPart{{
+					Account: account,
+					Amount:  mon.Amount,
+				}},
+			}, nil
+		}
+	}
+	return nil, fmt.Errorf("missing %v balance from %v", mon.Asset, account)
 }
 
 func (m *Machine) credit(account core.Account, funding core.Funding) {
@@ -229,6 +246,15 @@ func (m *Machine) tick() (bool, byte) {
 		overdraft := m.popMonetary()
 		account := m.popAccount()
 		funding, err := m.withdrawAll(account, overdraft.Asset, overdraft.Amount)
+		if err != nil {
+			return true, EXIT_FAIL_INVALID
+		}
+		m.pushValue(*funding)
+
+	case program.OP_TAKE_ALWAYS:
+		mon := m.popMonetary()
+		account := m.popAccount()
+		funding, err := m.withdrawAlways(account, mon)
 		if err != nil {
 			return true, EXIT_FAIL_INVALID
 		}
