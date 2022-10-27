@@ -6,10 +6,10 @@ import (
 	"strings"
 
 	"github.com/antlr/antlr4/runtime/Go/antlr"
+	"github.com/formancehq/machine/core"
+	"github.com/formancehq/machine/script/parser"
+	"github.com/formancehq/machine/vm/program"
 	ledger "github.com/numary/ledger/pkg/core"
-	"github.com/numary/machine/core"
-	"github.com/numary/machine/script/parser"
-	"github.com/numary/machine/vm/program"
 )
 
 type parseVisitor struct {

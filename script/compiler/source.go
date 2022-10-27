@@ -4,9 +4,9 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/numary/machine/core"
-	"github.com/numary/machine/script/parser"
-	"github.com/numary/machine/vm/program"
+	"github.com/formancehq/machine/core"
+	"github.com/formancehq/machine/script/parser"
+	"github.com/formancehq/machine/vm/program"
 )
 
 type FallbackAccount core.Address
