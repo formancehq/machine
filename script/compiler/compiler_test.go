@@ -9,9 +9,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/formancehq/machine/core"
+	"github.com/formancehq/machine/vm/program"
 	ledger "github.com/numary/ledger/pkg/core"
-	"github.com/numary/machine/core"
-	"github.com/numary/machine/vm/program"
 )
 
 type CaseResult struct {

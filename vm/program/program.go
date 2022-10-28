@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/numary/machine/core"
+	"github.com/formancehq/machine/core"
 )
 
 type Program struct {

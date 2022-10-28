@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 
-	"github.com/numary/machine/core"
-	"github.com/numary/machine/script/compiler"
-	"github.com/numary/machine/vm"
+	"github.com/formancehq/machine/core"
+	"github.com/formancehq/machine/script/compiler"
+	"github.com/formancehq/machine/vm"
 
 	ledger "github.com/numary/ledger/pkg/core"
 )
