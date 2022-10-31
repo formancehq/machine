@@ -74,9 +74,6 @@ type NumScriptListener interface {
 	// EnterSrcAccountOverdraftSpecific is called when entering the SrcAccountOverdraftSpecific production.
 	EnterSrcAccountOverdraftSpecific(c *SrcAccountOverdraftSpecificContext)
 
-	// EnterSrcAccountOverdraftDefault is called when entering the SrcAccountOverdraftDefault production.
-	EnterSrcAccountOverdraftDefault(c *SrcAccountOverdraftDefaultContext)
-
 	// EnterSrcAccountOverdraftUnbounded is called when entering the SrcAccountOverdraftUnbounded production.
 	EnterSrcAccountOverdraftUnbounded(c *SrcAccountOverdraftUnboundedContext)
 
@@ -199,9 +196,6 @@ type NumScriptListener interface {
 
 	// ExitSrcAccountOverdraftSpecific is called when exiting the SrcAccountOverdraftSpecific production.
 	ExitSrcAccountOverdraftSpecific(c *SrcAccountOverdraftSpecificContext)
-
-	// ExitSrcAccountOverdraftDefault is called when exiting the SrcAccountOverdraftDefault production.
-	ExitSrcAccountOverdraftDefault(c *SrcAccountOverdraftDefaultContext)
 
 	// ExitSrcAccountOverdraftUnbounded is called when exiting the SrcAccountOverdraftUnbounded production.
 	ExitSrcAccountOverdraftUnbounded(c *SrcAccountOverdraftUnboundedContext)
