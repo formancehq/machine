@@ -12,6 +12,7 @@ import (
 	"github.com/formancehq/machine/script/compiler"
 	"github.com/formancehq/machine/vm/program"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -1003,7 +1004,8 @@ func TestSetTxMeta(t *testing.T) {
 		}
 	}
 
-	_, err = m.Execute()
+	exitCode, err := m.Execute()
+	require.Equal(t, EXIT_OK, exitCode)
 
 	if err != nil {
 		t.Fatalf("did not expect error on Execute, got: %v", err)
@@ -1036,4 +1038,54 @@ func TestSetTxMeta(t *testing.T) {
 			}
 		}
 	}
+}
+
+func (m *Machine) GetTxMetaJSON() Metadata {
+	meta := make(Metadata)
+	for k, v := range m.TxMeta {
+		valJSON, _ := json.Marshal(v)
+		v, _ := json.Marshal(core.ValueJSON{
+			Type:  v.GetType().String(),
+			Value: valJSON,
+		})
+		meta[k] = v
+	}
+	return meta
+}
+
+func TestSetAccountMeta(t *testing.T) {
+	p, err := compiler.Compile(`
+	set_account_meta(@platform, "fees", "15 percent")
+	`)
+	require.NoError(t, err)
+
+	m := NewMachine(*p)
+
+	{
+		ch, err := m.ResolveResources()
+		if err != nil {
+			t.Fatal(fmt.Errorf("could not resolve program resources: %v", err))
+		}
+		for req := range ch {
+			if req.Error != nil {
+				t.Fatalf(fmt.Sprintf("could not resolve program resources: %v", req.Error))
+			}
+		}
+	}
+
+	{
+		ch, err := m.ResolveBalances()
+		if err != nil {
+			t.Fatal(fmt.Errorf("could not resolve balances: %v", err))
+		}
+		for req := range ch {
+			if req.Error != nil {
+				t.Fatal(fmt.Errorf("could not resolve balances: %v", err))
+			}
+		}
+	}
+
+	exitCode, err := m.Execute()
+	require.NoError(t, err)
+	require.Equal(t, EXIT_OK, exitCode)
 }

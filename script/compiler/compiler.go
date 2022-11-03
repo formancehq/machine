@@ -258,6 +258,18 @@ func (p *parseVisitor) VisitSetTxMeta(ctx *parser.SetTxMetaContext) *CompileErro
 	return nil
 }
 
+// set_account_meta statement
+func (p *parseVisitor) VisitSetAccountMeta(ctx *parser.SetAccountMetaContext) *CompileError {
+	_, _, compErr := p.VisitExpr(ctx.GetValue(), false)
+	if compErr != nil {
+		return compErr
+	}
+
+	p.AppendInstruction(program.OP_ACCOUNT_META)
+
+	return nil
+}
+
 // print statement
 func (p *parseVisitor) VisitPrint(ctx *parser.PrintContext) *CompileError {
 	_, _, err := p.VisitExpr(ctx.GetExpr(), true)
@@ -360,6 +372,11 @@ func (p *parseVisitor) VisitScript(c parser.IScriptContext) *CompileError {
 				}
 			case *parser.SetTxMetaContext:
 				err := p.VisitSetTxMeta(c)
+				if err != nil {
+					return err
+				}
+			case *parser.SetAccountMetaContext:
+				err := p.VisitSetAccountMeta(c)
 				if err != nil {
 					return err
 				}

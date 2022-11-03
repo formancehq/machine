@@ -24,6 +24,7 @@ const (
 	OP_ALLOC            // <monetary> <allotment(N)> => <monetary>*N
 	OP_SEND             // <funding> <account>
 	OP_TX_META          //
+	OP_ACCOUNT_META     //
 )
 
 func OpcodeName(op byte) string {
@@ -74,6 +75,8 @@ func OpcodeName(op byte) string {
 		return "OP_SEND"
 	case OP_TX_META:
 		return "OP_TX_META"
+	case OP_ACCOUNT_META:
+		return "OP_ACCOUNT_META"
 	default:
 		return "Unknown opcode"
 	}

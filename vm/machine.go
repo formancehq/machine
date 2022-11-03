@@ -75,19 +75,6 @@ func StdOutPrinter(c chan core.Value) {
 	}
 }
 
-func (m *Machine) GetTxMetaJSON() Metadata {
-	meta := make(Metadata)
-	for k, v := range m.TxMeta {
-		valJSON, _ := json.Marshal(v)
-		v, _ := json.Marshal(core.ValueJSON{
-			Type:  v.GetType().String(),
-			Value: valJSON,
-		})
-		meta[k] = v
-	}
-	return meta
-}
-
 func (m *Machine) getResource(addr core.Address) (*core.Value, bool) {
 	a := int(addr)
 	if a >= len(m.Resources) {

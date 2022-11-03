@@ -231,6 +231,12 @@ func (s *BaseNumScriptListener) EnterSetTxMeta(ctx *SetTxMetaContext) {}
 // ExitSetTxMeta is called when production SetTxMeta is exited.
 func (s *BaseNumScriptListener) ExitSetTxMeta(ctx *SetTxMetaContext) {}
 
+// EnterSetAccountMeta is called when production SetAccountMeta is entered.
+func (s *BaseNumScriptListener) EnterSetAccountMeta(ctx *SetAccountMetaContext) {}
+
+// ExitSetAccountMeta is called when production SetAccountMeta is exited.
+func (s *BaseNumScriptListener) ExitSetAccountMeta(ctx *SetAccountMetaContext) {}
+
 // EnterFail is called when production Fail is entered.
 func (s *BaseNumScriptListener) EnterFail(ctx *FailContext) {}
 

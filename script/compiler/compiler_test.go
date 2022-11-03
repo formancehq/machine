@@ -961,3 +961,46 @@ func TestDestinationInOrderWrongType(t *testing.T) {
 // 		},
 // 	})
 // }
+
+func TestSetAccountMeta(t *testing.T) {
+	alice := core.Account("alice")
+	bob := core.Account("bob")
+	test(t, TestCase{
+		Case: `
+			send [EUR/2 99] (
+				source = @alice
+				destination = @bob
+			)
+			set_account_meta(@alice, "fees", "15 percent")`,
+		Expected: CaseResult{
+			Instructions: []byte{
+				program.OP_APUSH, 01, 00, // @alice
+				program.OP_APUSH, 00, 00, // @alice, [EUR/2 99]
+				program.OP_ASSET,         // @alice, EUR/2
+				program.OP_APUSH, 02, 00, // @alice, EUR/2, 0
+				program.OP_MONETARY_NEW,  // @alice, [EUR/2 0]
+				program.OP_TAKE_ALL,      // [EUR/2 @alice <?>]
+				program.OP_APUSH, 00, 00, // [EUR/2 @alice <?>], [EUR/2 99]
+				program.OP_TAKE,          // [EUR/2 @alice <?>], [EUR/2 @alice 99]
+				program.OP_APUSH, 03, 00, // [EUR/2 @alice <?>], [EUR/2 @alice 99], 1
+				program.OP_BUMP,          // [EUR/2 @alice 99], [EUR/2 @alice <?>]
+				program.OP_REPAY,         // [EUR/2 @alice 99]
+				program.OP_FUNDING_SUM,   // [EUR/2 @alice 99], [EUR/2 99]
+				program.OP_TAKE,          // [EUR/2], [EUR/2 @alice 99]
+				program.OP_APUSH, 04, 00, // [EUR/2], [EUR/2 @alice 99], @bob
+				program.OP_SEND,          // [EUR/2]
+				program.OP_REPAY,         //
+				program.OP_APUSH, 06, 00, //
+				program.OP_ACCOUNT_META, //
+			}, Resources: []program.Resource{
+				program.Constant{Inner: core.Monetary{Asset: "EUR/2", Amount: *core.NewMonetaryInt(99)}},
+				program.Constant{Inner: alice},
+				program.Constant{Inner: *core.NewMonetaryInt(0)},
+				program.Constant{Inner: *core.NewMonetaryInt(1)},
+				program.Constant{Inner: bob},
+				program.Constant{Inner: core.String("15 percent")},
+			},
+			Error: "",
+		},
+	})
+}

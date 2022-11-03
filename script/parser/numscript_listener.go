@@ -110,6 +110,9 @@ type NumScriptListener interface {
 	// EnterSetTxMeta is called when entering the SetTxMeta production.
 	EnterSetTxMeta(c *SetTxMetaContext)
 
+	// EnterSetAccountMeta is called when entering the SetAccountMeta production.
+	EnterSetAccountMeta(c *SetAccountMetaContext)
+
 	// EnterFail is called when entering the Fail production.
 	EnterFail(c *FailContext)
 
@@ -232,6 +235,9 @@ type NumScriptListener interface {
 
 	// ExitSetTxMeta is called when exiting the SetTxMeta production.
 	ExitSetTxMeta(c *SetTxMetaContext)
+
+	// ExitSetAccountMeta is called when exiting the SetAccountMeta production.
+	ExitSetAccountMeta(c *SetAccountMetaContext)
 
 	// ExitFail is called when exiting the Fail production.
 	ExitFail(c *FailContext)
