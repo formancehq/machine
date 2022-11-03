@@ -14,24 +14,24 @@ type ValueJSON struct {
 func TypenameToType(name string) (Type, bool) {
 	switch name {
 	case "account":
-		return TYPE_ACCOUNT, true
+		return TypeAccount, true
 	case "asset":
-		return TYPE_ASSET, true
+		return TypeAsset, true
 	case "number":
-		return TYPE_NUMBER, true
+		return TypeNumber, true
 	case "portion":
-		return TYPE_PORTION, true
+		return TypePortion, true
 	case "monetary":
-		return TYPE_MONETARY, true
+		return TypeMonetary, true
 	default:
 		return 0, false
 	}
 }
 
-func NewValueFromTypedJSON(raw_input json.RawMessage) (*Value, error) {
+func NewValueFromTypedJSON(rawInput json.RawMessage) (*Value, error) {
 	var input ValueJSON
 
-	err := json.Unmarshal(raw_input, &input)
+	err := json.Unmarshal(rawInput, &input)
 	if err != nil {
 		return nil, err
 	}
@@ -47,28 +47,28 @@ func NewValueFromTypedJSON(raw_input json.RawMessage) (*Value, error) {
 func NewValueFromJSON(typ Type, data json.RawMessage) (*Value, error) {
 	var value Value
 	switch typ {
-	case TYPE_ACCOUNT:
+	case TypeAccount:
 		var account Account
 		err := json.Unmarshal(data, &account)
 		if err != nil {
 			return nil, err
 		}
 		value = account
-	case TYPE_ASSET:
+	case TypeAsset:
 		var asset Asset
 		err := json.Unmarshal(data, &asset)
 		if err != nil {
 			return nil, err
 		}
 		value = asset
-	case TYPE_NUMBER:
+	case TypeNumber:
 		var number Number
 		err := json.Unmarshal(data, &number)
 		if err != nil {
 			return nil, err
 		}
 		value = number
-	case TYPE_MONETARY:
+	case TypeMonetary:
 		var mon struct {
 			Asset  string      `json:"asset"`
 			Amount MonetaryInt `json:"amount"`
@@ -81,7 +81,7 @@ func NewValueFromJSON(typ Type, data json.RawMessage) (*Value, error) {
 			Asset:  Asset(mon.Asset),
 			Amount: mon.Amount,
 		}
-	case TYPE_PORTION:
+	case TypePortion:
 		var s string
 		err := json.Unmarshal(data, &s)
 		if err != nil {
@@ -92,7 +92,7 @@ func NewValueFromJSON(typ Type, data json.RawMessage) (*Value, error) {
 			return nil, err
 		}
 		value = *res
-	case TYPE_STRING:
+	case TypeString:
 		var s String
 		err := json.Unmarshal(data, &s)
 		if err != nil {

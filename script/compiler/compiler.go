@@ -82,14 +82,14 @@ func (p *parseVisitor) VisitExpr(c parser.IExpressionContext, push bool) (core.T
 		if err != nil {
 			return 0, nil, err
 		}
-		if ty != core.TYPE_NUMBER {
+		if ty != core.TypeNumber {
 			return 0, nil, LogicError(c, errors.New("tried to do arithmetic with wrong type"))
 		}
 		ty, _, err = p.VisitExpr(c.GetRhs(), push)
 		if err != nil {
 			return 0, nil, err
 		}
-		if ty != core.TYPE_NUMBER {
+		if ty != core.TypeNumber {
 			return 0, nil, LogicError(c, errors.New("tried to do arithmetic with wrong type"))
 		}
 		if push {
@@ -100,7 +100,7 @@ func (p *parseVisitor) VisitExpr(c parser.IExpressionContext, push bool) (core.T
 				p.AppendInstruction(program.OP_ISUB)
 			}
 		}
-		return core.TYPE_NUMBER, nil, nil
+		return core.TypeNumber, nil, nil
 	case *parser.ExprLiteralContext:
 		ty, addr, err := p.VisitLit(c.GetLit(), push)
 		if err != nil {
@@ -127,7 +127,7 @@ func (p *parseVisitor) VisitLit(c parser.ILiteralContext, push bool) (core.Type,
 		if push {
 			p.PushAddress(*addr)
 		}
-		return core.TYPE_ACCOUNT, addr, nil
+		return core.TypeAccount, addr, nil
 	case *parser.LitAssetContext:
 		asset := core.Asset(c.GetText())
 		addr, err := p.AllocateResource(program.Constant{Inner: asset})
@@ -137,7 +137,7 @@ func (p *parseVisitor) VisitLit(c parser.ILiteralContext, push bool) (core.Type,
 		if push {
 			p.PushAddress(*addr)
 		}
-		return core.TYPE_ASSET, addr, nil
+		return core.TypeAsset, addr, nil
 	case *parser.LitNumberContext:
 		number, err := core.ParseNumber(c.GetText())
 		if err != nil {
@@ -149,7 +149,7 @@ func (p *parseVisitor) VisitLit(c parser.ILiteralContext, push bool) (core.Type,
 				return 0, nil, LogicError(c, err)
 			}
 		}
-		return core.TYPE_NUMBER, nil, nil
+		return core.TypeNumber, nil, nil
 	case *parser.LitStringContext:
 		addr, err := p.AllocateResource(program.Constant{
 			Inner: core.String(strings.Trim(c.GetText(), `"`)),
@@ -160,7 +160,7 @@ func (p *parseVisitor) VisitLit(c parser.ILiteralContext, push bool) (core.Type,
 		if push {
 			p.PushAddress(*addr)
 		}
-		return core.TYPE_STRING, addr, nil
+		return core.TypeString, addr, nil
 	case *parser.LitMonetaryContext:
 		asset := c.Monetary().GetAsset().GetText()
 		amt, err := core.ParseMonetaryInt(c.Monetary().GetAmt().GetText())
@@ -178,7 +178,7 @@ func (p *parseVisitor) VisitLit(c parser.ILiteralContext, push bool) (core.Type,
 		if push {
 			p.PushAddress(*addr)
 		}
-		return core.TYPE_MONETARY, addr, nil
+		return core.TypeMonetary, addr, nil
 	default:
 		return 0, nil, InternalError(c)
 	}
@@ -195,27 +195,27 @@ func (p *parseVisitor) VisitSend(c *parser.SendContext) *CompileError {
 			return LogicError(c, err)
 		}
 		assetAddr = *addr
-		accounts, cerr := p.VisitValueAwareSource(c.GetSrc(), func() {
+		accounts, compErr := p.VisitValueAwareSource(c.GetSrc(), func() {
 			p.PushAddress(*addr)
 		}, nil)
-		if cerr != nil {
-			return cerr
+		if compErr != nil {
+			return compErr
 		}
 		neededAccounts = accounts
 	}
 	if mon := c.GetMon(); mon != nil {
-		ty, mon_addr, err := p.VisitExpr(c.GetMon(), false)
+		ty, monAddr, err := p.VisitExpr(c.GetMon(), false)
 		if err != nil {
 			return err
 		}
-		if ty != core.TYPE_MONETARY {
+		if ty != core.TypeMonetary {
 			return LogicError(c, errors.New("wrong type for monetary value"))
 		}
-		assetAddr = *mon_addr
+		assetAddr = *monAddr
 		accounts, err := p.VisitValueAwareSource(c.GetSrc(), func() {
-			p.PushAddress(*mon_addr)
+			p.PushAddress(*monAddr)
 			p.AppendInstruction(program.OP_ASSET)
-		}, mon_addr)
+		}, monAddr)
 		if err != nil {
 			return err
 		}
@@ -284,17 +284,17 @@ func (p *parseVisitor) VisitVars(c *parser.VarListDeclContext) *CompileError {
 		var ty core.Type
 		switch v.GetTy().GetText() {
 		case "account":
-			ty = core.TYPE_ACCOUNT
+			ty = core.TypeAccount
 		case "asset":
-			ty = core.TYPE_ASSET
+			ty = core.TypeAsset
 		case "number":
-			ty = core.TYPE_NUMBER
+			ty = core.TypeNumber
 		case "string":
-			ty = core.TYPE_STRING
+			ty = core.TypeString
 		case "monetary":
-			ty = core.TYPE_MONETARY
+			ty = core.TypeMonetary
 		case "portion":
-			ty = core.TYPE_PORTION
+			ty = core.TypePortion
 		default:
 			return InternalError(c)
 		}
@@ -306,7 +306,7 @@ func (p *parseVisitor) VisitVars(c *parser.VarListDeclContext) *CompileError {
 			if compErr != nil {
 				return compErr
 			}
-			if srcTy != core.TYPE_ACCOUNT {
+			if srcTy != core.TypeAccount {
 				return LogicError(cOrig, errors.New("wrong type: expected account"))
 			}
 			key := strings.Trim(cOrig.GetKey().GetText(), `"`)

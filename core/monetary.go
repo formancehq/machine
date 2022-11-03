@@ -2,10 +2,24 @@ package core
 
 import (
 	"errors"
+	"fmt"
 	"math/big"
 )
 
+type Monetary struct {
+	Asset  Asset       `json:"asset"`
+	Amount MonetaryInt `json:"amount"`
+}
+
+func (Monetary) GetType() Type { return TypeMonetary }
+
+func (m Monetary) String() string {
+	return fmt.Sprintf("[%v %v]", m.Asset, &m.Amount)
+}
+
 type MonetaryInt big.Int
+
+func (MonetaryInt) GetType() Type { return TypeNumber }
 
 func (a *MonetaryInt) Add(b *MonetaryInt) *MonetaryInt {
 	if a == nil {

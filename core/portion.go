@@ -12,7 +12,7 @@ type Portion struct {
 	Specific  *big.Rat
 }
 
-func (Portion) GetType() Type { return TYPE_PORTION }
+func (Portion) GetType() Type { return TypePortion }
 
 func NewPortionRemaining() Portion {
 	return Portion{
@@ -45,10 +45,10 @@ func ParsePortionSpecific(input string) (*Portion, error) {
 	var res *big.Rat
 
 	re := regexp.MustCompile(`^([0-9]+)(?:[.]([0-9]+))?[%]$`)
-	percent_match := re.FindStringSubmatch(input)
-	if len(percent_match) != 0 {
-		integral := percent_match[1]
-		fractional := percent_match[2]
+	percentMatch := re.FindStringSubmatch(input)
+	if len(percentMatch) != 0 {
+		integral := percentMatch[1]
+		fractional := percentMatch[2]
 		rat, ok := new(big.Rat).SetString(integral + "." + fractional)
 		if !ok {
 			return nil, errors.New("invalid format")
@@ -57,10 +57,10 @@ func ParsePortionSpecific(input string) (*Portion, error) {
 		res = rat
 	} else {
 		re = regexp.MustCompile(`^([0-9]+)\s?[/]\s?([0-9]+)$`)
-		fraction_match := re.FindStringSubmatch(input)
-		if len(fraction_match) != 0 {
-			numerator := fraction_match[1]
-			denominator := fraction_match[2]
+		fractionMatch := re.FindStringSubmatch(input)
+		if len(fractionMatch) != 0 {
+			numerator := fractionMatch[1]
+			denominator := fractionMatch[2]
 			rat, ok := new(big.Rat).SetString(numerator + "/" + denominator)
 			if !ok {
 				return nil, errors.New("invalid format")

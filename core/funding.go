@@ -10,7 +10,7 @@ type FundingPart struct {
 	Account Account
 }
 
-func (Funding) GetType() Type { return TYPE_FUNDING }
+func (Funding) GetType() Type { return TypeFunding }
 
 func (lhs FundingPart) Equals(rhs FundingPart) bool {
 	return lhs.Account == rhs.Account && lhs.Amount.Equal(&rhs.Amount)
@@ -21,15 +21,15 @@ type Funding struct {
 	Parts []FundingPart
 }
 
-func (f Funding) Equals(rhs Funding) bool {
-	if f.Asset != rhs.Asset {
+func (lhs Funding) Equals(rhs Funding) bool {
+	if lhs.Asset != rhs.Asset {
 		return false
 	}
-	if len(f.Parts) != len(rhs.Parts) {
+	if len(lhs.Parts) != len(rhs.Parts) {
 		return false
 	}
-	for i := range f.Parts {
-		if !f.Parts[i].Equals(rhs.Parts[i]) {
+	for i := range lhs.Parts {
+		if !lhs.Parts[i].Equals(rhs.Parts[i]) {
 			return false
 		}
 	}
@@ -51,23 +51,23 @@ func (f Funding) Take(amount MonetaryInt) (Funding, Funding, error) {
 	remainder := Funding{
 		Asset: f.Asset,
 	}
-	remaining_to_withdraw := amount
+	remainingToWithdraw := amount
 	i := 0
-	for remaining_to_withdraw.Gt(NewMonetaryInt(0)) && i < len(f.Parts) {
-		amt_to_withdraw := f.Parts[i].Amount
+	for remainingToWithdraw.Gt(NewMonetaryInt(0)) && i < len(f.Parts) {
+		amtToWithdraw := f.Parts[i].Amount
 		// if this part has excess balance, put it in the remainder & only take what's needed
-		if amt_to_withdraw.Gt(&remaining_to_withdraw) {
-			rem := *amt_to_withdraw.Sub(&remaining_to_withdraw)
-			amt_to_withdraw = remaining_to_withdraw
+		if amtToWithdraw.Gt(&remainingToWithdraw) {
+			rem := *amtToWithdraw.Sub(&remainingToWithdraw)
+			amtToWithdraw = remainingToWithdraw
 			remainder.Parts = append(remainder.Parts, FundingPart{
 				Account: f.Parts[i].Account,
 				Amount:  rem,
 			})
 		}
-		remaining_to_withdraw = *remaining_to_withdraw.Sub(&amt_to_withdraw)
+		remainingToWithdraw = *remainingToWithdraw.Sub(&amtToWithdraw)
 		result.Parts = append(result.Parts, FundingPart{
 			Account: f.Parts[i].Account,
-			Amount:  amt_to_withdraw,
+			Amount:  amtToWithdraw,
 		})
 		i++
 	}
@@ -78,7 +78,7 @@ func (f Funding) Take(amount MonetaryInt) (Funding, Funding, error) {
 		})
 		i++
 	}
-	if !remaining_to_withdraw.Eq(NewMonetaryInt(0)) {
+	if !remainingToWithdraw.Eq(NewMonetaryInt(0)) {
 		return Funding{}, Funding{}, errors.New("insufficient funding")
 	}
 	return result, remainder, nil
@@ -91,23 +91,23 @@ func (f Funding) TakeMax(amount MonetaryInt) (Funding, Funding) {
 	remainder := Funding{
 		Asset: f.Asset,
 	}
-	remaining_to_withdraw := amount
+	remainingToWithdraw := amount
 	i := 0
-	for remaining_to_withdraw.Gt(NewMonetaryInt(0)) && i < len(f.Parts) {
-		amt_to_withdraw := f.Parts[i].Amount
+	for remainingToWithdraw.Gt(NewMonetaryInt(0)) && i < len(f.Parts) {
+		amtToWithdraw := f.Parts[i].Amount
 		// if this part has excess balance, put it in the remainder & only take what's needed
-		if amt_to_withdraw.Gt(&remaining_to_withdraw) {
-			rem := *amt_to_withdraw.Sub(&remaining_to_withdraw)
-			amt_to_withdraw = remaining_to_withdraw
+		if amtToWithdraw.Gt(&remainingToWithdraw) {
+			rem := *amtToWithdraw.Sub(&remainingToWithdraw)
+			amtToWithdraw = remainingToWithdraw
 			remainder.Parts = append(remainder.Parts, FundingPart{
 				Account: f.Parts[i].Account,
 				Amount:  rem,
 			})
 		}
-		remaining_to_withdraw = *remaining_to_withdraw.Sub(&amt_to_withdraw)
+		remainingToWithdraw = *remainingToWithdraw.Sub(&amtToWithdraw)
 		result.Parts = append(result.Parts, FundingPart{
 			Account: f.Parts[i].Account,
-			Amount:  amt_to_withdraw,
+			Amount:  amtToWithdraw,
 		})
 		i++
 	}
@@ -147,13 +147,13 @@ func (f Funding) Total() MonetaryInt {
 }
 
 func (f Funding) Reverse() Funding {
-	new_parts := []FundingPart{}
+	newParts := []FundingPart{}
 	for i := len(f.Parts) - 1; i >= 0; i-- {
-		new_parts = append(new_parts, f.Parts[i])
+		newParts = append(newParts, f.Parts[i])
 	}
-	new_funding := Funding{
+	newFunding := Funding{
 		Asset: f.Asset,
-		Parts: new_parts,
+		Parts: newParts,
 	}
-	return new_funding
+	return newFunding
 }

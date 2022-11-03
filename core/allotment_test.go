@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAllocate(t *testing.T) {
@@ -13,17 +14,16 @@ func TestAllocate(t *testing.T) {
 		{Specific: big.NewRat(2, 25)},
 		{Specific: big.NewRat(3, 25)},
 	})
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
+
 	parts := allotment.Allocate(*NewMonetaryInt(15))
-	expected_parts := []MonetaryInt{*NewMonetaryInt(13), *NewMonetaryInt(1), *NewMonetaryInt(1)}
-	if len(parts) != len(expected_parts) {
-		t.Fatalf("unexpected output %v != %v", parts, expected_parts)
+	expectedParts := []MonetaryInt{*NewMonetaryInt(13), *NewMonetaryInt(1), *NewMonetaryInt(1)}
+	if len(parts) != len(expectedParts) {
+		t.Fatalf("unexpected output %v != %v", parts, expectedParts)
 	}
 	for i := range parts {
-		if !parts[i].Equal(&expected_parts[i]) {
-			t.Fatalf("unexpected output %v != %v", parts, expected_parts)
+		if !parts[i].Equal(&expectedParts[i]) {
+			t.Fatalf("unexpected output %v != %v", parts, expectedParts)
 		}
 	}
 }

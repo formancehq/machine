@@ -59,31 +59,28 @@ func (c *TestCase) compile(t *testing.T, code string) {
 }
 
 func (c *TestCase) setVarsFromJSON(t *testing.T, str string) {
-	var jvars map[string]json.RawMessage
-	err := json.Unmarshal([]byte(str), &jvars)
+	var jsonVars map[string]json.RawMessage
+	err := json.Unmarshal([]byte(str), &jsonVars)
 	if err != nil {
 		t.Fatalf("unmarshal error: %v", err)
 	}
-	v, err := c.program.ParseVariablesJSON(jvars)
+	v, err := c.program.ParseVariablesJSON(jsonVars)
 	if err != nil {
 		t.Fatalf("parse variables error: %v", err)
 	}
 	c.vars = v
 }
 
-func (c *TestCase) setBalance(t *testing.T, account, asset string, amount int64) {
+func (c *TestCase) setBalance(account, asset string, amount int64) {
 	if _, ok := c.balances[account]; !ok {
 		c.balances[account] = make(map[string]core.MonetaryInt)
 	}
 	c.balances[account][asset] = *core.NewMonetaryInt(amount)
 }
 
-func test(
-	t *testing.T,
-	test_case TestCase,
-) {
-	testimpl(t, test_case.program, test_case.expected, func(m *Machine) (byte, error) {
-		err := m.SetVars(test_case.vars)
+func test(t *testing.T, testCase TestCase) {
+	testImpl(t, testCase.program, testCase.expected, func(m *Machine) (byte, error) {
+		err := m.SetVars(testCase.vars)
 		if err != nil {
 			return 0, err
 		}
@@ -93,7 +90,7 @@ func test(
 				return 0, err
 			}
 			for req := range ch {
-				val := test_case.meta[req.Account][req.Key]
+				val := testCase.meta[req.Account][req.Key]
 				if req.Error != nil {
 					panic(req.Error)
 				}
@@ -106,7 +103,7 @@ func test(
 				return 0, err
 			}
 			for req := range ch {
-				val := test_case.balances[req.Account][req.Asset]
+				val := testCase.balances[req.Account][req.Asset]
 				if req.Error != nil {
 					panic(req.Error)
 				}
@@ -117,7 +114,7 @@ func test(
 	})
 }
 
-func testimpl(t *testing.T, prog *program.Program, expected CaseResult, exec func(*Machine) (byte, error)) {
+func testImpl(t *testing.T, prog *program.Program, expected CaseResult, exec func(*Machine) (byte, error)) {
 	printed := []core.Value{}
 
 	var wg sync.WaitGroup
@@ -190,7 +187,7 @@ func TestPrint(t *testing.T) {
 	tc := NewTestCase()
 	tc.compile(t, "print 29 + 15 - 2")
 	tc.expected = CaseResult{
-		Printed:  []core.Value{core.Number(*big.NewInt(42))},
+		Printed:  []core.Value{core.MonetaryInt(*big.NewInt(42))},
 		Postings: []Posting{},
 		ExitCode: EXIT_OK,
 	}
@@ -203,7 +200,7 @@ func TestSend(t *testing.T) {
 		source=@alice
 		destination=@bob
 	)`)
-	tc.setBalance(t, "alice", "EUR/2", 100)
+	tc.setBalance("alice", "EUR/2", 100)
 	tc.expected = CaseResult{
 		Printed: []core.Value{},
 		Postings: []Posting{
@@ -233,7 +230,7 @@ func TestVariables(t *testing.T) {
 		"rider":  core.Account("users:001"),
 		"driver": core.Account("users:002"),
 	}
-	tc.setBalance(t, "users:001", "EUR/2", 1000)
+	tc.setBalance("users:001", "EUR/2", 1000)
 	tc.expected = CaseResult{
 		Printed: []core.Value{},
 		Postings: []Posting{
@@ -265,7 +262,7 @@ func TestVariablesJSON(t *testing.T) {
 		"driver": "users:002",
 		"description": "midnight ride"
 	}`)
-	tc.setBalance(t, "users:001", "EUR/2", 1000)
+	tc.setBalance("users:001", "EUR/2", 1000)
 	tc.expected = CaseResult{
 		Printed: []core.Value{},
 		Postings: []Posting{
@@ -303,8 +300,8 @@ func TestSource(t *testing.T) {
 		"payment": "payments:001",
 		"seller": "users:002"
 	}`)
-	tc.setBalance(t, "users:001", "GEM", 3)
-	tc.setBalance(t, "payments:001", "GEM", 12)
+	tc.setBalance("users:001", "GEM", 3)
+	tc.setBalance("payments:001", "GEM", 12)
 	tc.expected = CaseResult{
 		Printed: []core.Value{},
 		Postings: []Posting{
@@ -344,7 +341,7 @@ func TestAllocation(t *testing.T) {
 		"rider": "users:001",
 		"driver": "users:002"
 	}`)
-	tc.setBalance(t, "users:001", "GEM", 15)
+	tc.setBalance("users:001", "GEM", 15)
 	tc.expected = CaseResult{
 		Printed: []core.Value{},
 		Postings: []Posting{
@@ -388,7 +385,7 @@ func TestDynamicAllocation(t *testing.T) {
 	tc.setVarsFromJSON(t, `{
 		"p": "15%"
 	}`)
-	tc.setBalance(t, "a", "GEM", 15)
+	tc.setBalance("a", "GEM", 15)
 	tc.expected = CaseResult{
 		Printed: []core.Value{},
 		Postings: []Posting{
@@ -416,7 +413,7 @@ func TestSendAll(t *testing.T) {
 		source = @users:001
 		destination = @platform
 	)`)
-	tc.setBalance(t, "users:001", "USD/2", 17)
+	tc.setBalance("users:001", "USD/2", 17)
 	tc.expected = CaseResult{
 		Printed: []core.Value{},
 		Postings: []Posting{
@@ -442,8 +439,8 @@ func TestSendAllMulti(t *testing.T) {
 		destination = @platform
 	)
 	`)
-	tc.setBalance(t, "users:001:wallet", "USD/2", 19)
-	tc.setBalance(t, "users:001:credit", "USD/2", 22)
+	tc.setBalance("users:001:wallet", "USD/2", 19)
+	tc.setBalance("users:001:credit", "USD/2", 22)
 	tc.expected = CaseResult{
 		Printed: []core.Value{},
 		Postings: []Posting{
@@ -484,8 +481,8 @@ func TestInsufficientFunds(t *testing.T) {
 		"payment": "payments:001",
 		"seller": "users:002"
 	}`)
-	tc.setBalance(t, "users:001", "GEM", 3)
-	tc.setBalance(t, "payments:001", "GEM", 12)
+	tc.setBalance("users:001", "GEM", 3)
+	tc.setBalance("payments:001", "GEM", 12)
 	tc.expected = CaseResult{
 		Printed:  []core.Value{},
 		Postings: []Posting{},
@@ -503,7 +500,7 @@ func TestWorldSource(t *testing.T) {
 		}
 		destination = @b
 	)`)
-	tc.setBalance(t, "a", "GEM", 1)
+	tc.setBalance("a", "GEM", 1)
 	tc.expected = CaseResult{
 		Printed: []core.Value{},
 		Postings: []Posting{
@@ -555,7 +552,7 @@ func TestNoEmptyPostings2(t *testing.T) {
 		source = @foo
 		destination = @bar
 	)`)
-	tc.setBalance(t, "foo", "GEM", 0)
+	tc.setBalance("foo", "GEM", 0)
 	tc.expected = CaseResult{
 		Printed:  []core.Value{},
 		Postings: []Posting{},
@@ -576,8 +573,8 @@ func TestAllocateDontTakeTooMuch(t *testing.T) {
 			1/2 to @bar
 		}
 	)`)
-	tc.setBalance(t, "users:001", "CREDIT", 100)
-	tc.setBalance(t, "users:002", "CREDIT", 110)
+	tc.setBalance("users:001", "CREDIT", 100)
+	tc.setBalance("users:002", "CREDIT", 110)
 	tc.expected = CaseResult{
 		Printed: []core.Value{},
 		Postings: []Posting{
@@ -625,8 +622,8 @@ func TestMetadata(t *testing.T) {
 			"commission": *commission,
 		},
 	}
-	tc.setBalance(t, "sales:042", "EUR/2", 2500)
-	tc.setBalance(t, "users:053", "EUR/2", 500)
+	tc.setBalance("sales:042", "EUR/2", 2500)
+	tc.setBalance("users:053", "EUR/2", 500)
 	tc.expected = CaseResult{
 		Printed: []core.Value{},
 		Postings: []Posting{
@@ -659,7 +656,7 @@ func TestTrackBalances(t *testing.T) {
 		source = @a
 		destination = @b
 	)`)
-	tc.setBalance(t, "a", "COIN", 50)
+	tc.setBalance("a", "COIN", 50)
 	tc.expected = CaseResult{
 		Printed: []core.Value{},
 		Postings: []Posting{
@@ -692,7 +689,7 @@ func TestTrackBalances2(t *testing.T) {
 		source = @a
 		destination = @z
 	)`)
-	tc.setBalance(t, "a", "COIN", 60)
+	tc.setBalance("a", "COIN", 60)
 	tc.expected = CaseResult{
 		Printed:  []core.Value{},
 		Postings: []Posting{},
@@ -714,7 +711,7 @@ func TestTrackBalances3(t *testing.T) {
 		source = @foo
 		destination = @bar
 	)`)
-	tc.setBalance(t, "foo", "COIN", 2000)
+	tc.setBalance("foo", "COIN", 2000)
 	tc.expected = CaseResult{
 		Printed: []core.Value{},
 		Postings: []Posting{
@@ -746,9 +743,9 @@ func TestSourceAllotment(t *testing.T) {
 		}
 		destination = @d
 	)`)
-	tc.setBalance(t, "a", "COIN", 100)
-	tc.setBalance(t, "b", "COIN", 100)
-	tc.setBalance(t, "c", "COIN", 100)
+	tc.setBalance("a", "COIN", 100)
+	tc.setBalance("b", "COIN", 100)
+	tc.setBalance("c", "COIN", 100)
 	tc.expected = CaseResult{
 		Printed: []core.Value{},
 		Postings: []Posting{
@@ -789,8 +786,8 @@ func TestSourceOverlapping(t *testing.T) {
 		}
 		destination = @world
 	)`)
-	tc.setBalance(t, "a", "COIN", 99)
-	tc.setBalance(t, "b", "COIN", 3)
+	tc.setBalance("a", "COIN", 99)
+	tc.setBalance("b", "COIN", 3)
 	tc.expected = CaseResult{
 		Printed: []core.Value{},
 		Postings: []Posting{
@@ -834,10 +831,10 @@ func TestSourceComplex(t *testing.T) {
 			"amount": 120
 		}
 	}`)
-	tc.setBalance(t, "a", "COIN", 1000)
-	tc.setBalance(t, "b", "COIN", 40)
-	tc.setBalance(t, "c", "COIN", 1000)
-	tc.setBalance(t, "d", "COIN", 1000)
+	tc.setBalance("a", "COIN", 1000)
+	tc.setBalance("b", "COIN", 40)
+	tc.setBalance("c", "COIN", 1000)
+	tc.setBalance("d", "COIN", 1000)
 	tc.expected = CaseResult{
 		Printed: []core.Value{},
 		Postings: []Posting{
@@ -1012,7 +1009,7 @@ func TestSetTxMeta(t *testing.T) {
 		t.Fatalf("did not expect error on Execute, got: %v", err)
 	}
 
-	expected_meta := map[string]json.RawMessage{
+	expectedMeta := map[string]json.RawMessage{
 		"aaa": json.RawMessage(`{"type":"account","value":"platform"}`),
 		"bbb": json.RawMessage(`{"type":"asset","value":"GEM"}`),
 		"ccc": json.RawMessage(`{"type":"number","value":45}`),
@@ -1029,7 +1026,7 @@ func TestSetTxMeta(t *testing.T) {
 	}
 
 	for k, v := range meta {
-		if expected, ok := expected_meta[k]; ok {
+		if expected, ok := expectedMeta[k]; ok {
 			if rm, ok := v.(json.RawMessage); ok {
 				if string(rm) != string(expected) {
 					fmt.Printf("%v\n", string(rm))

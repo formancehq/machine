@@ -54,13 +54,13 @@ type Posting struct {
 type Metadata map[string]any
 
 func NewMachine(p program.Program) *Machine {
-	printc := make(chan core.Value)
+	printChan := make(chan core.Value)
 
 	m := Machine{
 		Program:             p,
 		UnresolvedResources: p.Resources,
 		Resources:           make([]core.Value, 0),
-		printChan:           printc,
+		printChan:           printChan,
 		Printer:             StdOutPrinter,
 		Postings:            make([]Posting, 0),
 		TxMeta:              map[string]core.Value{},
@@ -97,12 +97,12 @@ func (m *Machine) getResource(addr core.Address) (*core.Value, bool) {
 }
 
 func (m *Machine) withdrawAll(account core.Account, asset core.Asset, overdraft core.MonetaryInt) (*core.Funding, error) {
-	if accBalance, ok := m.Balances[account]; ok {
-		if balance, ok := accBalance[asset]; ok {
+	if accBalances, ok := m.Balances[account]; ok {
+		if balance, ok := accBalances[asset]; ok {
 			amountTaken := *core.NewMonetaryInt(0)
 			if balance.Add(&overdraft).Gt(core.NewMonetaryInt(0)) {
 				amountTaken = *balance.Add(&overdraft)
-				accBalance[asset] = *overdraft.Neg()
+				accBalances[asset] = *overdraft.Neg()
 			}
 
 			return &core.Funding{
@@ -189,7 +189,7 @@ func (m *Machine) tick() (bool, byte) {
 		m.Stack = append(m.Stack, v)
 	case program.OP_DELETE:
 		n := m.popValue()
-		if n.GetType() == core.TYPE_FUNDING {
+		if n.GetType() == core.TypeFunding {
 			return true, EXIT_FAIL_INVALID
 		}
 	case program.OP_IADD:
@@ -224,7 +224,7 @@ func (m *Machine) tick() (bool, byte) {
 		asset := m.popAsset()
 		m.pushValue(core.Monetary{
 			Asset:  asset,
-			Amount: core.MonetaryInt(amount),
+			Amount: amount,
 		})
 
 	case program.OP_MONETARY_ADD:
@@ -531,7 +531,7 @@ func (m *Machine) ResolveResources() (chan MetadataRequest, error) {
 					}
 					return
 				}
-				if (*sourceAccount).GetType() != core.TYPE_ACCOUNT {
+				if (*sourceAccount).GetType() != core.TypeAccount {
 					ch <- MetadataRequest{
 						Error: fmt.Errorf("tried to request metadata on wrong entity: %v instead of ACCOUNT", (*sourceAccount).GetType()),
 					}

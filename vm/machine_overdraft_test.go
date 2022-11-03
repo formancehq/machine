@@ -12,7 +12,7 @@ func TestOverdraftNotEnough(t *testing.T) {
 		source = @foo allowing overdraft up to [GEM 10]
 		destination = @world
 	)`)
-	tc.setBalance(t, "foo", "GEM", 89)
+	tc.setBalance("foo", "GEM", 89)
 	tc.expected = CaseResult{
 		Printed:  []core.Value{},
 		Postings: []Posting{},
@@ -27,7 +27,7 @@ func TestOverdraftEnough(t *testing.T) {
 			source = @foo allowing overdraft up to [GEM 10]
 			destination = @world
 		)`)
-	tc.setBalance(t, "foo", "GEM", 90)
+	tc.setBalance("foo", "GEM", 90)
 	tc.expected = CaseResult{
 		Printed: []core.Value{},
 		Postings: []Posting{
@@ -49,7 +49,7 @@ func TestOverdraftUnbounded(t *testing.T) {
 			source = @foo allowing unbounded overdraft
 			destination = @world
 		)`)
-	tc.setBalance(t, "foo", "GEM", 90)
+	tc.setBalance("foo", "GEM", 90)
 	tc.expected = CaseResult{
 		Printed: []core.Value{},
 		Postings: []Posting{
@@ -77,9 +77,9 @@ func TestOverdraftSourceAllotmentSuccess(t *testing.T) {
 			}
 			destination = @world
 		)`)
-	tc.setBalance(t, "foo", "GEM", 40)
-	tc.setBalance(t, "bar", "GEM", 20)
-	tc.setBalance(t, "baz", "GEM", 0)
+	tc.setBalance("foo", "GEM", 40)
+	tc.setBalance("bar", "GEM", 20)
+	tc.setBalance("baz", "GEM", 0)
 	tc.expected = CaseResult{
 		Printed: []core.Value{},
 		Postings: []Posting{
@@ -120,10 +120,10 @@ func TestOverdraftSourceInOrderSuccess(t *testing.T) {
 			}
 			destination = @world
 		)`)
-	tc.setBalance(t, "foo", "GEM", 0)
-	tc.setBalance(t, "bar", "GEM", 0)
-	tc.setBalance(t, "baz", "GEM", 0)
-	tc.setBalance(t, "qux", "GEM", 0)
+	tc.setBalance("foo", "GEM", 0)
+	tc.setBalance("bar", "GEM", 0)
+	tc.setBalance("baz", "GEM", 0)
+	tc.setBalance("qux", "GEM", 0)
 	tc.expected = CaseResult{
 		Printed: []core.Value{},
 		Postings: []Posting{
@@ -172,7 +172,7 @@ func TestOverdraftBalanceTracking(t *testing.T) {
 		destination = @world
 	)
 	`)
-	tc.setBalance(t, "foo", "GEM", 0)
+	tc.setBalance("foo", "GEM", 0)
 	tc.expected = CaseResult{
 		Printed: []core.Value{},
 		Postings: []Posting{
@@ -244,9 +244,9 @@ func TestOverdraftComplexFailure(t *testing.T) {
 			}
 			destination = @world
 		)`)
-	tc.setBalance(t, "foo", "GEM", 40)
-	tc.setBalance(t, "bar", "GEM", 20)
-	tc.setBalance(t, "baz", "GEM", 0)
+	tc.setBalance("foo", "GEM", 40)
+	tc.setBalance("bar", "GEM", 20)
+	tc.setBalance("baz", "GEM", 0)
 	tc.expected = CaseResult{
 		Printed:  []core.Value{},
 		Postings: []Posting{},
@@ -261,7 +261,7 @@ func TestNegativeBalance(t *testing.T) {
 			source = @foo
 			destination = @world
 		)`)
-	tc.setBalance(t, "foo", "GEM", -50)
+	tc.setBalance("foo", "GEM", -50)
 	tc.expected = CaseResult{
 		Printed:  []core.Value{},
 		Postings: []Posting{},

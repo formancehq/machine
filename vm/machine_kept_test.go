@@ -19,7 +19,7 @@ func TestKeptDestinationAllotment(t *testing.T) {
 			25% to @y
 		}
 	)`)
-	tc.setBalance(t, "a", "GEM", 1)
+	tc.setBalance("a", "GEM", 1)
 	tc.expected = CaseResult{
 		Printed: []core.Value{},
 		Postings: []Posting{
@@ -69,9 +69,9 @@ func TestKeptComplex(t *testing.T) {
 				remaining to @quz
 			}
 		)`)
-	tc.setBalance(t, "foo", "GEM", 20)
-	tc.setBalance(t, "bar", "GEM", 40)
-	tc.setBalance(t, "baz", "GEM", 40)
+	tc.setBalance("foo", "GEM", 20)
+	tc.setBalance("bar", "GEM", 40)
+	tc.setBalance("baz", "GEM", 40)
 	tc.expected = CaseResult{
 		Printed: []core.Value{},
 		Postings: []Posting{

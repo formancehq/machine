@@ -8,34 +8,34 @@ import (
 type Type byte
 
 const (
-	TYPE_ACCOUNT   = Type(iota + 1) // address of an account
-	TYPE_ASSET                      // name of an asset
-	TYPE_NUMBER                     // 64bit unsigned integer
-	TYPE_STRING                     // string
-	TYPE_MONETARY                   // [asset number]
-	TYPE_PORTION                    // rational number between 0 and 1 both exclusive
-	TYPE_ALLOTMENT                  // list of portions
-	TYPE_AMOUNT                     // either ALL or a SPECIFIC number
-	TYPE_FUNDING                    // (asset, []{amount, account})
+	TypeAccount   = Type(iota + 1) // address of an account
+	TypeAsset                      // name of an asset
+	TypeNumber                     // 64bit unsigned integer
+	TypeString                     // string
+	TypeMonetary                   // [asset number]
+	TypePortion                    // rational number between 0 and 1 both exclusive
+	TypeAllotment                  // list of portions
+	TypeAmount                     // either ALL or a SPECIFIC number
+	TypeFunding                    // (asset, []{amount, account})
 )
 
 func (t Type) String() string {
 	switch t {
-	case TYPE_ACCOUNT:
+	case TypeAccount:
 		return "account"
-	case TYPE_ASSET:
+	case TypeAsset:
 		return "asset"
-	case TYPE_NUMBER:
+	case TypeNumber:
 		return "number"
-	case TYPE_STRING:
+	case TypeString:
 		return "string"
-	case TYPE_MONETARY:
+	case TypeMonetary:
 		return "monetary"
-	case TYPE_PORTION:
+	case TypePortion:
 		return "portion"
-	case TYPE_ALLOTMENT:
+	case TypeAllotment:
 		return "allotment"
-	case TYPE_AMOUNT:
+	case TypeAmount:
 		return "amount"
 	default:
 		return "invalid type"
@@ -48,34 +48,23 @@ type Value interface {
 
 type Account string
 
-func (Account) GetType() Type { return TYPE_ACCOUNT }
+func (Account) GetType() Type { return TypeAccount }
 func (a Account) String() string {
 	return fmt.Sprintf("@%v", string(a))
 }
 
 type Asset string
 
-func (Asset) GetType() Type { return TYPE_ASSET }
+func (Asset) GetType() Type { return TypeAsset }
 func (a Asset) String() string {
 	return fmt.Sprintf("%v", string(a))
 }
 
 type String string
 
-func (String) GetType() Type { return TYPE_STRING }
+func (String) GetType() Type { return TypeString }
 func (s String) String() string {
 	return fmt.Sprintf("\"%v\"", string(s))
-}
-
-type Monetary struct {
-	Asset  Asset       `json:"asset"`
-	Amount MonetaryInt `json:"amount"`
-}
-
-func (Monetary) GetType() Type { return TYPE_MONETARY }
-
-func (m Monetary) String() string {
-	return fmt.Sprintf("[%v %v]", m.Asset, &m.Amount)
 }
 
 type HasAsset interface {
@@ -90,8 +79,8 @@ func ValueEquals(lhs, rhs Value) bool {
 	if reflect.TypeOf(lhs) != reflect.TypeOf(rhs) {
 		return false
 	}
-	if lhsn, ok := lhs.(Number); ok {
-		rhsn := rhs.(Number)
+	if lhsn, ok := lhs.(MonetaryInt); ok {
+		rhsn := rhs.(MonetaryInt)
 		return lhsn.Equal(&rhsn)
 	} else if lhsm, ok := lhs.(Monetary); ok {
 		rhsm := rhs.(Monetary)

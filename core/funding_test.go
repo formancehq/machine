@@ -6,18 +6,18 @@ import (
 
 func TestFundingTake(t *testing.T) {
 	f := Funding{
-		Asset: Asset("COIN"),
+		Asset: "COIN",
 		Parts: []FundingPart{
 			{
-				Account: Account("aaa"),
+				Account: "aaa",
 				Amount:  *NewMonetaryInt(70),
 			},
 			{
-				Account: Account("bbb"),
+				Account: "bbb",
 				Amount:  *NewMonetaryInt(30),
 			},
 			{
-				Account: Account("ccc"),
+				Account: "ccc",
 				Amount:  *NewMonetaryInt(50),
 			},
 		},
@@ -26,56 +26,56 @@ func TestFundingTake(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	expected_result := Funding{
-		Asset: Asset("COIN"),
+	expectedResult := Funding{
+		Asset: "COIN",
 		Parts: []FundingPart{
 			{
-				Account: Account("aaa"),
+				Account: "aaa",
 				Amount:  *NewMonetaryInt(70),
 			},
 			{
-				Account: Account("bbb"),
+				Account: "bbb",
 				Amount:  *NewMonetaryInt(10),
 			},
 		},
 	}
-	if !ValueEquals(result, expected_result) {
+	if !ValueEquals(result, expectedResult) {
 		t.Fatalf("unexpected result: %v", result)
 	}
-	expected_remainder := Funding{
-		Asset: Asset("COIN"),
+	expectedRemainder := Funding{
+		Asset: "COIN",
 		Parts: []FundingPart{
 			{
-				Account: Account("bbb"),
+				Account: "bbb",
 				Amount:  *NewMonetaryInt(20),
 			},
 			{
-				Account: Account("ccc"),
+				Account: "ccc",
 				Amount:  *NewMonetaryInt(50),
 			},
 		},
 	}
-	if !ValueEquals(remainder, expected_remainder) {
+	if !ValueEquals(remainder, expectedRemainder) {
 		t.Fatalf("unexpected remainder: %v", remainder)
 	}
 }
 
 func TestFundingTakeMaxUnder(t *testing.T) {
 	f := Funding{
-		Asset: Asset("COIN"),
+		Asset: "COIN",
 		Parts: []FundingPart{
 			{
-				Account: Account("aaa"),
+				Account: "aaa",
 				Amount:  *NewMonetaryInt(30),
 			},
 		},
 	}
 	result, remainder := f.TakeMax(*NewMonetaryInt(80))
 	if !ValueEquals(result, Funding{
-		Asset: Asset("COIN"),
+		Asset: "COIN",
 		Parts: []FundingPart{
 			{
-				Account: Account("aaa"),
+				Account: "aaa",
 				Amount:  *NewMonetaryInt(30),
 			},
 		},
@@ -83,7 +83,7 @@ func TestFundingTakeMaxUnder(t *testing.T) {
 		t.Fatalf("unexpected result: %v", result)
 	}
 	if !ValueEquals(remainder, Funding{
-		Asset: Asset("COIN"),
+		Asset: "COIN",
 	}) {
 		t.Fatalf("unexpected remainder: %v", remainder)
 	}
@@ -91,20 +91,20 @@ func TestFundingTakeMaxUnder(t *testing.T) {
 
 func TestFundingTakeMaxAbove(t *testing.T) {
 	f := Funding{
-		Asset: Asset("COIN"),
+		Asset: "COIN",
 		Parts: []FundingPart{
 			{
-				Account: Account("aaa"),
+				Account: "aaa",
 				Amount:  *NewMonetaryInt(90),
 			},
 		},
 	}
 	result, remainder := f.TakeMax(*NewMonetaryInt(80))
 	if !ValueEquals(result, Funding{
-		Asset: Asset("COIN"),
+		Asset: "COIN",
 		Parts: []FundingPart{
 			{
-				Account: Account("aaa"),
+				Account: "aaa",
 				Amount:  *NewMonetaryInt(80),
 			},
 		},
@@ -112,10 +112,10 @@ func TestFundingTakeMaxAbove(t *testing.T) {
 		t.Fatalf("unexpected result: %v", result)
 	}
 	if !ValueEquals(remainder, Funding{
-		Asset: Asset("COIN"),
+		Asset: "COIN",
 		Parts: []FundingPart{
 			{
-				Account: Account("aaa"),
+				Account: "aaa",
 				Amount:  *NewMonetaryInt(10),
 			},
 		},
@@ -126,36 +126,36 @@ func TestFundingTakeMaxAbove(t *testing.T) {
 
 func TestFundingReversal(t *testing.T) {
 	f := Funding{
-		Asset: Asset("COIN"),
+		Asset: "COIN",
 		Parts: []FundingPart{
 			{
-				Account: Account("aaa"),
+				Account: "aaa",
 				Amount:  *NewMonetaryInt(10),
 			},
 			{
-				Account: Account("bbb"),
+				Account: "bbb",
 				Amount:  *NewMonetaryInt(20),
 			},
 			{
-				Account: Account("ccc"),
+				Account: "ccc",
 				Amount:  *NewMonetaryInt(30),
 			},
 		},
 	}
 	rev := f.Reverse()
 	if !ValueEquals(rev, Funding{
-		Asset: Asset("COIN"),
+		Asset: "COIN",
 		Parts: []FundingPart{
 			{
-				Account: Account("ccc"),
+				Account: "ccc",
 				Amount:  *NewMonetaryInt(30),
 			},
 			{
-				Account: Account("bbb"),
+				Account: "bbb",
 				Amount:  *NewMonetaryInt(20),
 			},
 			{
-				Account: Account("aaa"),
+				Account: "aaa",
 				Amount:  *NewMonetaryInt(10),
 			},
 		},
