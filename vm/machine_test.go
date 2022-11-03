@@ -11,7 +11,6 @@ import (
 	"github.com/formancehq/machine/core"
 	"github.com/formancehq/machine/script/compiler"
 	"github.com/formancehq/machine/vm/program"
-	ledger "github.com/numary/ledger/pkg/core"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -21,7 +20,7 @@ const (
 
 type CaseResult struct {
 	Printed  []core.Value
-	Postings []ledger.Posting
+	Postings []Posting
 	Metadata map[string]core.Value
 	ExitCode byte
 	Error    string
@@ -31,7 +30,7 @@ type TestCase struct {
 	program  *program.Program
 	vars     map[string]core.Value
 	meta     map[string]map[string]core.Value
-	balances map[string]map[string]ledger.MonetaryInt
+	balances map[string]map[string]core.MonetaryInt
 	expected CaseResult
 }
 
@@ -39,10 +38,10 @@ func NewTestCase() TestCase {
 	return TestCase{
 		vars:     make(map[string]core.Value),
 		meta:     make(map[string]map[string]core.Value),
-		balances: make(map[string]map[string]ledger.MonetaryInt),
+		balances: make(map[string]map[string]core.MonetaryInt),
 		expected: CaseResult{
 			Printed:  []core.Value{},
-			Postings: []ledger.Posting{},
+			Postings: []Posting{},
 			Metadata: make(map[string]core.Value),
 			ExitCode: EXIT_OK,
 			Error:    "",
@@ -74,9 +73,9 @@ func (c *TestCase) setVarsFromJSON(t *testing.T, str string) {
 
 func (c *TestCase) setBalance(t *testing.T, account, asset string, amount int64) {
 	if _, ok := c.balances[account]; !ok {
-		c.balances[account] = make(map[string]ledger.MonetaryInt)
+		c.balances[account] = make(map[string]core.MonetaryInt)
 	}
-	c.balances[account][asset] = *ledger.NewMonetaryInt(amount)
+	c.balances[account][asset] = *core.NewMonetaryInt(amount)
 }
 
 func test(
@@ -162,7 +161,7 @@ func testimpl(t *testing.T, prog *program.Program, expected CaseResult, exec fun
 	}
 
 	if expected.Postings == nil {
-		expected.Postings = make([]ledger.Posting, 0)
+		expected.Postings = make([]Posting, 0)
 	}
 	if expected.Metadata == nil {
 		expected.Metadata = make(map[string]core.Value)
@@ -181,7 +180,7 @@ func TestFail(t *testing.T) {
 	tc.compile(t, "fail")
 	tc.expected = CaseResult{
 		Printed:  []core.Value{},
-		Postings: []ledger.Posting{},
+		Postings: []Posting{},
 		ExitCode: EXIT_FAIL,
 	}
 	test(t, tc)
@@ -192,7 +191,7 @@ func TestPrint(t *testing.T) {
 	tc.compile(t, "print 29 + 15 - 2")
 	tc.expected = CaseResult{
 		Printed:  []core.Value{core.Number(*big.NewInt(42))},
-		Postings: []ledger.Posting{},
+		Postings: []Posting{},
 		ExitCode: EXIT_OK,
 	}
 	test(t, tc)
@@ -207,10 +206,10 @@ func TestSend(t *testing.T) {
 	tc.setBalance(t, "alice", "EUR/2", 100)
 	tc.expected = CaseResult{
 		Printed: []core.Value{},
-		Postings: []ledger.Posting{
+		Postings: []Posting{
 			{
 				Asset:       "EUR/2",
-				Amount:      ledger.NewMonetaryInt(100),
+				Amount:      core.NewMonetaryInt(100),
 				Source:      "alice",
 				Destination: "bob",
 			},
@@ -237,10 +236,10 @@ func TestVariables(t *testing.T) {
 	tc.setBalance(t, "users:001", "EUR/2", 1000)
 	tc.expected = CaseResult{
 		Printed: []core.Value{},
-		Postings: []ledger.Posting{
+		Postings: []Posting{
 			{
 				Asset:       "EUR/2",
-				Amount:      ledger.NewMonetaryInt(999),
+				Amount:      core.NewMonetaryInt(999),
 				Source:      "users:001",
 				Destination: "users:002",
 			},
@@ -269,10 +268,10 @@ func TestVariablesJSON(t *testing.T) {
 	tc.setBalance(t, "users:001", "EUR/2", 1000)
 	tc.expected = CaseResult{
 		Printed: []core.Value{},
-		Postings: []ledger.Posting{
+		Postings: []Posting{
 			{
 				Asset:       "EUR/2",
-				Amount:      ledger.NewMonetaryInt(999),
+				Amount:      core.NewMonetaryInt(999),
 				Source:      "users:001",
 				Destination: "users:002",
 			},
@@ -308,16 +307,16 @@ func TestSource(t *testing.T) {
 	tc.setBalance(t, "payments:001", "GEM", 12)
 	tc.expected = CaseResult{
 		Printed: []core.Value{},
-		Postings: []ledger.Posting{
+		Postings: []Posting{
 			{
 				Asset:       "GEM",
-				Amount:      ledger.NewMonetaryInt(3),
+				Amount:      core.NewMonetaryInt(3),
 				Source:      "users:001",
 				Destination: "users:002",
 			},
 			{
 				Asset:       "GEM",
-				Amount:      ledger.NewMonetaryInt(12),
+				Amount:      core.NewMonetaryInt(12),
 				Source:      "payments:001",
 				Destination: "users:002",
 			},
@@ -348,22 +347,22 @@ func TestAllocation(t *testing.T) {
 	tc.setBalance(t, "users:001", "GEM", 15)
 	tc.expected = CaseResult{
 		Printed: []core.Value{},
-		Postings: []ledger.Posting{
+		Postings: []Posting{
 			{
 				Asset:       "GEM",
-				Amount:      ledger.NewMonetaryInt(13),
+				Amount:      core.NewMonetaryInt(13),
 				Source:      "users:001",
 				Destination: "users:002",
 			},
 			{
 				Asset:       "GEM",
-				Amount:      ledger.NewMonetaryInt(1),
+				Amount:      core.NewMonetaryInt(1),
 				Source:      "users:001",
 				Destination: "a",
 			},
 			{
 				Asset:       "GEM",
-				Amount:      ledger.NewMonetaryInt(1),
+				Amount:      core.NewMonetaryInt(1),
 				Source:      "users:001",
 				Destination: "b",
 			},
@@ -392,16 +391,16 @@ func TestDynamicAllocation(t *testing.T) {
 	tc.setBalance(t, "a", "GEM", 15)
 	tc.expected = CaseResult{
 		Printed: []core.Value{},
-		Postings: []ledger.Posting{
+		Postings: []Posting{
 			{
 				Asset:       "GEM",
-				Amount:      ledger.NewMonetaryInt(13),
+				Amount:      core.NewMonetaryInt(13),
 				Source:      "a",
 				Destination: "b",
 			},
 			{
 				Asset:       "GEM",
-				Amount:      ledger.NewMonetaryInt(2),
+				Amount:      core.NewMonetaryInt(2),
 				Source:      "a",
 				Destination: "c",
 			},
@@ -420,10 +419,10 @@ func TestSendAll(t *testing.T) {
 	tc.setBalance(t, "users:001", "USD/2", 17)
 	tc.expected = CaseResult{
 		Printed: []core.Value{},
-		Postings: []ledger.Posting{
+		Postings: []Posting{
 			{
 				Asset:       "USD/2",
-				Amount:      ledger.NewMonetaryInt(17),
+				Amount:      core.NewMonetaryInt(17),
 				Source:      "users:001",
 				Destination: "platform",
 			},
@@ -447,16 +446,16 @@ func TestSendAllMulti(t *testing.T) {
 	tc.setBalance(t, "users:001:credit", "USD/2", 22)
 	tc.expected = CaseResult{
 		Printed: []core.Value{},
-		Postings: []ledger.Posting{
+		Postings: []Posting{
 			{
 				Asset:       "USD/2",
-				Amount:      ledger.NewMonetaryInt(19),
+				Amount:      core.NewMonetaryInt(19),
 				Source:      "users:001:wallet",
 				Destination: "platform",
 			},
 			{
 				Asset:       "USD/2",
-				Amount:      ledger.NewMonetaryInt(22),
+				Amount:      core.NewMonetaryInt(22),
 				Source:      "users:001:credit",
 				Destination: "platform",
 			},
@@ -489,7 +488,7 @@ func TestInsufficientFunds(t *testing.T) {
 	tc.setBalance(t, "payments:001", "GEM", 12)
 	tc.expected = CaseResult{
 		Printed:  []core.Value{},
-		Postings: []ledger.Posting{},
+		Postings: []Posting{},
 		ExitCode: EXIT_FAIL_INSUFFICIENT_FUNDS,
 	}
 	test(t, tc)
@@ -507,16 +506,16 @@ func TestWorldSource(t *testing.T) {
 	tc.setBalance(t, "a", "GEM", 1)
 	tc.expected = CaseResult{
 		Printed: []core.Value{},
-		Postings: []ledger.Posting{
+		Postings: []Posting{
 			{
 				Asset:       "GEM",
-				Amount:      ledger.NewMonetaryInt(1),
+				Amount:      core.NewMonetaryInt(1),
 				Source:      "a",
 				Destination: "b",
 			},
 			{
 				Asset:       "GEM",
-				Amount:      ledger.NewMonetaryInt(14),
+				Amount:      core.NewMonetaryInt(14),
 				Source:      "world",
 				Destination: "b",
 			},
@@ -537,10 +536,10 @@ func TestNoEmptyPostings(t *testing.T) {
 	)`)
 	tc.expected = CaseResult{
 		Printed: []core.Value{},
-		Postings: []ledger.Posting{
+		Postings: []Posting{
 			{
 				Asset:       "GEM",
-				Amount:      ledger.NewMonetaryInt(2),
+				Amount:      core.NewMonetaryInt(2),
 				Source:      "world",
 				Destination: "a",
 			},
@@ -559,7 +558,7 @@ func TestNoEmptyPostings2(t *testing.T) {
 	tc.setBalance(t, "foo", "GEM", 0)
 	tc.expected = CaseResult{
 		Printed:  []core.Value{},
-		Postings: []ledger.Posting{},
+		Postings: []Posting{},
 		ExitCode: EXIT_OK,
 	}
 	test(t, tc)
@@ -581,16 +580,16 @@ func TestAllocateDontTakeTooMuch(t *testing.T) {
 	tc.setBalance(t, "users:002", "CREDIT", 110)
 	tc.expected = CaseResult{
 		Printed: []core.Value{},
-		Postings: []ledger.Posting{
+		Postings: []Posting{
 			{
 				Asset:       "CREDIT",
-				Amount:      ledger.NewMonetaryInt(100),
+				Amount:      core.NewMonetaryInt(100),
 				Source:      "users:001",
 				Destination: "foo",
 			},
 			{
 				Asset:       "CREDIT",
-				Amount:      ledger.NewMonetaryInt(100),
+				Amount:      core.NewMonetaryInt(100),
 				Source:      "users:002",
 				Destination: "bar",
 			},
@@ -630,16 +629,16 @@ func TestMetadata(t *testing.T) {
 	tc.setBalance(t, "users:053", "EUR/2", 500)
 	tc.expected = CaseResult{
 		Printed: []core.Value{},
-		Postings: []ledger.Posting{
+		Postings: []Posting{
 			{
 				Asset:       "EUR/2",
-				Amount:      ledger.NewMonetaryInt(88),
+				Amount:      core.NewMonetaryInt(88),
 				Source:      "sales:042",
 				Destination: "users:053",
 			},
 			{
 				Asset:       "EUR/2",
-				Amount:      ledger.NewMonetaryInt(12),
+				Amount:      core.NewMonetaryInt(12),
 				Source:      "sales:042",
 				Destination: "platform",
 			},
@@ -663,16 +662,16 @@ func TestTrackBalances(t *testing.T) {
 	tc.setBalance(t, "a", "COIN", 50)
 	tc.expected = CaseResult{
 		Printed: []core.Value{},
-		Postings: []ledger.Posting{
+		Postings: []Posting{
 			{
 				Asset:       "COIN",
-				Amount:      ledger.NewMonetaryInt(50),
+				Amount:      core.NewMonetaryInt(50),
 				Source:      "world",
 				Destination: "a",
 			},
 			{
 				Asset:       "COIN",
-				Amount:      ledger.NewMonetaryInt(100),
+				Amount:      core.NewMonetaryInt(100),
 				Source:      "a",
 				Destination: "b",
 			},
@@ -696,7 +695,7 @@ func TestTrackBalances2(t *testing.T) {
 	tc.setBalance(t, "a", "COIN", 60)
 	tc.expected = CaseResult{
 		Printed:  []core.Value{},
-		Postings: []ledger.Posting{},
+		Postings: []Posting{},
 		ExitCode: EXIT_FAIL_INSUFFICIENT_FUNDS,
 	}
 	test(t, tc)
@@ -718,16 +717,16 @@ func TestTrackBalances3(t *testing.T) {
 	tc.setBalance(t, "foo", "COIN", 2000)
 	tc.expected = CaseResult{
 		Printed: []core.Value{},
-		Postings: []ledger.Posting{
+		Postings: []Posting{
 			{
 				Asset:       "COIN",
-				Amount:      ledger.NewMonetaryInt(1000),
+				Amount:      core.NewMonetaryInt(1000),
 				Source:      "foo",
 				Destination: "bar",
 			},
 			{
 				Asset:       "COIN",
-				Amount:      ledger.NewMonetaryInt(1000),
+				Amount:      core.NewMonetaryInt(1000),
 				Source:      "foo",
 				Destination: "bar",
 			},
@@ -752,22 +751,22 @@ func TestSourceAllotment(t *testing.T) {
 	tc.setBalance(t, "c", "COIN", 100)
 	tc.expected = CaseResult{
 		Printed: []core.Value{},
-		Postings: []ledger.Posting{
+		Postings: []Posting{
 			{
 				Asset:       "COIN",
-				Amount:      ledger.NewMonetaryInt(61),
+				Amount:      core.NewMonetaryInt(61),
 				Source:      "a",
 				Destination: "d",
 			},
 			{
 				Asset:       "COIN",
-				Amount:      ledger.NewMonetaryInt(35),
+				Amount:      core.NewMonetaryInt(35),
 				Source:      "b",
 				Destination: "d",
 			},
 			{
 				Asset:       "COIN",
-				Amount:      ledger.NewMonetaryInt(4),
+				Amount:      core.NewMonetaryInt(4),
 				Source:      "c",
 				Destination: "d",
 			},
@@ -794,16 +793,16 @@ func TestSourceOverlapping(t *testing.T) {
 	tc.setBalance(t, "b", "COIN", 3)
 	tc.expected = CaseResult{
 		Printed: []core.Value{},
-		Postings: []ledger.Posting{
+		Postings: []Posting{
 			{
 				Asset:       "COIN",
-				Amount:      ledger.NewMonetaryInt(3),
+				Amount:      core.NewMonetaryInt(3),
 				Source:      "b",
 				Destination: "world",
 			},
 			{
 				Asset:       "COIN",
-				Amount:      ledger.NewMonetaryInt(96),
+				Amount:      core.NewMonetaryInt(96),
 				Source:      "a",
 				Destination: "world",
 			},
@@ -841,28 +840,28 @@ func TestSourceComplex(t *testing.T) {
 	tc.setBalance(t, "d", "COIN", 1000)
 	tc.expected = CaseResult{
 		Printed: []core.Value{},
-		Postings: []ledger.Posting{
+		Postings: []Posting{
 			{
 				Asset:       "COIN",
-				Amount:      ledger.NewMonetaryInt(4),
+				Amount:      core.NewMonetaryInt(4),
 				Source:      "a",
 				Destination: "platform",
 			},
 			{
 				Asset:       "COIN",
-				Amount:      ledger.NewMonetaryInt(40),
+				Amount:      core.NewMonetaryInt(40),
 				Source:      "b",
 				Destination: "platform",
 			},
 			{
 				Asset:       "COIN",
-				Amount:      ledger.NewMonetaryInt(56),
+				Amount:      core.NewMonetaryInt(56),
 				Source:      "c",
 				Destination: "platform",
 			},
 			{
 				Asset:       "COIN",
-				Amount:      ledger.NewMonetaryInt(100),
+				Amount:      core.NewMonetaryInt(100),
 				Source:      "d",
 				Destination: "platform",
 			},
@@ -887,22 +886,22 @@ func TestDestinationComplex(t *testing.T) {
 	)`)
 	tc.expected = CaseResult{
 		Printed: []core.Value{},
-		Postings: []ledger.Posting{
+		Postings: []Posting{
 			{
 				Asset:       "COIN",
-				Amount:      ledger.NewMonetaryInt(20),
+				Amount:      core.NewMonetaryInt(20),
 				Source:      "world",
 				Destination: "a",
 			},
 			{
 				Asset:       "COIN",
-				Amount:      ledger.NewMonetaryInt(10),
+				Amount:      core.NewMonetaryInt(10),
 				Source:      "world",
 				Destination: "b",
 			},
 			{
 				Asset:       "COIN",
-				Amount:      ledger.NewMonetaryInt(50),
+				Amount:      core.NewMonetaryInt(50),
 				Source:      "world",
 				Destination: "c",
 			},
@@ -969,7 +968,7 @@ func TestNeededBalances(t *testing.T) {
 				if len(expected[req.Account]) == 0 {
 					delete(expected, req.Account)
 				}
-				req.Response <- *ledger.NewMonetaryInt(0)
+				req.Response <- *core.NewMonetaryInt(0)
 			} else {
 				t.Fatalf("did not expect to need %v balance of %v", req.Asset, req.Account)
 			}
@@ -1021,7 +1020,7 @@ func TestSetTxMeta(t *testing.T) {
 		"eee": json.RawMessage(`{"type":"monetary","value":{"asset":"COIN","amount":30}}`),
 	}
 
-	meta := m.GetTxMetaJson()
+	meta := m.GetTxMetaJSON()
 
 	fmt.Printf("%v", len(meta))
 

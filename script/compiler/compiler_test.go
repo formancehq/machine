@@ -11,7 +11,6 @@ import (
 
 	"github.com/formancehq/machine/core"
 	"github.com/formancehq/machine/vm/program"
-	ledger "github.com/numary/ledger/pkg/core"
 )
 
 type CaseResult struct {
@@ -344,7 +343,7 @@ func TestDestinationAllotment(t *testing.T) {
 			Resources: []program.Resource{
 				program.Constant{Inner: core.Monetary{
 					Asset:  "EUR/2",
-					Amount: *ledger.NewMonetaryInt(43),
+					Amount: *core.NewMonetaryInt(43),
 				}},
 				program.Constant{Inner: core.Account("foo")},
 				program.Constant{Inner: *core.NewNumber(0)},
@@ -429,14 +428,14 @@ func TestDestinationInOrder(t *testing.T) {
 			Resources: []program.Resource{
 				program.Constant{Inner: core.Monetary{
 					Asset:  "COIN",
-					Amount: *ledger.NewMonetaryInt(50),
+					Amount: *core.NewMonetaryInt(50),
 				}},
 				program.Constant{Inner: core.Account("a")},
 				program.Constant{Inner: *core.NewNumber(0)},
 				program.Constant{Inner: *core.NewNumber(1)},
 				program.Constant{Inner: core.Monetary{
 					Asset:  "COIN",
-					Amount: *ledger.NewMonetaryInt(10),
+					Amount: *core.NewMonetaryInt(10),
 				}},
 				program.Constant{Inner: *core.NewNumber(2)},
 				program.Constant{Inner: core.Account("b")},
@@ -463,7 +462,7 @@ func TestAllocationPercentages(t *testing.T) {
 			Resources: []program.Resource{
 				program.Constant{Inner: core.Monetary{
 					Asset:  "EUR/2",
-					Amount: *ledger.NewMonetaryInt(43),
+					Amount: *core.NewMonetaryInt(43),
 				}},
 				program.Constant{Inner: core.Account("foo")},
 				program.Constant{Inner: *core.NewNumber(0)},
@@ -509,7 +508,7 @@ func TestSend(t *testing.T) {
 				program.OP_SEND,  // [EUR/2]
 				program.OP_REPAY, //
 			}, Resources: []program.Resource{
-				program.Constant{Inner: core.Monetary{Asset: "EUR/2", Amount: *ledger.NewMonetaryInt(99)}},
+				program.Constant{Inner: core.Monetary{Asset: "EUR/2", Amount: *core.NewMonetaryInt(99)}},
 				program.Constant{Inner: alice},
 				program.Constant{Inner: *core.NewNumber(0)},
 				program.Constant{Inner: *core.NewNumber(1)},
@@ -567,7 +566,7 @@ func TestMetadata(t *testing.T) {
 				program.Parameter{Typ: core.TYPE_ACCOUNT, Name: "sale"},
 				program.Metadata{Typ: core.TYPE_ACCOUNT, SourceAccount: core.NewAddress(0), Key: "seller"},
 				program.Metadata{Typ: core.TYPE_PORTION, SourceAccount: core.NewAddress(1), Key: "commission"},
-				program.Constant{Inner: core.Monetary{Asset: "EUR/2", Amount: *ledger.NewMonetaryInt(53)}},
+				program.Constant{Inner: core.Monetary{Asset: "EUR/2", Amount: *core.NewMonetaryInt(53)}},
 				program.Constant{Inner: *core.NewNumber(0)},
 				program.Constant{Inner: *core.NewNumber(1)},
 				program.Constant{Inner: core.NewPortionRemaining()},

@@ -4,11 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
-
-	ledger "github.com/numary/ledger/pkg/core"
 )
 
 type Allotment []big.Rat
+
+func (Allotment) GetType() Type { return TYPE_ALLOTMENT }
 
 func NewAllotment(portions []Portion) (*Allotment, error) {
 	n := len(portions)
@@ -55,22 +55,22 @@ func (a Allotment) String() string {
 	return out + " }"
 }
 
-func (a Allotment) Allocate(amount ledger.MonetaryInt) []ledger.MonetaryInt {
+func (a Allotment) Allocate(amount MonetaryInt) []MonetaryInt {
 	amt_bigint := big.Int(amount)
-	parts := make([]ledger.MonetaryInt, len(a))
-	total_allocated := *ledger.NewMonetaryInt(0)
+	parts := make([]MonetaryInt, len(a))
+	total_allocated := *NewMonetaryInt(0)
 	// for every part in the allotment, calculate the floored value
 	for i, allot := range a {
 		var res big.Int
 		res.Mul(&amt_bigint, allot.Num())
 		res.Div(&res, allot.Denom())
-		parts[i] = ledger.MonetaryInt(res)
+		parts[i] = MonetaryInt(res)
 		total_allocated = *total_allocated.Add(&parts[i])
 	}
 	for i := range parts {
 		if total_allocated.Lt(&amount) {
-			parts[i] = *parts[i].Add(ledger.NewMonetaryInt(1))
-			total_allocated = *total_allocated.Add(ledger.NewMonetaryInt(1))
+			parts[i] = *parts[i].Add(NewMonetaryInt(1))
+			total_allocated = *total_allocated.Add(NewMonetaryInt(1))
 		}
 	}
 	return parts

@@ -7,7 +7,6 @@ import (
 
 type Number big.Int
 
-func (Number) isValue()      {}
 func (Number) GetType() Type { return TYPE_NUMBER }
 
 func (a *Number) Add(b *Number) *Number {

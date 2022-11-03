@@ -3,8 +3,6 @@ package core
 import (
 	"fmt"
 	"reflect"
-
-	ledger "github.com/numary/ledger/pkg/core"
 )
 
 type Type byte
@@ -45,13 +43,11 @@ func (t Type) String() string {
 }
 
 type Value interface {
-	isValue()
 	GetType() Type
 }
 
 type Account string
 
-func (Account) isValue()      {}
 func (Account) GetType() Type { return TYPE_ACCOUNT }
 func (a Account) String() string {
 	return fmt.Sprintf("@%v", string(a))
@@ -59,7 +55,6 @@ func (a Account) String() string {
 
 type Asset string
 
-func (Asset) isValue()      {}
 func (Asset) GetType() Type { return TYPE_ASSET }
 func (a Asset) String() string {
 	return fmt.Sprintf("%v", string(a))
@@ -67,32 +62,21 @@ func (a Asset) String() string {
 
 type String string
 
-func (String) isValue()      {}
 func (String) GetType() Type { return TYPE_STRING }
 func (s String) String() string {
 	return fmt.Sprintf("\"%v\"", string(s))
 }
 
 type Monetary struct {
-	Asset  Asset              `json:"asset"`
-	Amount ledger.MonetaryInt `json:"amount"`
+	Asset  Asset       `json:"asset"`
+	Amount MonetaryInt `json:"amount"`
 }
 
-func (a Monetary) String() string {
-	return fmt.Sprintf("[%v %v]", a.Asset, &a.Amount)
-}
-
-func (Monetary) isValue()      {}
 func (Monetary) GetType() Type { return TYPE_MONETARY }
 
-func (Allotment) isValue()      {}
-func (Allotment) GetType() Type { return TYPE_ALLOTMENT }
-
-func (Portion) isValue()      {}
-func (Portion) GetType() Type { return TYPE_PORTION }
-
-func (Funding) isValue()      {}
-func (Funding) GetType() Type { return TYPE_FUNDING }
+func (m Monetary) String() string {
+	return fmt.Sprintf("[%v %v]", m.Asset, &m.Amount)
+}
 
 type HasAsset interface {
 	GetAsset() Asset
@@ -124,10 +108,10 @@ func ValueEquals(lhs, rhs Value) bool {
 		}
 	} else if lhsp, ok := lhs.(Portion); ok {
 		rhsp := rhs.(Portion)
-		return lhsp.Equals(&rhsp)
+		return lhsp.Equals(rhsp)
 	} else if lhsf, ok := lhs.(Funding); ok {
 		rhsf := rhs.(Funding)
-		return lhsf.Equals(&rhsf)
+		return lhsf.Equals(rhsf)
 	} else if lhs != rhs {
 		return false
 	}

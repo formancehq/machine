@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/formancehq/machine/core"
-	ledger "github.com/numary/ledger/pkg/core"
 )
 
 func TestKeptDestinationAllotment(t *testing.T) {
@@ -23,22 +22,22 @@ func TestKeptDestinationAllotment(t *testing.T) {
 	tc.setBalance(t, "a", "GEM", 1)
 	tc.expected = CaseResult{
 		Printed: []core.Value{},
-		Postings: []ledger.Posting{
+		Postings: []Posting{
 			{
 				Asset:       "GEM",
-				Amount:      ledger.NewMonetaryInt(1),
+				Amount:      core.NewMonetaryInt(1),
 				Source:      "a",
 				Destination: "x",
 			},
 			{
 				Asset:       "GEM",
-				Amount:      ledger.NewMonetaryInt(24),
+				Amount:      core.NewMonetaryInt(24),
 				Source:      "world",
 				Destination: "x",
 			},
 			{
 				Asset:       "GEM",
-				Amount:      ledger.NewMonetaryInt(25),
+				Amount:      core.NewMonetaryInt(25),
 				Source:      "world",
 				Destination: "y",
 			},
@@ -75,40 +74,40 @@ func TestKeptComplex(t *testing.T) {
 	tc.setBalance(t, "baz", "GEM", 40)
 	tc.expected = CaseResult{
 		Printed: []core.Value{},
-		Postings: []ledger.Posting{
+		Postings: []Posting{
 			{
 				Asset:       "GEM",
-				Amount:      ledger.NewMonetaryInt(2),
+				Amount:      core.NewMonetaryInt(2),
 				Source:      "foo",
 				Destination: "arst",
 			},
 			{
 				Asset:       "GEM",
-				Amount:      ledger.NewMonetaryInt(18),
+				Amount:      core.NewMonetaryInt(18),
 				Source:      "foo",
 				Destination: "thing",
 			},
 			{
 				Asset:       "GEM",
-				Amount:      ledger.NewMonetaryInt(24),
+				Amount:      core.NewMonetaryInt(24),
 				Source:      "bar",
 				Destination: "thing",
 			},
 			{
 				Asset:       "GEM",
-				Amount:      ledger.NewMonetaryInt(16),
+				Amount:      core.NewMonetaryInt(16),
 				Source:      "bar",
 				Destination: "qux",
 			},
 			{
 				Asset:       "GEM",
-				Amount:      ledger.NewMonetaryInt(4),
+				Amount:      core.NewMonetaryInt(4),
 				Source:      "baz",
 				Destination: "qux",
 			},
 			{
 				Asset:       "GEM",
-				Amount:      ledger.NewMonetaryInt(25),
+				Amount:      core.NewMonetaryInt(25),
 				Source:      "baz",
 				Destination: "quz",
 			},

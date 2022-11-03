@@ -25,7 +25,7 @@ func (c *CompileErrorList) Error() string {
 	lines := strings.SplitAfter(strings.ReplaceAll(source, "\r\n", "\n"), "\n")
 	lines[len(lines)-1] += "\n"
 
-	txt_bar_good := aurora.Blue("|")
+	txtBarGood := aurora.Blue("|")
 
 	s := ""
 	for _, e := range c.Errors {
@@ -33,7 +33,7 @@ func (c *CompileErrorList) Error() string {
 		// error indicator
 		s += fmt.Sprintf("%v error:%v:%v\n", aurora.Red("-->"), e.Startl, e.Startc)
 		// initial empty line
-		s += fmt.Sprintf("%v %v\n", strings.Repeat(" ", ln_pad), txt_bar_good)
+		s += fmt.Sprintf("%v %v\n", strings.Repeat(" ", ln_pad), txtBarGood)
 		// offending lines
 		for l := e.Startl; l <= e.Endl; l++ { // "print fail"
 			line := lines[l-1]
@@ -68,7 +68,7 @@ func (c *CompileErrorList) Error() string {
 		if span == 0 {
 			span = 1
 		}
-		s += fmt.Sprintf("%v %v %v%v %v\n", strings.Repeat(" ", ln_pad), txt_bar_good, strings.Repeat(" ", start), aurora.Red(strings.Repeat("^", span)), e.Msg)
+		s += fmt.Sprintf("%v %v %v%v %v\n", strings.Repeat(" ", ln_pad), txtBarGood, strings.Repeat(" ", start), aurora.Red(strings.Repeat("^", span)), e.Msg)
 	}
 	return s
 }

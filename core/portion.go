@@ -12,6 +12,8 @@ type Portion struct {
 	Specific  *big.Rat
 }
 
+func (Portion) GetType() Type { return TYPE_PORTION }
+
 func NewPortionRemaining() Portion {
 	return Portion{
 		Remaining: true,
@@ -29,7 +31,7 @@ func NewPortionSpecific(r big.Rat) (*Portion, error) {
 	}, nil
 }
 
-func (lhs *Portion) Equals(rhs *Portion) bool {
+func (lhs Portion) Equals(rhs Portion) bool {
 	if lhs.Remaining != rhs.Remaining {
 		return false
 	}

@@ -3,16 +3,16 @@ package core
 import (
 	"errors"
 	"fmt"
-
-	ledger "github.com/numary/ledger/pkg/core"
 )
 
 type FundingPart struct {
-	Amount  ledger.MonetaryInt
+	Amount  MonetaryInt
 	Account Account
 }
 
-func (lhs *FundingPart) Equals(rhs *FundingPart) bool {
+func (Funding) GetType() Type { return TYPE_FUNDING }
+
+func (lhs FundingPart) Equals(rhs FundingPart) bool {
 	return lhs.Account == rhs.Account && lhs.Amount.Equal(&rhs.Amount)
 }
 
@@ -21,15 +21,15 @@ type Funding struct {
 	Parts []FundingPart
 }
 
-func (lhs *Funding) Equals(rhs *Funding) bool {
-	if lhs.Asset != rhs.Asset {
+func (f Funding) Equals(rhs Funding) bool {
+	if f.Asset != rhs.Asset {
 		return false
 	}
-	if len(lhs.Parts) != len(rhs.Parts) {
+	if len(f.Parts) != len(rhs.Parts) {
 		return false
 	}
-	for i := range lhs.Parts {
-		if !lhs.Parts[i].Equals(&rhs.Parts[i]) {
+	for i := range f.Parts {
+		if !f.Parts[i].Equals(rhs.Parts[i]) {
 			return false
 		}
 	}
@@ -44,7 +44,7 @@ func (f Funding) String() string {
 	return out + "]"
 }
 
-func (f Funding) Take(amount ledger.MonetaryInt) (Funding, Funding, error) {
+func (f Funding) Take(amount MonetaryInt) (Funding, Funding, error) {
 	result := Funding{
 		Asset: f.Asset,
 	}
@@ -53,7 +53,7 @@ func (f Funding) Take(amount ledger.MonetaryInt) (Funding, Funding, error) {
 	}
 	remaining_to_withdraw := amount
 	i := 0
-	for remaining_to_withdraw.Gt(ledger.NewMonetaryInt(0)) && i < len(f.Parts) {
+	for remaining_to_withdraw.Gt(NewMonetaryInt(0)) && i < len(f.Parts) {
 		amt_to_withdraw := f.Parts[i].Amount
 		// if this part has excess balance, put it in the remainder & only take what's needed
 		if amt_to_withdraw.Gt(&remaining_to_withdraw) {
@@ -78,13 +78,13 @@ func (f Funding) Take(amount ledger.MonetaryInt) (Funding, Funding, error) {
 		})
 		i++
 	}
-	if !remaining_to_withdraw.Eq(ledger.NewMonetaryInt(0)) {
+	if !remaining_to_withdraw.Eq(NewMonetaryInt(0)) {
 		return Funding{}, Funding{}, errors.New("insufficient funding")
 	}
 	return result, remainder, nil
 }
 
-func (f Funding) TakeMax(amount ledger.MonetaryInt) (Funding, Funding) {
+func (f Funding) TakeMax(amount MonetaryInt) (Funding, Funding) {
 	result := Funding{
 		Asset: f.Asset,
 	}
@@ -93,7 +93,7 @@ func (f Funding) TakeMax(amount ledger.MonetaryInt) (Funding, Funding) {
 	}
 	remaining_to_withdraw := amount
 	i := 0
-	for remaining_to_withdraw.Gt(ledger.NewMonetaryInt(0)) && i < len(f.Parts) {
+	for remaining_to_withdraw.Gt(NewMonetaryInt(0)) && i < len(f.Parts) {
 		amt_to_withdraw := f.Parts[i].Amount
 		// if this part has excess balance, put it in the remainder & only take what's needed
 		if amt_to_withdraw.Gt(&remaining_to_withdraw) {
@@ -138,8 +138,8 @@ func (f Funding) Concat(other Funding) (Funding, error) {
 	return res, nil
 }
 
-func (f Funding) Total() ledger.MonetaryInt {
-	total := *ledger.NewMonetaryInt(0)
+func (f Funding) Total() MonetaryInt {
+	total := *NewMonetaryInt(0)
 	for _, part := range f.Parts {
 		total = *total.Add(&part.Amount)
 	}
