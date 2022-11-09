@@ -54,6 +54,7 @@ literal
   | ASSET # LitAsset
   | NUMBER # LitNumber
   | STRING # LitString
+  | PORTION # LitPortion
   | monetary # LitMonetary
   ;
 

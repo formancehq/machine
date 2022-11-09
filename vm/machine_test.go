@@ -987,6 +987,7 @@ func TestSetTxMeta(t *testing.T) {
 	set_tx_meta("ccc", 45)
 	set_tx_meta("ddd", "hello")
 	set_tx_meta("eee", [COIN 30])
+	set_tx_meta("fff", 15%)
 	`)
 
 	if err != nil {
@@ -1019,13 +1020,14 @@ func TestSetTxMeta(t *testing.T) {
 		"ccc": json.RawMessage(`{"type":"number","value":45}`),
 		"ddd": json.RawMessage(`{"type":"string","value":"hello"}`),
 		"eee": json.RawMessage(`{"type":"monetary","value":{"asset":"COIN","amount":30}}`),
+		"fff": json.RawMessage(`{"type":"portion","value":""}`),
 	}
 
 	meta := m.GetTxMetaJson()
 
 	fmt.Printf("%v", len(meta))
 
-	if len(meta) != 5 {
+	if len(meta) != 6 {
 		t.Fatalf("unexpected transaction metadata")
 	}
 

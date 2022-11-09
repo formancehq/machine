@@ -162,6 +162,19 @@ func (p *parseVisitor) VisitLit(c parser.ILiteralContext, push bool) (core.Type,
 			p.PushAddress(*addr)
 		}
 		return core.TYPE_STRING, addr, nil
+	case *parser.LitPortionContext:
+		portion, err := core.ParsePortionSpecific(c.GetText())
+		if err != nil {
+			return 0, nil, LogicError(c, err)
+		}
+		addr, err := p.AllocateResource(program.Constant{Inner: *portion})
+		if err != nil {
+			return 0, nil, LogicError(c, err)
+		}
+		if push {
+			p.PushAddress(*addr)
+		}
+		return core.TYPE_PORTION, addr, nil
 	case *parser.LitMonetaryContext:
 		asset := c.Monetary().GetAsset().GetText()
 		amt, err := ledger.ParseMonetaryInt(c.Monetary().GetAmt().GetText())
