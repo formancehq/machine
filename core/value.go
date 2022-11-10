@@ -79,12 +79,12 @@ func ValueEquals(lhs, rhs Value) bool {
 	if reflect.TypeOf(lhs) != reflect.TypeOf(rhs) {
 		return false
 	}
-	if lhsn, ok := lhs.(MonetaryInt); ok {
-		rhsn := rhs.(MonetaryInt)
-		return lhsn.Equal(&rhsn)
+	if lhsn, ok := lhs.(*MonetaryInt); ok {
+		rhsn := rhs.(*MonetaryInt)
+		return lhsn.Equal(rhsn)
 	} else if lhsm, ok := lhs.(Monetary); ok {
 		rhsm := rhs.(Monetary)
-		return lhsm.Asset == rhsm.Asset && lhsm.Amount.Equal(&rhsm.Amount)
+		return lhsm.Asset == rhsm.Asset && lhsm.Amount.Equal(rhsm.Amount)
 	} else if lhsa, ok := lhs.(Allotment); ok {
 		rhsa := rhs.(Allotment)
 		if len(lhsa) != len(rhsa) {

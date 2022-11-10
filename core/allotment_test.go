@@ -16,13 +16,13 @@ func TestAllocate(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	parts := allotment.Allocate(*NewMonetaryInt(15))
-	expectedParts := []MonetaryInt{*NewMonetaryInt(13), *NewMonetaryInt(1), *NewMonetaryInt(1)}
+	parts := allotment.Allocate(NewMonetaryInt(15))
+	expectedParts := []*MonetaryInt{NewMonetaryInt(13), NewMonetaryInt(1), NewMonetaryInt(1)}
 	if len(parts) != len(expectedParts) {
 		t.Fatalf("unexpected output %v != %v", parts, expectedParts)
 	}
 	for i := range parts {
-		if !parts[i].Equal(&expectedParts[i]) {
+		if !parts[i].Equal(expectedParts[i]) {
 			t.Fatalf("unexpected output %v != %v", parts, expectedParts)
 		}
 	}

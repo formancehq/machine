@@ -144,7 +144,7 @@ func (p *parseVisitor) VisitLit(c parser.ILiteralContext, push bool) (core.Type,
 			return 0, nil, LogicError(c, err)
 		}
 		if push {
-			err := p.PushInteger(*number)
+			err := p.PushInteger(number)
 			if err != nil {
 				return 0, nil, LogicError(c, err)
 			}
@@ -169,7 +169,7 @@ func (p *parseVisitor) VisitLit(c parser.ILiteralContext, push bool) (core.Type,
 		}
 		monetary := core.Monetary{
 			Asset:  core.Asset(asset),
-			Amount: *amt,
+			Amount: amt,
 		}
 		addr, err := p.AllocateResource(program.Constant{Inner: monetary})
 		if err != nil {

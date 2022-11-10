@@ -41,7 +41,7 @@ func (p *parseVisitor) VisitDestinationRecursive(c parser.IDestinationContext) *
 		// initialize the `kept` accumulator
 		p.AppendInstruction(program.OP_FUNDING_SUM)
 		p.AppendInstruction(program.OP_ASSET)
-		err := p.PushInteger(*core.NewNumber(0))
+		err := p.PushInteger(core.NewNumber(0))
 		if err != nil {
 			return LogicError(c, err)
 		}
@@ -84,7 +84,7 @@ func (p *parseVisitor) VisitDestinationRecursive(c parser.IDestinationContext) *
 			if err != nil {
 				return LogicError(c, err)
 			}
-			err = p.PushInteger(*core.NewNumber(2))
+			err = p.PushInteger(core.NewNumber(2))
 			if err != nil {
 				return LogicError(c, err)
 			}
@@ -110,7 +110,7 @@ func (p *parseVisitor) VisitDestinationRecursive(c parser.IDestinationContext) *
 		if err != nil {
 			return LogicError(c, err)
 		}
-		err = p.PushInteger(*core.NewNumber(2))
+		err = p.PushInteger(core.NewNumber(2))
 		if err != nil {
 			return LogicError(c, err)
 		}
@@ -169,7 +169,7 @@ func (p *parseVisitor) VisitAllocDestination(dests []parser.IKeptOrDestinationCo
 		if err != nil {
 			return LogicError(dest, err)
 		}
-		err = p.PushInteger(*core.NewNumber(2))
+		err = p.PushInteger(core.NewNumber(2))
 		if err != nil {
 			return LogicError(dest, err)
 		}

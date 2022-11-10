@@ -7,8 +7,8 @@ import (
 )
 
 type Monetary struct {
-	Asset  Asset       `json:"asset"`
-	Amount MonetaryInt `json:"amount"`
+	Asset  Asset        `json:"asset"`
+	Amount *MonetaryInt `json:"amount"`
 }
 
 func (Monetary) GetType() Type { return TypeMonetary }
