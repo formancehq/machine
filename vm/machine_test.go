@@ -1018,23 +1018,10 @@ func TestSetTxMeta(t *testing.T) {
 		"eee": json.RawMessage(`{"type":"monetary","value":{"asset":"COIN","amount":30}}`),
 	}
 
-	meta := m.GetTxMetaJSON()
+	resMeta := m.GetTxMetaJSON()
+	assert.Equal(t, 5, len(resMeta))
 
-	fmt.Printf("%v", len(meta))
-
-	if len(meta) != 5 {
-		t.Fatalf("unexpected transaction metadata")
-	}
-
-	for k, v := range meta {
-		if expected, ok := expectedMeta[k]; ok {
-			if rm, ok := v.(json.RawMessage); ok {
-				if string(rm) != string(expected) {
-					fmt.Printf("%v\n", string(rm))
-					fmt.Printf("%v\n", string(expected))
-					t.Fatalf("unexpected transaction metadata")
-				}
-			}
-		}
+	for key, val := range resMeta {
+		assert.Equal(t, string(expectedMeta[key]), string(val.([]byte)))
 	}
 }
