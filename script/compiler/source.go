@@ -11,49 +11,49 @@ import (
 
 type FallbackAccount core.Address
 
-// Returns the resource addresses of all the accounts
-func (p *parseVisitor) VisitValueAwareSource(c parser.IValueAwareSourceContext, push_asset func(), mon_addr *core.Address) (map[core.Address]struct{}, *CompileError) {
-	needed_accounts := map[core.Address]struct{}{}
-	is_all := mon_addr == nil
+// VisitValueAwareSource returns the resource addresses of all the accounts
+func (p *parseVisitor) VisitValueAwareSource(c parser.IValueAwareSourceContext, pushAsset func(), monAddr *core.Address) (map[core.Address]struct{}, *CompileError) {
+	neededAccounts := map[core.Address]struct{}{}
+	isAll := monAddr == nil
 	switch c := c.(type) {
 	case *parser.SrcContext:
-		accounts, _, unbounded, err := p.VisitSource(c.Source(), push_asset, is_all)
-		if err != nil {
-			return nil, err
+		accounts, _, unbounded, compErr := p.VisitSource(c.Source(), pushAsset, isAll)
+		if compErr != nil {
+			return nil, compErr
 		}
 		for k, v := range accounts {
-			needed_accounts[k] = v
+			neededAccounts[k] = v
 		}
-		if !is_all {
-			p.PushAddress(*mon_addr)
-			err := p.TakeFromSource(unbounded, push_asset)
+		if !isAll {
+			p.PushAddress(*monAddr)
+			err := p.TakeFromSource(unbounded)
 			if err != nil {
 				return nil, LogicError(c, err)
 			}
 		}
 	case *parser.SrcAllotmentContext:
-		if is_all {
+		if isAll {
 			return nil, LogicError(c, errors.New("cannot take all balance of an allotment source"))
 		}
-		p.PushAddress(*mon_addr)
+		p.PushAddress(*monAddr)
 		p.VisitAllotment(c.SourceAllotment(), c.SourceAllotment().GetPortions())
 		p.AppendInstruction(program.OP_ALLOC)
 
 		sources := c.SourceAllotment().GetSources()
 		n := len(sources)
 		for i := 0; i < n; i++ {
-			accounts, _, fallback, cerr := p.VisitSource(sources[i], push_asset, is_all)
-			if cerr != nil {
-				return nil, cerr
+			accounts, _, fallback, compErr := p.VisitSource(sources[i], pushAsset, isAll)
+			if compErr != nil {
+				return nil, compErr
 			}
 			for k, v := range accounts {
-				needed_accounts[k] = v
+				neededAccounts[k] = v
 			}
 			err := p.Bump(int64(i + 1))
 			if err != nil {
 				return nil, LogicError(c, err)
 			}
-			err = p.TakeFromSource(fallback, push_asset)
+			err = p.TakeFromSource(fallback)
 			if err != nil {
 				return nil, LogicError(c, err)
 			}
@@ -64,10 +64,10 @@ func (p *parseVisitor) VisitValueAwareSource(c parser.IValueAwareSourceContext, 
 		}
 		p.AppendInstruction(program.OP_FUNDING_ASSEMBLE)
 	}
-	return needed_accounts, nil
+	return neededAccounts, nil
 }
 
-func (p *parseVisitor) TakeFromSource(fallback *FallbackAccount, push_asset func()) error {
+func (p *parseVisitor) TakeFromSource(fallback *FallbackAccount) error {
 	if fallback == nil {
 		p.AppendInstruction(program.OP_TAKE)
 		err := p.Bump(1)
@@ -97,31 +97,31 @@ func (p *parseVisitor) TakeFromSource(fallback *FallbackAccount, push_asset func
 	return nil
 }
 
-// Returns the resource addresses of all the accounts,
+// VisitSource returns the resource addresses of all the accounts,
 // the addresses of accounts already emptied,
 // and possibly a fallback account if the source has an unbounded overdraft allowance or contains @world
-func (p *parseVisitor) VisitSource(c parser.ISourceContext, push_asset func(), is_all bool) (map[core.Address]struct{}, map[core.Address]struct{}, *FallbackAccount, *CompileError) {
-	needed_accounts := map[core.Address]struct{}{}
-	emptied_accounts := map[core.Address]struct{}{}
+func (p *parseVisitor) VisitSource(c parser.ISourceContext, pushAsset func(), isAll bool) (map[core.Address]struct{}, map[core.Address]struct{}, *FallbackAccount, *CompileError) {
+	neededAccounts := map[core.Address]struct{}{}
+	emptiedAccounts := map[core.Address]struct{}{}
 	var fallback *FallbackAccount
 	switch c := c.(type) {
 	case *parser.SrcAccountContext:
-		ty, acc_addr, err := p.VisitExpr(c.SourceAccount().GetAccount(), true)
-		if err != nil {
-			return nil, nil, nil, err
+		ty, accAddr, compErr := p.VisitExpr(c.SourceAccount().GetAccount(), true)
+		if compErr != nil {
+			return nil, nil, nil, compErr
 		}
-		if ty != core.TYPE_ACCOUNT {
+		if ty != core.TypeAccount {
 			return nil, nil, nil, LogicError(c, errors.New("wrong type: expected account or allocation as destination"))
 		}
-		if p.isWorld(*acc_addr) {
-			f := FallbackAccount(*acc_addr)
+		if p.isWorld(*accAddr) {
+			f := FallbackAccount(*accAddr)
 			fallback = &f
 		}
 
 		overdraft := c.SourceAccount().GetOverdraft()
 		if overdraft == nil {
 			// no overdraft: use zero monetary
-			push_asset()
+			pushAsset()
 			err := p.PushInteger(*core.NewNumber(0))
 			if err != nil {
 				return nil, nil, nil, LogicError(c, err)
@@ -129,52 +129,52 @@ func (p *parseVisitor) VisitSource(c parser.ISourceContext, push_asset func(), i
 			p.AppendInstruction(program.OP_MONETARY_NEW)
 			p.AppendInstruction(program.OP_TAKE_ALL)
 		} else {
-			if p.isWorld(*acc_addr) {
+			if p.isWorld(*accAddr) {
 				return nil, nil, nil, LogicError(c, errors.New("@world is already set to an unbounded overdraft"))
 			}
 			switch c := overdraft.(type) {
 			case *parser.SrcAccountOverdraftSpecificContext:
-				ty, _, err := p.VisitExpr(c.GetSpecific(), true)
-				if err != nil {
-					return nil, nil, nil, err
+				ty, _, compErr := p.VisitExpr(c.GetSpecific(), true)
+				if compErr != nil {
+					return nil, nil, nil, compErr
 				}
-				if ty != core.TYPE_MONETARY {
+				if ty != core.TypeMonetary {
 					return nil, nil, nil, LogicError(c, errors.New("wrong type: expected monetary"))
 				}
 				p.AppendInstruction(program.OP_TAKE_ALL)
 			case *parser.SrcAccountOverdraftUnboundedContext:
-				push_asset()
+				pushAsset()
 				err := p.PushInteger(*core.NewNumber(0))
 				if err != nil {
 					return nil, nil, nil, LogicError(c, err)
 				}
 				p.AppendInstruction(program.OP_MONETARY_NEW)
 				p.AppendInstruction(program.OP_TAKE_ALL)
-				f := FallbackAccount(*acc_addr)
+				f := FallbackAccount(*accAddr)
 				fallback = &f
 			}
 		}
-		needed_accounts[*acc_addr] = struct{}{}
-		emptied_accounts[*acc_addr] = struct{}{}
+		neededAccounts[*accAddr] = struct{}{}
+		emptiedAccounts[*accAddr] = struct{}{}
 
-		if fallback != nil && is_all {
+		if fallback != nil && isAll {
 			return nil, nil, nil, LogicError(c, errors.New("cannot take all balance of an unbounded source"))
 		}
 
 	case *parser.SrcMaxedContext:
-		accounts, _, subsource_fallback, cerr := p.VisitSource(c.SourceMaxed().GetSrc(), push_asset, false)
-		if cerr != nil {
-			return nil, nil, nil, cerr
+		accounts, _, subsourceFallback, compErr := p.VisitSource(c.SourceMaxed().GetSrc(), pushAsset, false)
+		if compErr != nil {
+			return nil, nil, nil, compErr
 		}
-		ty, _, cerr := p.VisitExpr(c.SourceMaxed().GetMax(), true)
-		if cerr != nil {
-			return nil, nil, nil, cerr
+		ty, _, compErr := p.VisitExpr(c.SourceMaxed().GetMax(), true)
+		if compErr != nil {
+			return nil, nil, nil, compErr
 		}
-		if ty != core.TYPE_MONETARY {
+		if ty != core.TypeMonetary {
 			return nil, nil, nil, LogicError(c, errors.New("wrong type: expected monetary as max"))
 		}
 		for k, v := range accounts {
-			needed_accounts[k] = v
+			neededAccounts[k] = v
 		}
 		p.AppendInstruction(program.OP_TAKE_MAX)
 		err := p.Bump(1)
@@ -182,8 +182,8 @@ func (p *parseVisitor) VisitSource(c parser.ISourceContext, push_asset func(), i
 			return nil, nil, nil, LogicError(c, err)
 		}
 		p.AppendInstruction(program.OP_REPAY)
-		if subsource_fallback != nil {
-			p.PushAddress(core.Address(*subsource_fallback))
+		if subsourceFallback != nil {
+			p.PushAddress(core.Address(*subsourceFallback))
 			err := p.Bump(2)
 			if err != nil {
 				return nil, nil, nil, LogicError(c, err)
@@ -205,22 +205,22 @@ func (p *parseVisitor) VisitSource(c parser.ISourceContext, push_asset func(), i
 		sources := c.SourceInOrder().GetSources()
 		n := len(sources)
 		for i := 0; i < n; i++ {
-			accounts, emptied, subsource_fallback, err := p.VisitSource(sources[i], push_asset, is_all)
-			if err != nil {
-				return nil, nil, nil, err
+			accounts, emptied, subsourceFallback, compErr := p.VisitSource(sources[i], pushAsset, isAll)
+			if compErr != nil {
+				return nil, nil, nil, compErr
 			}
-			fallback = subsource_fallback
-			if subsource_fallback != nil && i != n-1 {
+			fallback = subsourceFallback
+			if subsourceFallback != nil && i != n-1 {
 				return nil, nil, nil, LogicError(c, errors.New("an unbounded subsource can only be in last position"))
 			}
 			for k, v := range accounts {
-				needed_accounts[k] = v
+				neededAccounts[k] = v
 			}
 			for k, v := range emptied {
-				if _, ok := emptied_accounts[k]; ok {
+				if _, ok := emptiedAccounts[k]; ok {
 					return nil, nil, nil, LogicError(sources[i], fmt.Errorf("%v is already empty at this stage", p.resources[k]))
 				}
-				emptied_accounts[k] = v
+				emptiedAccounts[k] = v
 			}
 		}
 		err := p.PushInteger(*core.NewNumber(int64(n)))
@@ -229,5 +229,5 @@ func (p *parseVisitor) VisitSource(c parser.ISourceContext, push_asset func(), i
 		}
 		p.AppendInstruction(program.OP_FUNDING_ASSEMBLE)
 	}
-	return needed_accounts, emptied_accounts, fallback, nil
+	return neededAccounts, emptiedAccounts, fallback, nil
 }

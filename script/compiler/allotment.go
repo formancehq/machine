@@ -13,8 +13,8 @@ import (
 
 func (p *parseVisitor) VisitAllotment(c antlr.ParserRuleContext, portions []parser.IAllotmentPortionContext) *CompileError {
 	total := big.NewRat(0, 1)
-	has_variable := false
-	has_remaining := false
+	hasVariable := false
+	hasRemaining := false
 	for i := len(portions) - 1; i >= 0; i-- {
 		c := portions[i]
 		switch c := c.(type) {
@@ -23,9 +23,9 @@ func (p *parseVisitor) VisitAllotment(c antlr.ParserRuleContext, portions []pars
 			if err != nil {
 				return LogicError(c, err)
 			}
-			rat := big.Rat(*portion.Specific)
+			rat := *portion.Specific
 			total.Add(&rat, total)
-			addr, err := p.AllocateResource(program.Constant{Inner: core.Portion(*portion)})
+			addr, err := p.AllocateResource(program.Constant{Inner: *portion})
 			if err != nil {
 				return LogicError(c, err)
 			}
@@ -35,14 +35,14 @@ func (p *parseVisitor) VisitAllotment(c antlr.ParserRuleContext, portions []pars
 			if err != nil {
 				return err
 			}
-			if ty != core.TYPE_PORTION {
+			if ty != core.TypePortion {
 				return LogicError(c,
 					fmt.Errorf("wrong type: expected type portion for variable: %v", ty),
 				)
 			}
-			has_variable = true
+			hasVariable = true
 		case *parser.AllotmentPortionRemainingContext:
-			if has_remaining {
+			if hasRemaining {
 				return LogicError(c,
 					errors.New("two uses of `remaining` in the same allocation"),
 				)
@@ -52,7 +52,7 @@ func (p *parseVisitor) VisitAllotment(c antlr.ParserRuleContext, portions []pars
 				return LogicError(c, err)
 			}
 			p.PushAddress(*addr)
-			has_remaining = true
+			hasRemaining = true
 		}
 	}
 	if total.Cmp(big.NewRat(1, 1)) == 1 {
@@ -60,17 +60,17 @@ func (p *parseVisitor) VisitAllotment(c antlr.ParserRuleContext, portions []pars
 			errors.New("the sum of known portions is greater than 100%"),
 		)
 	}
-	if total.Cmp(big.NewRat(1, 1)) == -1 && !has_remaining {
+	if total.Cmp(big.NewRat(1, 1)) == -1 && !hasRemaining {
 		return LogicError(c,
 			errors.New("the sum of portions might be less than 100%"),
 		)
 	}
-	if total.Cmp(big.NewRat(1, 1)) == 0 && has_variable {
+	if total.Cmp(big.NewRat(1, 1)) == 0 && hasVariable {
 		return LogicError(c,
 			errors.New("the sum of portions might be greater than 100%"),
 		)
 	}
-	if total.Cmp(big.NewRat(1, 1)) == 0 && has_remaining {
+	if total.Cmp(big.NewRat(1, 1)) == 0 && hasRemaining {
 		return LogicError(c,
 			errors.New("known portions are already equal to 100%"),
 		)

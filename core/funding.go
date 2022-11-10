@@ -3,16 +3,16 @@ package core
 import (
 	"errors"
 	"fmt"
-
-	ledger "github.com/numary/ledger/pkg/core"
 )
 
 type FundingPart struct {
-	Amount  ledger.MonetaryInt
+	Amount  MonetaryInt
 	Account Account
 }
 
-func (lhs *FundingPart) Equals(rhs *FundingPart) bool {
+func (Funding) GetType() Type { return TypeFunding }
+
+func (lhs FundingPart) Equals(rhs FundingPart) bool {
 	return lhs.Account == rhs.Account && lhs.Amount.Equal(&rhs.Amount)
 }
 
@@ -21,7 +21,7 @@ type Funding struct {
 	Parts []FundingPart
 }
 
-func (lhs *Funding) Equals(rhs *Funding) bool {
+func (lhs Funding) Equals(rhs Funding) bool {
 	if lhs.Asset != rhs.Asset {
 		return false
 	}
@@ -29,7 +29,7 @@ func (lhs *Funding) Equals(rhs *Funding) bool {
 		return false
 	}
 	for i := range lhs.Parts {
-		if !lhs.Parts[i].Equals(&rhs.Parts[i]) {
+		if !lhs.Parts[i].Equals(rhs.Parts[i]) {
 			return false
 		}
 	}
@@ -44,30 +44,30 @@ func (f Funding) String() string {
 	return out + "]"
 }
 
-func (f Funding) Take(amount ledger.MonetaryInt) (Funding, Funding, error) {
+func (f Funding) Take(amount MonetaryInt) (Funding, Funding, error) {
 	result := Funding{
 		Asset: f.Asset,
 	}
 	remainder := Funding{
 		Asset: f.Asset,
 	}
-	remaining_to_withdraw := amount
+	remainingToWithdraw := amount
 	i := 0
-	for remaining_to_withdraw.Gt(ledger.NewMonetaryInt(0)) && i < len(f.Parts) {
-		amt_to_withdraw := f.Parts[i].Amount
+	for remainingToWithdraw.Gt(NewMonetaryInt(0)) && i < len(f.Parts) {
+		amtToWithdraw := f.Parts[i].Amount
 		// if this part has excess balance, put it in the remainder & only take what's needed
-		if amt_to_withdraw.Gt(&remaining_to_withdraw) {
-			rem := *amt_to_withdraw.Sub(&remaining_to_withdraw)
-			amt_to_withdraw = remaining_to_withdraw
+		if amtToWithdraw.Gt(&remainingToWithdraw) {
+			rem := *amtToWithdraw.Sub(&remainingToWithdraw)
+			amtToWithdraw = remainingToWithdraw
 			remainder.Parts = append(remainder.Parts, FundingPart{
 				Account: f.Parts[i].Account,
 				Amount:  rem,
 			})
 		}
-		remaining_to_withdraw = *remaining_to_withdraw.Sub(&amt_to_withdraw)
+		remainingToWithdraw = *remainingToWithdraw.Sub(&amtToWithdraw)
 		result.Parts = append(result.Parts, FundingPart{
 			Account: f.Parts[i].Account,
-			Amount:  amt_to_withdraw,
+			Amount:  amtToWithdraw,
 		})
 		i++
 	}
@@ -78,36 +78,36 @@ func (f Funding) Take(amount ledger.MonetaryInt) (Funding, Funding, error) {
 		})
 		i++
 	}
-	if !remaining_to_withdraw.Eq(ledger.NewMonetaryInt(0)) {
+	if !remainingToWithdraw.Eq(NewMonetaryInt(0)) {
 		return Funding{}, Funding{}, errors.New("insufficient funding")
 	}
 	return result, remainder, nil
 }
 
-func (f Funding) TakeMax(amount ledger.MonetaryInt) (Funding, Funding) {
+func (f Funding) TakeMax(amount MonetaryInt) (Funding, Funding) {
 	result := Funding{
 		Asset: f.Asset,
 	}
 	remainder := Funding{
 		Asset: f.Asset,
 	}
-	remaining_to_withdraw := amount
+	remainingToWithdraw := amount
 	i := 0
-	for remaining_to_withdraw.Gt(ledger.NewMonetaryInt(0)) && i < len(f.Parts) {
-		amt_to_withdraw := f.Parts[i].Amount
+	for remainingToWithdraw.Gt(NewMonetaryInt(0)) && i < len(f.Parts) {
+		amtToWithdraw := f.Parts[i].Amount
 		// if this part has excess balance, put it in the remainder & only take what's needed
-		if amt_to_withdraw.Gt(&remaining_to_withdraw) {
-			rem := *amt_to_withdraw.Sub(&remaining_to_withdraw)
-			amt_to_withdraw = remaining_to_withdraw
+		if amtToWithdraw.Gt(&remainingToWithdraw) {
+			rem := *amtToWithdraw.Sub(&remainingToWithdraw)
+			amtToWithdraw = remainingToWithdraw
 			remainder.Parts = append(remainder.Parts, FundingPart{
 				Account: f.Parts[i].Account,
 				Amount:  rem,
 			})
 		}
-		remaining_to_withdraw = *remaining_to_withdraw.Sub(&amt_to_withdraw)
+		remainingToWithdraw = *remainingToWithdraw.Sub(&amtToWithdraw)
 		result.Parts = append(result.Parts, FundingPart{
 			Account: f.Parts[i].Account,
-			Amount:  amt_to_withdraw,
+			Amount:  amtToWithdraw,
 		})
 		i++
 	}
@@ -138,8 +138,8 @@ func (f Funding) Concat(other Funding) (Funding, error) {
 	return res, nil
 }
 
-func (f Funding) Total() ledger.MonetaryInt {
-	total := *ledger.NewMonetaryInt(0)
+func (f Funding) Total() MonetaryInt {
+	total := *NewMonetaryInt(0)
 	for _, part := range f.Parts {
 		total = *total.Add(&part.Amount)
 	}
@@ -147,13 +147,13 @@ func (f Funding) Total() ledger.MonetaryInt {
 }
 
 func (f Funding) Reverse() Funding {
-	new_parts := []FundingPart{}
+	newParts := []FundingPart{}
 	for i := len(f.Parts) - 1; i >= 0; i-- {
-		new_parts = append(new_parts, f.Parts[i])
+		newParts = append(newParts, f.Parts[i])
 	}
-	new_funding := Funding{
+	newFunding := Funding{
 		Asset: f.Asset,
-		Parts: new_parts,
+		Parts: newParts,
 	}
-	return new_funding
+	return newFunding
 }

@@ -18,7 +18,6 @@ import (
 	"github.com/formancehq/machine/core"
 	"github.com/formancehq/machine/vm/program"
 	"github.com/logrusorgru/aurora"
-	ledger "github.com/numary/ledger/pkg/core"
 )
 
 const (
@@ -28,52 +27,61 @@ const (
 	EXIT_FAIL_INSUFFICIENT_FUNDS
 )
 
-func StdOutPrinter(c chan core.Value) {
-	for v := range c {
-		fmt.Println("OUT:", v)
-	}
-}
-
-func NewMachine(p program.Program) *Machine {
-	printc := make(chan core.Value)
-
-	m := Machine{
-		Program:             p,
-		UnresolvedResources: p.Resources,
-		Resources:           make([]core.Value, 0),
-		print_chan:          printc,
-		Printer:             StdOutPrinter,
-		Postings:            make([]ledger.Posting, 0),
-		TxMeta:              map[string]core.Value{},
-	}
-
-	return &m
-}
-
 type Machine struct {
 	P                   uint
 	Program             program.Program
 	Vars                map[string]core.Value
 	UnresolvedResources []program.Resource
 	Resources           []core.Value // Constants and Variables
-	resolve_called      bool
-	Balances            map[core.Account]map[core.Asset]ledger.MonetaryInt // keeps tracks of balances througout execution
-	set_balance_called  bool
+	resolveCalled       bool
+	Balances            map[core.Account]map[core.Asset]core.MonetaryInt // keeps tracks of balances throughout execution
+	setBalanceCalled    bool
 	Stack               []core.Value
-	Postings            []ledger.Posting      // accumulates postings throughout execution
+	Postings            []Posting             // accumulates postings throughout execution
 	TxMeta              map[string]core.Value // accumulates transaction meta throughout execution
 	Printer             func(chan core.Value)
-	print_chan          chan core.Value
+	printChan           chan core.Value
 	Debug               bool
 }
 
-func (m *Machine) GetTxMetaJson() ledger.Metadata {
-	meta := make(ledger.Metadata)
+type Posting struct {
+	Source      string            `json:"source"`
+	Destination string            `json:"destination"`
+	Amount      *core.MonetaryInt `json:"amount"`
+	Asset       string            `json:"asset"`
+}
+
+type Metadata map[string]any
+
+func NewMachine(p program.Program) *Machine {
+	printChan := make(chan core.Value)
+
+	m := Machine{
+		Program:             p,
+		UnresolvedResources: p.Resources,
+		Resources:           make([]core.Value, 0),
+		printChan:           printChan,
+		Printer:             StdOutPrinter,
+		Postings:            make([]Posting, 0),
+		TxMeta:              map[string]core.Value{},
+	}
+
+	return &m
+}
+
+func StdOutPrinter(c chan core.Value) {
+	for v := range c {
+		fmt.Println("OUT:", v)
+	}
+}
+
+func (m *Machine) GetTxMetaJSON() Metadata {
+	meta := make(Metadata)
 	for k, v := range m.TxMeta {
-		val_json, _ := json.Marshal(v)
+		valJSON, _ := json.Marshal(v)
 		v, _ := json.Marshal(core.ValueJSON{
 			Type:  v.GetType().String(),
-			Value: val_json,
+			Value: valJSON,
 		})
 		meta[k] = v
 	}
@@ -88,20 +96,20 @@ func (m *Machine) getResource(addr core.Address) (*core.Value, bool) {
 	return &m.Resources[a], true
 }
 
-func (m *Machine) withdrawAll(account core.Account, asset core.Asset, overdraft ledger.MonetaryInt) (*core.Funding, error) {
-	if acc_balance, ok := m.Balances[account]; ok {
-		if balance, ok := acc_balance[asset]; ok {
-			amount_taken := *ledger.NewMonetaryInt(0)
-			if balance.Add(&overdraft).Gt(ledger.NewMonetaryInt(0)) {
-				amount_taken = *balance.Add(&overdraft)
-				acc_balance[asset] = *overdraft.Neg()
+func (m *Machine) withdrawAll(account core.Account, asset core.Asset, overdraft core.MonetaryInt) (*core.Funding, error) {
+	if accBalances, ok := m.Balances[account]; ok {
+		if balance, ok := accBalances[asset]; ok {
+			amountTaken := *core.NewMonetaryInt(0)
+			if balance.Add(&overdraft).Gt(core.NewMonetaryInt(0)) {
+				amountTaken = *balance.Add(&overdraft)
+				accBalances[asset] = *overdraft.Neg()
 			}
 
 			return &core.Funding{
 				Asset: asset,
 				Parts: []core.FundingPart{{
 					Account: account,
-					Amount:  amount_taken,
+					Amount:  amountTaken,
 				}},
 			}, nil
 		}
@@ -110,9 +118,9 @@ func (m *Machine) withdrawAll(account core.Account, asset core.Asset, overdraft 
 }
 
 func (m *Machine) withdrawAlways(account core.Account, mon core.Monetary) (*core.Funding, error) {
-	if acc_balance, ok := m.Balances[account]; ok {
-		if balance, ok := acc_balance[mon.Asset]; ok {
-			acc_balance[mon.Asset] = *balance.Sub(&mon.Amount)
+	if accBalance, ok := m.Balances[account]; ok {
+		if balance, ok := accBalance[mon.Asset]; ok {
+			accBalance[mon.Asset] = *balance.Sub(&mon.Amount)
 			return &core.Funding{
 				Asset: mon.Asset,
 				Parts: []core.FundingPart{{
@@ -129,11 +137,11 @@ func (m *Machine) credit(account core.Account, funding core.Funding) {
 	if account == "world" {
 		return
 	}
-	if acc_balance, ok := m.Balances[account]; ok {
-		if _, ok := acc_balance[funding.Asset]; ok {
+	if accBalance, ok := m.Balances[account]; ok {
+		if _, ok := accBalance[funding.Asset]; ok {
 			for _, part := range funding.Parts {
-				balance := acc_balance[funding.Asset]
-				acc_balance[funding.Asset] = *balance.Add(&part.Amount)
+				balance := accBalance[funding.Asset]
+				accBalance[funding.Asset] = *balance.Add(&part.Amount)
 			}
 		}
 	}
@@ -181,7 +189,7 @@ func (m *Machine) tick() (bool, byte) {
 		m.Stack = append(m.Stack, v)
 	case program.OP_DELETE:
 		n := m.popValue()
-		if n.GetType() == core.TYPE_FUNDING {
+		if n.GetType() == core.TypeFunding {
 			return true, EXIT_FAIL_INVALID
 		}
 	case program.OP_IADD:
@@ -195,7 +203,7 @@ func (m *Machine) tick() (bool, byte) {
 		m.pushValue(*a.Sub(&b))
 	case program.OP_PRINT:
 		a := m.popValue()
-		m.print_chan <- a
+		m.printChan <- a
 	case program.OP_FAIL:
 		return true, EXIT_FAIL
 	case program.OP_ASSET:
@@ -216,7 +224,7 @@ func (m *Machine) tick() (bool, byte) {
 		asset := m.popAsset()
 		m.pushValue(core.Monetary{
 			Asset:  asset,
-			Amount: ledger.MonetaryInt(amount),
+			Amount: amount,
 		})
 
 	case program.OP_MONETARY_ADD:
@@ -279,7 +287,7 @@ func (m *Machine) tick() (bool, byte) {
 		if funding.Asset != mon.Asset {
 			return true, EXIT_FAIL_INVALID
 		}
-		missing := *ledger.NewMonetaryInt(0)
+		missing := *core.NewMonetaryInt(0)
 		total := funding.Total()
 		if mon.Amount.Gt(&total) {
 			missing = *mon.Amount.Sub(&total)
@@ -356,10 +364,10 @@ func (m *Machine) tick() (bool, byte) {
 		for _, part := range funding.Parts {
 			src := part.Account
 			amt := part.Amount
-			if amt.Eq(ledger.NewMonetaryInt(0)) {
+			if amt.Eq(core.NewMonetaryInt(0)) {
 				continue
 			}
-			m.Postings = append(m.Postings, ledger.Posting{
+			m.Postings = append(m.Postings, Posting{
 				Source:      string(src),
 				Destination: string(dest),
 				Asset:       string(funding.Asset),
@@ -385,8 +393,8 @@ func (m *Machine) tick() (bool, byte) {
 }
 
 func (m *Machine) Execute() (byte, error) {
-	go m.Printer(m.print_chan)
-	defer close(m.print_chan)
+	go m.Printer(m.printChan)
+	defer close(m.printChan)
 
 	if len(m.Resources) != len(m.UnresolvedResources) {
 		return 0, errors.New("resources haven't been initialized")
@@ -395,12 +403,12 @@ func (m *Machine) Execute() (byte, error) {
 	}
 
 	for {
-		finished, exit_code := m.tick()
+		finished, exitCode := m.tick()
 		if finished {
-			if exit_code == EXIT_OK && len(m.Stack) != 0 {
+			if exitCode == EXIT_OK && len(m.Stack) != 0 {
 				return EXIT_FAIL_INVALID, nil
 			} else {
-				return exit_code, nil
+				return exitCode, nil
 			}
 		}
 	}
@@ -409,7 +417,7 @@ func (m *Machine) Execute() (byte, error) {
 type BalanceRequest struct {
 	Account  string
 	Asset    string
-	Response chan ledger.MonetaryInt
+	Response chan core.MonetaryInt
 	Error    error
 }
 
@@ -417,30 +425,30 @@ func (m *Machine) ResolveBalances() (chan BalanceRequest, error) {
 	if len(m.Resources) != len(m.UnresolvedResources) {
 		return nil, errors.New("tried to resolve balances before resources")
 	}
-	if m.set_balance_called {
+	if m.setBalanceCalled {
 		return nil, errors.New("tried to call ResolveBalances twice")
 	}
-	m.set_balance_called = true
-	ch := make(chan BalanceRequest)
+	m.setBalanceCalled = true
+	resChan := make(chan BalanceRequest)
 	go func() {
-		defer close(ch)
-		m.Balances = make(map[core.Account]map[core.Asset]ledger.MonetaryInt)
+		defer close(resChan)
+		m.Balances = make(map[core.Account]map[core.Asset]core.MonetaryInt)
 		// for every account that we need balances of, check if it's there
-		for addr, needed_assets := range m.Program.NeededBalances {
+		for addr, neededAssets := range m.Program.NeededBalances {
 			account, ok := m.getResource(addr)
 			if !ok {
-				ch <- BalanceRequest{
+				resChan <- BalanceRequest{
 					Error: errors.New("invalid program (resolve balances: invalid address of account)"),
 				}
 				return
 			}
 			if account, ok := (*account).(core.Account); ok {
-				m.Balances[account] = make(map[core.Asset]ledger.MonetaryInt)
+				m.Balances[account] = make(map[core.Asset]core.MonetaryInt)
 				// for every asset, send request
-				for addr := range needed_assets {
+				for addr := range neededAssets {
 					mon, ok := m.getResource(addr)
 					if !ok {
-						ch <- BalanceRequest{
+						resChan <- BalanceRequest{
 							Error: errors.New("invalid program (resolve balances: invalid address of monetary)"),
 						}
 						return
@@ -448,40 +456,40 @@ func (m *Machine) ResolveBalances() (chan BalanceRequest, error) {
 					if ha, ok := (*mon).(core.HasAsset); ok {
 						asset := ha.GetAsset()
 						if string(account) == "world" {
-							m.Balances[account][asset] = *ledger.NewMonetaryInt(0)
+							m.Balances[account][asset] = *core.NewMonetaryInt(0)
 							continue
 						}
-						resp_ch := make(chan ledger.MonetaryInt)
-						ch <- BalanceRequest{
+						respChan := make(chan core.MonetaryInt)
+						resChan <- BalanceRequest{
 							Account:  string(account),
 							Asset:    string(asset),
-							Response: resp_ch,
+							Response: respChan,
 						}
-						resp, ok := <-resp_ch
-						close(resp_ch)
+						resp, ok := <-respChan
+						close(respChan)
 						if !ok {
-							ch <- BalanceRequest{
+							resChan <- BalanceRequest{
 								Error: errors.New("error on response channel"),
 							}
 							return
 						}
 						m.Balances[account][asset] = resp
 					} else {
-						ch <- BalanceRequest{
+						resChan <- BalanceRequest{
 							Error: errors.New("invalid program (resolve balances: not an asset)"),
 						}
 						return
 					}
 				}
 			} else {
-				ch <- BalanceRequest{
+				resChan <- BalanceRequest{
 					Error: errors.New("incorrect program (resolve balances: not an account)"),
 				}
 				return
 			}
 		}
 	}()
-	return ch, nil
+	return resChan, nil
 }
 
 type MetadataRequest struct {
@@ -492,10 +500,10 @@ type MetadataRequest struct {
 }
 
 func (m *Machine) ResolveResources() (chan MetadataRequest, error) {
-	if m.resolve_called {
+	if m.resolveCalled {
 		return nil, errors.New("tried to call ResolveResources twice")
 	}
-	m.resolve_called = true
+	m.resolveCalled = true
 	ch := make(chan MetadataRequest)
 	go func() {
 		defer close(ch)
@@ -516,20 +524,20 @@ func (m *Machine) ResolveResources() (chan MetadataRequest, error) {
 					return
 				}
 			case program.Metadata:
-				source_account, ok := m.getResource(res.SourceAccount)
+				sourceAccount, ok := m.getResource(res.SourceAccount)
 				if !ok {
 					ch <- MetadataRequest{
 						Error: errors.New("tried to request metadata of an account which has not yet been solved"),
 					}
 					return
 				}
-				if (*source_account).GetType() != core.TYPE_ACCOUNT {
+				if (*sourceAccount).GetType() != core.TypeAccount {
 					ch <- MetadataRequest{
-						Error: fmt.Errorf("tried to request metadata on wrong entity: %v instead of ACCOUNT", (*source_account).GetType()),
+						Error: fmt.Errorf("tried to request metadata on wrong entity: %v instead of ACCOUNT", (*sourceAccount).GetType()),
 					}
 					return
 				}
-				account := (*source_account).(core.Account)
+				account := (*sourceAccount).(core.Account)
 				resp := make(chan core.Value)
 				ch <- MetadataRequest{
 					Account:  string(account),
