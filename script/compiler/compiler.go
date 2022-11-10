@@ -144,7 +144,7 @@ func (p *parseVisitor) VisitLit(c parser.ILiteralContext, push bool) (core.Type,
 			return 0, nil, LogicError(c, err)
 		}
 		if push {
-			err := p.PushInteger(*number)
+			err := p.PushInteger(number)
 			if err != nil {
 				return 0, nil, LogicError(c, err)
 			}
@@ -169,7 +169,7 @@ func (p *parseVisitor) VisitLit(c parser.ILiteralContext, push bool) (core.Type,
 		}
 		monetary := core.Monetary{
 			Asset:  core.Asset(asset),
-			Amount: *amt,
+			Amount: amt,
 		}
 		addr, err := p.AllocateResource(program.Constant{Inner: monetary})
 		if err != nil {
@@ -260,10 +260,26 @@ func (p *parseVisitor) VisitSetTxMeta(ctx *parser.SetTxMetaContext) *CompileErro
 
 // set_account_meta statement
 func (p *parseVisitor) VisitSetAccountMeta(ctx *parser.SetAccountMetaContext) *CompileError {
-	_, _, compErr := p.VisitExpr(ctx.GetValue(), false)
+	_, _, compErr := p.VisitExpr(ctx.GetValue(), true)
 	if compErr != nil {
 		return compErr
 	}
+
+	keyAddr, err := p.AllocateResource(program.Constant{
+		Inner: core.String(strings.Trim(ctx.GetKey().GetText(), `"`)),
+	})
+	if err != nil {
+		return LogicError(ctx, err)
+	}
+	p.PushAddress(*keyAddr)
+
+	accAddr, err := p.AllocateResource(program.Constant{
+		Inner: core.Account(ctx.GetAcc().GetText()[1:]),
+	})
+	if err != nil {
+		return LogicError(ctx, err)
+	}
+	p.PushAddress(*accAddr)
 
 	p.AppendInstruction(program.OP_ACCOUNT_META)
 

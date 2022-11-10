@@ -10,19 +10,19 @@ func TestFundingTake(t *testing.T) {
 		Parts: []FundingPart{
 			{
 				Account: "aaa",
-				Amount:  *NewMonetaryInt(70),
+				Amount:  NewMonetaryInt(70),
 			},
 			{
 				Account: "bbb",
-				Amount:  *NewMonetaryInt(30),
+				Amount:  NewMonetaryInt(30),
 			},
 			{
 				Account: "ccc",
-				Amount:  *NewMonetaryInt(50),
+				Amount:  NewMonetaryInt(50),
 			},
 		},
 	}
-	result, remainder, err := f.Take(*NewMonetaryInt(80))
+	result, remainder, err := f.Take(NewMonetaryInt(80))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -31,11 +31,11 @@ func TestFundingTake(t *testing.T) {
 		Parts: []FundingPart{
 			{
 				Account: "aaa",
-				Amount:  *NewMonetaryInt(70),
+				Amount:  NewMonetaryInt(70),
 			},
 			{
 				Account: "bbb",
-				Amount:  *NewMonetaryInt(10),
+				Amount:  NewMonetaryInt(10),
 			},
 		},
 	}
@@ -47,11 +47,11 @@ func TestFundingTake(t *testing.T) {
 		Parts: []FundingPart{
 			{
 				Account: "bbb",
-				Amount:  *NewMonetaryInt(20),
+				Amount:  NewMonetaryInt(20),
 			},
 			{
 				Account: "ccc",
-				Amount:  *NewMonetaryInt(50),
+				Amount:  NewMonetaryInt(50),
 			},
 		},
 	}
@@ -66,17 +66,17 @@ func TestFundingTakeMaxUnder(t *testing.T) {
 		Parts: []FundingPart{
 			{
 				Account: "aaa",
-				Amount:  *NewMonetaryInt(30),
+				Amount:  NewMonetaryInt(30),
 			},
 		},
 	}
-	result, remainder := f.TakeMax(*NewMonetaryInt(80))
+	result, remainder := f.TakeMax(NewMonetaryInt(80))
 	if !ValueEquals(result, Funding{
 		Asset: "COIN",
 		Parts: []FundingPart{
 			{
 				Account: "aaa",
-				Amount:  *NewMonetaryInt(30),
+				Amount:  NewMonetaryInt(30),
 			},
 		},
 	}) {
@@ -95,17 +95,17 @@ func TestFundingTakeMaxAbove(t *testing.T) {
 		Parts: []FundingPart{
 			{
 				Account: "aaa",
-				Amount:  *NewMonetaryInt(90),
+				Amount:  NewMonetaryInt(90),
 			},
 		},
 	}
-	result, remainder := f.TakeMax(*NewMonetaryInt(80))
+	result, remainder := f.TakeMax(NewMonetaryInt(80))
 	if !ValueEquals(result, Funding{
 		Asset: "COIN",
 		Parts: []FundingPart{
 			{
 				Account: "aaa",
-				Amount:  *NewMonetaryInt(80),
+				Amount:  NewMonetaryInt(80),
 			},
 		},
 	}) {
@@ -116,7 +116,7 @@ func TestFundingTakeMaxAbove(t *testing.T) {
 		Parts: []FundingPart{
 			{
 				Account: "aaa",
-				Amount:  *NewMonetaryInt(10),
+				Amount:  NewMonetaryInt(10),
 			},
 		},
 	}) {
@@ -130,15 +130,15 @@ func TestFundingReversal(t *testing.T) {
 		Parts: []FundingPart{
 			{
 				Account: "aaa",
-				Amount:  *NewMonetaryInt(10),
+				Amount:  NewMonetaryInt(10),
 			},
 			{
 				Account: "bbb",
-				Amount:  *NewMonetaryInt(20),
+				Amount:  NewMonetaryInt(20),
 			},
 			{
 				Account: "ccc",
-				Amount:  *NewMonetaryInt(30),
+				Amount:  NewMonetaryInt(30),
 			},
 		},
 	}
@@ -148,15 +148,15 @@ func TestFundingReversal(t *testing.T) {
 		Parts: []FundingPart{
 			{
 				Account: "ccc",
-				Amount:  *NewMonetaryInt(30),
+				Amount:  NewMonetaryInt(30),
 			},
 			{
 				Account: "bbb",
-				Amount:  *NewMonetaryInt(20),
+				Amount:  NewMonetaryInt(20),
 			},
 			{
 				Account: "aaa",
-				Amount:  *NewMonetaryInt(10),
+				Amount:  NewMonetaryInt(10),
 			},
 		},
 	}) {

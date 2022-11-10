@@ -34,11 +34,12 @@ type Machine struct {
 	UnresolvedResources []program.Resource
 	Resources           []core.Value // Constants and Variables
 	resolveCalled       bool
-	Balances            map[core.Account]map[core.Asset]core.MonetaryInt // keeps tracks of balances throughout execution
+	Balances            map[core.Account]map[core.Asset]*core.MonetaryInt // keeps tracks of balances throughout execution
 	setBalanceCalled    bool
 	Stack               []core.Value
-	Postings            []Posting             // accumulates postings throughout execution
-	TxMeta              map[string]core.Value // accumulates transaction meta throughout execution
+	Postings            []Posting                              // accumulates postings throughout execution
+	TxMeta              map[string]core.Value                  // accumulates transaction meta throughout execution
+	AccountsMeta        map[core.Account]map[string]core.Value // accumulates accounts meta throughout execution
 	Printer             func(chan core.Value)
 	printChan           chan core.Value
 	Debug               bool
@@ -64,6 +65,7 @@ func NewMachine(p program.Program) *Machine {
 		Printer:             StdOutPrinter,
 		Postings:            make([]Posting, 0),
 		TxMeta:              map[string]core.Value{},
+		AccountsMeta:        map[core.Account]map[string]core.Value{},
 	}
 
 	return &m
@@ -75,6 +77,56 @@ func StdOutPrinter(c chan core.Value) {
 	}
 }
 
+func (m *Machine) GetTxMetaJSON() Metadata {
+	meta := make(Metadata)
+	for k, v := range m.TxMeta {
+		valJSON, err := json.Marshal(v)
+		if err != nil {
+			panic(err)
+		}
+		v, err := json.Marshal(core.ValueJSON{
+			Type:  v.GetType().String(),
+			Value: valJSON,
+		})
+		if err != nil {
+			panic(err)
+		}
+		meta[k] = v
+	}
+	return meta
+}
+
+func (m *Machine) GetAccountMetaJSON() Metadata {
+	res := Metadata{}
+	if len(m.AccountsMeta) == 0 {
+		return res
+	}
+
+	fmt.Printf("ACCMETA:%+v\n", m.AccountsMeta)
+	for account, meta := range m.AccountsMeta {
+		fmt.Printf("META:%+v\n", meta)
+		for k, v := range meta {
+			if _, ok := res[account.String()]; !ok {
+				res[account.String()] = map[string][]byte{}
+			}
+			valJSON, err := json.Marshal(v)
+			if err != nil {
+				panic(err)
+			}
+			v, err := json.Marshal(core.ValueJSON{
+				Type:  v.GetType().String(),
+				Value: valJSON,
+			})
+			if err != nil {
+				panic(err)
+			}
+			res[account.String()].(map[string][]byte)[k] = v
+		}
+	}
+
+	return res
+}
+
 func (m *Machine) getResource(addr core.Address) (*core.Value, bool) {
 	a := int(addr)
 	if a >= len(m.Resources) {
@@ -83,13 +135,13 @@ func (m *Machine) getResource(addr core.Address) (*core.Value, bool) {
 	return &m.Resources[a], true
 }
 
-func (m *Machine) withdrawAll(account core.Account, asset core.Asset, overdraft core.MonetaryInt) (*core.Funding, error) {
+func (m *Machine) withdrawAll(account core.Account, asset core.Asset, overdraft *core.MonetaryInt) (*core.Funding, error) {
 	if accBalances, ok := m.Balances[account]; ok {
 		if balance, ok := accBalances[asset]; ok {
-			amountTaken := *core.NewMonetaryInt(0)
-			if balance.Add(&overdraft).Gt(core.NewMonetaryInt(0)) {
-				amountTaken = *balance.Add(&overdraft)
-				accBalances[asset] = *overdraft.Neg()
+			amountTaken := core.NewMonetaryInt(0)
+			if balance.Add(overdraft).Gt(core.NewMonetaryInt(0)) {
+				amountTaken = balance.Add(overdraft)
+				accBalances[asset] = overdraft.Neg()
 			}
 
 			return &core.Funding{
@@ -107,7 +159,7 @@ func (m *Machine) withdrawAll(account core.Account, asset core.Asset, overdraft 
 func (m *Machine) withdrawAlways(account core.Account, mon core.Monetary) (*core.Funding, error) {
 	if accBalance, ok := m.Balances[account]; ok {
 		if balance, ok := accBalance[mon.Asset]; ok {
-			accBalance[mon.Asset] = *balance.Sub(&mon.Amount)
+			accBalance[mon.Asset] = balance.Sub(mon.Amount)
 			return &core.Funding{
 				Asset: mon.Asset,
 				Parts: []core.FundingPart{{
@@ -128,7 +180,7 @@ func (m *Machine) credit(account core.Account, funding core.Funding) {
 		if _, ok := accBalance[funding.Asset]; ok {
 			for _, part := range funding.Parts {
 				balance := accBalance[funding.Asset]
-				accBalance[funding.Asset] = *balance.Add(&part.Amount)
+				accBalance[funding.Asset] = balance.Add(part.Amount)
 			}
 		}
 	}
@@ -140,7 +192,7 @@ func (m *Machine) repay(funding core.Funding) {
 			continue
 		}
 		balance := m.Balances[part.Account][funding.Asset]
-		m.Balances[part.Account][funding.Asset] = *balance.Add(&part.Amount)
+		m.Balances[part.Account][funding.Asset] = balance.Add(part.Amount)
 	}
 }
 
@@ -165,11 +217,11 @@ func (m *Machine) tick() (bool, byte) {
 		m.P += 2
 	case program.OP_IPUSH:
 		bytes := m.Program.Instructions[m.P+1 : m.P+9]
-		v := core.Number(*big.NewInt(int64(binary.LittleEndian.Uint64(bytes))))
+		v := core.Number(big.NewInt(int64(binary.LittleEndian.Uint64(bytes))))
 		m.Stack = append(m.Stack, v)
 		m.P += 8
 	case program.OP_BUMP:
-		n := big.Int(m.popNumber())
+		n := big.Int(*m.popNumber())
 		idx := len(m.Stack) - int(n.Uint64()) - 1
 		v := m.Stack[idx]
 		m.Stack = append(m.Stack[:idx], m.Stack[idx+1:]...)
@@ -182,12 +234,11 @@ func (m *Machine) tick() (bool, byte) {
 	case program.OP_IADD:
 		b := m.popNumber()
 		a := m.popNumber()
-
-		m.pushValue(*a.Add(&b))
+		m.pushValue(a.Add(b))
 	case program.OP_ISUB:
 		b := m.popNumber()
 		a := m.popNumber()
-		m.pushValue(*a.Sub(&b))
+		m.pushValue(a.Sub(b))
 	case program.OP_PRINT:
 		a := m.popValue()
 		m.printChan <- a
@@ -222,7 +273,7 @@ func (m *Machine) tick() (bool, byte) {
 		}
 		m.pushValue(core.Monetary{
 			Asset:  a.Asset,
-			Amount: *a.Amount.Add(&b.Amount),
+			Amount: a.Amount.Add(b.Amount),
 		})
 
 	case program.OP_MAKE_ALLOTMENT:
@@ -274,10 +325,10 @@ func (m *Machine) tick() (bool, byte) {
 		if funding.Asset != mon.Asset {
 			return true, EXIT_FAIL_INVALID
 		}
-		missing := *core.NewMonetaryInt(0)
+		missing := core.NewMonetaryInt(0)
 		total := funding.Total()
-		if mon.Amount.Gt(&total) {
-			missing = *mon.Amount.Sub(&total)
+		if mon.Amount.Gt(total) {
+			missing = mon.Amount.Sub(total)
 		}
 		result, remainder := funding.TakeMax(mon.Amount)
 		m.pushValue(core.Monetary{
@@ -358,13 +409,23 @@ func (m *Machine) tick() (bool, byte) {
 				Source:      string(src),
 				Destination: string(dest),
 				Asset:       string(funding.Asset),
-				Amount:      &amt,
+				Amount:      amt,
 			})
 		}
+
 	case program.OP_TX_META:
 		k := m.popString()
 		v := m.popValue()
 		m.TxMeta[string(k)] = v
+
+	case program.OP_ACCOUNT_META:
+		a := m.popAccount()
+		k := m.popString()
+		v := m.popValue()
+		if m.AccountsMeta[a] == nil {
+			m.AccountsMeta[a] = map[string]core.Value{}
+		}
+		m.AccountsMeta[a][string(k)] = v
 
 	default:
 		return true, EXIT_FAIL_INVALID
@@ -404,7 +465,7 @@ func (m *Machine) Execute() (byte, error) {
 type BalanceRequest struct {
 	Account  string
 	Asset    string
-	Response chan core.MonetaryInt
+	Response chan *core.MonetaryInt
 	Error    error
 }
 
@@ -419,7 +480,7 @@ func (m *Machine) ResolveBalances() (chan BalanceRequest, error) {
 	resChan := make(chan BalanceRequest)
 	go func() {
 		defer close(resChan)
-		m.Balances = make(map[core.Account]map[core.Asset]core.MonetaryInt)
+		m.Balances = make(map[core.Account]map[core.Asset]*core.MonetaryInt)
 		// for every account that we need balances of, check if it's there
 		for addr, neededAssets := range m.Program.NeededBalances {
 			account, ok := m.getResource(addr)
@@ -430,7 +491,7 @@ func (m *Machine) ResolveBalances() (chan BalanceRequest, error) {
 				return
 			}
 			if account, ok := (*account).(core.Account); ok {
-				m.Balances[account] = make(map[core.Asset]core.MonetaryInt)
+				m.Balances[account] = make(map[core.Asset]*core.MonetaryInt)
 				// for every asset, send request
 				for addr := range neededAssets {
 					mon, ok := m.getResource(addr)
@@ -443,10 +504,10 @@ func (m *Machine) ResolveBalances() (chan BalanceRequest, error) {
 					if ha, ok := (*mon).(core.HasAsset); ok {
 						asset := ha.GetAsset()
 						if string(account) == "world" {
-							m.Balances[account][asset] = *core.NewMonetaryInt(0)
+							m.Balances[account][asset] = core.NewMonetaryInt(0)
 							continue
 						}
-						respChan := make(chan core.MonetaryInt)
+						respChan := make(chan *core.MonetaryInt)
 						resChan <- BalanceRequest{
 							Account:  string(account),
 							Asset:    string(asset),

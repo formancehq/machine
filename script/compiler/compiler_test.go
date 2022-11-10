@@ -54,12 +54,12 @@ func test(t *testing.T, c TestCase) {
 			return
 		} else {
 			for i := range c.Expected.Resources {
-				if !checkResourceEquals(t, p.Resources[i], c.Expected.Resources[i]) {
+				if !checkResourcesEqual(p.Resources[i], c.Expected.Resources[i]) {
 					t.Error(fmt.Errorf("%v: %v is not %v: %v",
 						p.Resources[i], reflect.TypeOf(p.Resources[i]).Name(),
 						c.Expected.Resources[i], reflect.TypeOf(c.Expected.Resources[i]).Name(),
 					))
-					t.Error(fmt.Errorf("unexpected program resources: %v", *p))
+					t.Error(fmt.Errorf("unexpected program resources\n%+v\n%+v", p.Resources, c.Expected.Resources))
 					return
 				}
 			}
@@ -67,15 +67,12 @@ func test(t *testing.T, c TestCase) {
 	}
 }
 
-func checkResourceEquals(t *testing.T, res program.Resource, expected program.Resource) bool {
+func checkResourcesEqual(res, expected program.Resource) bool {
 	if reflect.TypeOf(res) != reflect.TypeOf(expected) {
 		return false
 	}
 	switch res := res.(type) {
 	case program.Constant:
-		if reflect.TypeOf(res.Inner).Kind() == reflect.Ptr {
-			t.Fatal("generated program contained a constant with a pointer value")
-		}
 		return core.ValueEquals(res.Inner, expected.(program.Constant).Inner)
 	case program.Parameter:
 		e := expected.(program.Parameter)
@@ -99,7 +96,7 @@ func TestSimplePrint(t *testing.T) {
 				program.OP_PRINT,
 			},
 			Resources: []program.Resource{
-				program.Constant{Inner: *core.NewMonetaryInt(1)},
+				program.Constant{Inner: core.NewMonetaryInt(1)},
 			},
 			Error: "",
 		},
@@ -119,9 +116,9 @@ func TestCompositeExpr(t *testing.T) {
 				program.OP_PRINT,
 			},
 			Resources: []program.Resource{
-				program.Constant{Inner: *core.NewMonetaryInt(29)},
-				program.Constant{Inner: *core.NewMonetaryInt(15)},
-				program.Constant{Inner: *core.NewMonetaryInt(2)},
+				program.Constant{Inner: core.NewMonetaryInt(29)},
+				program.Constant{Inner: core.NewMonetaryInt(15)},
+				program.Constant{Inner: core.NewMonetaryInt(2)},
 			},
 			Error: "",
 		},
@@ -343,14 +340,14 @@ func TestDestinationAllotment(t *testing.T) {
 			Resources: []program.Resource{
 				program.Constant{Inner: core.Monetary{
 					Asset:  "EUR/2",
-					Amount: *core.NewMonetaryInt(43),
+					Amount: core.NewMonetaryInt(43),
 				}},
 				program.Constant{Inner: core.Account("foo")},
-				program.Constant{Inner: *core.NewMonetaryInt(0)},
-				program.Constant{Inner: *core.NewMonetaryInt(1)},
+				program.Constant{Inner: core.NewMonetaryInt(0)},
+				program.Constant{Inner: core.NewMonetaryInt(1)},
 				program.Constant{Inner: core.Portion{Specific: big.NewRat(7, 8)}},
 				program.Constant{Inner: core.Portion{Specific: big.NewRat(1, 8)}},
-				program.Constant{Inner: *core.NewMonetaryInt(2)},
+				program.Constant{Inner: core.NewMonetaryInt(2)},
 				program.Constant{Inner: core.Account("bar")},
 				program.Constant{Inner: core.Account("baz")},
 			},
@@ -428,18 +425,18 @@ func TestDestinationInOrder(t *testing.T) {
 			Resources: []program.Resource{
 				program.Constant{Inner: core.Monetary{
 					Asset:  "COIN",
-					Amount: *core.NewMonetaryInt(50),
+					Amount: core.NewMonetaryInt(50),
 				}},
 				program.Constant{Inner: core.Account("a")},
-				program.Constant{Inner: *core.NewMonetaryInt(0)},
-				program.Constant{Inner: *core.NewMonetaryInt(1)},
+				program.Constant{Inner: core.NewMonetaryInt(0)},
+				program.Constant{Inner: core.NewMonetaryInt(1)},
 				program.Constant{Inner: core.Monetary{
 					Asset:  "COIN",
-					Amount: *core.NewMonetaryInt(10),
+					Amount: core.NewMonetaryInt(10),
 				}},
-				program.Constant{Inner: *core.NewMonetaryInt(2)},
+				program.Constant{Inner: core.NewMonetaryInt(2)},
 				program.Constant{Inner: core.Account("b")},
-				program.Constant{Inner: *core.NewMonetaryInt(3)},
+				program.Constant{Inner: core.NewMonetaryInt(3)},
 				program.Constant{Inner: core.Account("c")},
 			},
 			Error: "",
@@ -462,17 +459,17 @@ func TestAllocationPercentages(t *testing.T) {
 			Resources: []program.Resource{
 				program.Constant{Inner: core.Monetary{
 					Asset:  "EUR/2",
-					Amount: *core.NewMonetaryInt(43),
+					Amount: core.NewMonetaryInt(43),
 				}},
 				program.Constant{Inner: core.Account("foo")},
-				program.Constant{Inner: *core.NewMonetaryInt(0)},
-				program.Constant{Inner: *core.NewMonetaryInt(1)},
+				program.Constant{Inner: core.NewMonetaryInt(0)},
+				program.Constant{Inner: core.NewMonetaryInt(1)},
 				program.Constant{Inner: core.Portion{Specific: big.NewRat(1, 2)}},
 				program.Constant{Inner: core.Portion{Specific: big.NewRat(3, 8)}},
 				program.Constant{Inner: core.Portion{Specific: big.NewRat(1, 8)}},
-				program.Constant{Inner: *core.NewMonetaryInt(3)},
+				program.Constant{Inner: core.NewMonetaryInt(3)},
 				program.Constant{Inner: core.Account("bar")},
-				program.Constant{Inner: *core.NewMonetaryInt(2)},
+				program.Constant{Inner: core.NewMonetaryInt(2)},
 				program.Constant{Inner: core.Account("baz")},
 				program.Constant{Inner: core.Account("qux")},
 			},
@@ -508,10 +505,10 @@ func TestSend(t *testing.T) {
 				program.OP_SEND,  // [EUR/2]
 				program.OP_REPAY, //
 			}, Resources: []program.Resource{
-				program.Constant{Inner: core.Monetary{Asset: "EUR/2", Amount: *core.NewMonetaryInt(99)}},
+				program.Constant{Inner: core.Monetary{Asset: "EUR/2", Amount: core.NewMonetaryInt(99)}},
 				program.Constant{Inner: alice},
-				program.Constant{Inner: *core.NewMonetaryInt(0)},
-				program.Constant{Inner: *core.NewMonetaryInt(1)},
+				program.Constant{Inner: core.NewMonetaryInt(0)},
+				program.Constant{Inner: core.NewMonetaryInt(1)},
 				program.Constant{Inner: bob}},
 			Error: "",
 		},
@@ -539,7 +536,7 @@ func TestSendAll(t *testing.T) {
 			}, Resources: []program.Resource{
 				program.Constant{Inner: core.Asset("EUR/2")},
 				program.Constant{Inner: core.Account("alice")},
-				program.Constant{Inner: *core.NewMonetaryInt(0)},
+				program.Constant{Inner: core.NewMonetaryInt(0)},
 				program.Constant{Inner: core.Account("bob")}},
 			Error: "",
 		},
@@ -566,11 +563,11 @@ func TestMetadata(t *testing.T) {
 				program.Parameter{Typ: core.TypeAccount, Name: "sale"},
 				program.Metadata{Typ: core.TypeAccount, SourceAccount: core.NewAddress(0), Key: "seller"},
 				program.Metadata{Typ: core.TypePortion, SourceAccount: core.NewAddress(1), Key: "commission"},
-				program.Constant{Inner: core.Monetary{Asset: "EUR/2", Amount: *core.NewMonetaryInt(53)}},
-				program.Constant{Inner: *core.NewMonetaryInt(0)},
-				program.Constant{Inner: *core.NewMonetaryInt(1)},
+				program.Constant{Inner: core.Monetary{Asset: "EUR/2", Amount: core.NewMonetaryInt(53)}},
+				program.Constant{Inner: core.NewMonetaryInt(0)},
+				program.Constant{Inner: core.NewMonetaryInt(1)},
 				program.Constant{Inner: core.NewPortionRemaining()},
-				program.Constant{Inner: *core.NewMonetaryInt(2)},
+				program.Constant{Inner: core.NewMonetaryInt(2)},
 				program.Constant{Inner: core.Account("platform")},
 			},
 			Error: "",
@@ -990,17 +987,19 @@ func TestSetAccountMeta(t *testing.T) {
 				program.OP_APUSH, 04, 00, // [EUR/2], [EUR/2 @alice 99], @bob
 				program.OP_SEND,          // [EUR/2]
 				program.OP_REPAY,         //
+				program.OP_APUSH, 05, 00, //
 				program.OP_APUSH, 06, 00, //
+				program.OP_APUSH, 01, 00, //
 				program.OP_ACCOUNT_META, //
 			}, Resources: []program.Resource{
-				program.Constant{Inner: core.Monetary{Asset: "EUR/2", Amount: *core.NewMonetaryInt(99)}},
+				program.Constant{Inner: core.Monetary{Asset: "EUR/2", Amount: core.NewMonetaryInt(99)}},
 				program.Constant{Inner: alice},
-				program.Constant{Inner: *core.NewMonetaryInt(0)},
-				program.Constant{Inner: *core.NewMonetaryInt(1)},
+				program.Constant{Inner: core.NewMonetaryInt(0)},
+				program.Constant{Inner: core.NewMonetaryInt(1)},
 				program.Constant{Inner: bob},
 				program.Constant{Inner: core.String("15 percent")},
+				program.Constant{Inner: core.String("fees")},
 			},
-			Error: "",
 		},
 	})
 }

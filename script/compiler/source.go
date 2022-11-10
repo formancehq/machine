@@ -58,7 +58,7 @@ func (p *parseVisitor) VisitValueAwareSource(c parser.IValueAwareSourceContext, 
 				return nil, LogicError(c, err)
 			}
 		}
-		err := p.PushInteger(*core.NewNumber(int64(n)))
+		err := p.PushInteger(core.NewNumber(int64(n)))
 		if err != nil {
 			return nil, LogicError(c, err)
 		}
@@ -88,7 +88,7 @@ func (p *parseVisitor) TakeFromSource(fallback *FallbackAccount) error {
 			return err
 		}
 		p.AppendInstruction(program.OP_TAKE_ALWAYS)
-		err = p.PushInteger(*core.NewNumber(2))
+		err = p.PushInteger(core.NewNumber(2))
 		if err != nil {
 			return err
 		}
@@ -122,7 +122,7 @@ func (p *parseVisitor) VisitSource(c parser.ISourceContext, pushAsset func(), is
 		if overdraft == nil {
 			// no overdraft: use zero monetary
 			pushAsset()
-			err := p.PushInteger(*core.NewNumber(0))
+			err := p.PushInteger(core.NewNumber(0))
 			if err != nil {
 				return nil, nil, nil, LogicError(c, err)
 			}
@@ -144,7 +144,7 @@ func (p *parseVisitor) VisitSource(c parser.ISourceContext, pushAsset func(), is
 				p.AppendInstruction(program.OP_TAKE_ALL)
 			case *parser.SrcAccountOverdraftUnboundedContext:
 				pushAsset()
-				err := p.PushInteger(*core.NewNumber(0))
+				err := p.PushInteger(core.NewNumber(0))
 				if err != nil {
 					return nil, nil, nil, LogicError(c, err)
 				}
@@ -189,7 +189,7 @@ func (p *parseVisitor) VisitSource(c parser.ISourceContext, pushAsset func(), is
 				return nil, nil, nil, LogicError(c, err)
 			}
 			p.AppendInstruction(program.OP_TAKE_ALL)
-			err = p.PushInteger(*core.NewNumber(2))
+			err = p.PushInteger(core.NewNumber(2))
 			if err != nil {
 				return nil, nil, nil, LogicError(c, err)
 			}
@@ -223,7 +223,7 @@ func (p *parseVisitor) VisitSource(c parser.ISourceContext, pushAsset func(), is
 				emptiedAccounts[k] = v
 			}
 		}
-		err := p.PushInteger(*core.NewNumber(int64(n)))
+		err := p.PushInteger(core.NewNumber(int64(n)))
 		if err != nil {
 			return nil, nil, nil, LogicError(c, err)
 		}
