@@ -986,31 +986,29 @@ func TestSetTxMeta(t *testing.T) {
 	set_tx_meta("ddd", "hello")
 	set_tx_meta("eee", [COIN 30])
 	`)
-
-	if err != nil {
-		t.Fatalf("did not expect error on Compile, got: %v", err)
-	}
+	require.NoError(t, err)
 
 	m := NewMachine(*p)
 
 	{
-		ch, _ := m.ResolveResources()
-		for range ch {
+		ch, err := m.ResolveResources()
+		require.NoError(t, err)
+		for req := range ch {
+			require.NoError(t, req.Error)
 		}
 	}
 
 	{
-		ch, _ := m.ResolveBalances()
-		for range ch {
+		ch, err := m.ResolveBalances()
+		require.NoError(t, err)
+		for req := range ch {
+			require.NoError(t, req.Error)
 		}
 	}
 
 	exitCode, err := m.Execute()
+	require.NoError(t, err)
 	require.Equal(t, EXIT_OK, exitCode)
-
-	if err != nil {
-		t.Fatalf("did not expect error on Execute, got: %v", err)
-	}
 
 	expectedMeta := map[string]json.RawMessage{
 		"aaa": json.RawMessage(`{"type":"account","value":"platform"}`),
@@ -1030,7 +1028,11 @@ func TestSetTxMeta(t *testing.T) {
 
 func TestSetAccountMeta(t *testing.T) {
 	p, err := compiler.Compile(`
-	set_account_meta(@platform, "fees", "15 percent")
+	set_account_meta(@platform, "aaa", @platform)
+	set_account_meta(@platform, "bbb", GEM)
+	set_account_meta(@platform, "ccc", 45)
+	set_account_meta(@platform, "ddd", "hello")
+	set_account_meta(@platform, "eee", [COIN 30])
 	`)
 	require.NoError(t, err)
 
@@ -1038,25 +1040,17 @@ func TestSetAccountMeta(t *testing.T) {
 
 	{
 		ch, err := m.ResolveResources()
-		if err != nil {
-			t.Fatal(fmt.Errorf("could not resolve program resources: %v", err))
-		}
+		require.NoError(t, err)
 		for req := range ch {
-			if req.Error != nil {
-				t.Fatalf(fmt.Sprintf("could not resolve program resources: %v", req.Error))
-			}
+			require.NoError(t, req.Error)
 		}
 	}
 
 	{
 		ch, err := m.ResolveBalances()
-		if err != nil {
-			t.Fatal(fmt.Errorf("could not resolve balances: %v", err))
-		}
+		require.NoError(t, err)
 		for req := range ch {
-			if req.Error != nil {
-				t.Fatal(fmt.Errorf("could not resolve balances: %v", err))
-			}
+			require.NoError(t, req.Error)
 		}
 	}
 
@@ -1064,15 +1058,23 @@ func TestSetAccountMeta(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, EXIT_OK, exitCode)
 
-	resMeta := m.GetAccountMetaJSON()
+	expectedMeta := map[string]json.RawMessage{
+		"aaa": json.RawMessage(`{"type":"account","value":"platform"}`),
+		"bbb": json.RawMessage(`{"type":"asset","value":"GEM"}`),
+		"ccc": json.RawMessage(`{"type":"number","value":45}`),
+		"ddd": json.RawMessage(`{"type":"string","value":"hello"}`),
+		"eee": json.RawMessage(`{"type":"monetary","value":{"asset":"COIN","amount":30}}`),
+	}
+
+	resMeta := m.GetAccountsMetaJSON()
 	assert.Equal(t, 1, len(resMeta))
 
-	fmt.Printf("type:%T\n", resMeta)
 	for acc, meta := range resMeta {
-		fmt.Printf("acc:%s meta:%+v %T\n", acc, meta, meta)
+		assert.Equal(t, "@platform", acc)
 		m := meta.(map[string][]byte)
+		assert.Equal(t, 5, len(m))
 		for key, val := range m {
-			fmt.Printf("key:%s val:%s\n", key, string(val))
+			assert.Equal(t, string(expectedMeta[key]), string(val))
 		}
 	}
 }

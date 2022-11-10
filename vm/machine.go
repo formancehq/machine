@@ -96,15 +96,9 @@ func (m *Machine) GetTxMetaJSON() Metadata {
 	return meta
 }
 
-func (m *Machine) GetAccountMetaJSON() Metadata {
+func (m *Machine) GetAccountsMetaJSON() Metadata {
 	res := Metadata{}
-	if len(m.AccountsMeta) == 0 {
-		return res
-	}
-
-	fmt.Printf("ACCMETA:%+v\n", m.AccountsMeta)
 	for account, meta := range m.AccountsMeta {
-		fmt.Printf("META:%+v\n", meta)
 		for k, v := range meta {
 			if _, ok := res[account.String()]; !ok {
 				res[account.String()] = map[string][]byte{}
