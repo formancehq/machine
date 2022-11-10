@@ -8,8 +8,8 @@ import (
 )
 
 type Portion struct {
-	Remaining bool
-	Specific  *big.Rat
+	Remaining bool     `json:"remaining"`
+	Specific  *big.Rat `json:"specific"`
 }
 
 func (Portion) GetType() Type { return TypePortion }

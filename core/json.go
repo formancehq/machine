@@ -70,8 +70,8 @@ func NewValueFromJSON(typ Type, data json.RawMessage) (*Value, error) {
 		value = number
 	case TypeMonetary:
 		var mon struct {
-			Asset  string      `json:"asset"`
-			Amount MonetaryInt `json:"amount"`
+			Asset  string       `json:"asset"`
+			Amount *MonetaryInt `json:"amount"`
 		}
 		err := json.Unmarshal(data, &mon)
 		if err != nil {

@@ -30,7 +30,7 @@ type TestCase struct {
 	program  *program.Program
 	vars     map[string]core.Value
 	meta     map[string]map[string]core.Value
-	balances map[string]map[string]core.MonetaryInt
+	balances map[string]map[string]*core.MonetaryInt
 	expected CaseResult
 }
 
@@ -38,7 +38,7 @@ func NewTestCase() TestCase {
 	return TestCase{
 		vars:     make(map[string]core.Value),
 		meta:     make(map[string]map[string]core.Value),
-		balances: make(map[string]map[string]core.MonetaryInt),
+		balances: make(map[string]map[string]*core.MonetaryInt),
 		expected: CaseResult{
 			Printed:  []core.Value{},
 			Postings: []Posting{},
@@ -73,9 +73,9 @@ func (c *TestCase) setVarsFromJSON(t *testing.T, str string) {
 
 func (c *TestCase) setBalance(account, asset string, amount int64) {
 	if _, ok := c.balances[account]; !ok {
-		c.balances[account] = make(map[string]core.MonetaryInt)
+		c.balances[account] = make(map[string]*core.MonetaryInt)
 	}
-	c.balances[account][asset] = *core.NewMonetaryInt(amount)
+	c.balances[account][asset] = core.NewMonetaryInt(amount)
 }
 
 func test(t *testing.T, testCase TestCase) {
@@ -186,8 +186,9 @@ func TestFail(t *testing.T) {
 func TestPrint(t *testing.T) {
 	tc := NewTestCase()
 	tc.compile(t, "print 29 + 15 - 2")
+	mi := core.MonetaryInt(*big.NewInt(42))
 	tc.expected = CaseResult{
-		Printed:  []core.Value{core.MonetaryInt(*big.NewInt(42))},
+		Printed:  []core.Value{&mi},
 		Postings: []Posting{},
 		ExitCode: EXIT_OK,
 	}
@@ -965,7 +966,7 @@ func TestNeededBalances(t *testing.T) {
 				if len(expected[req.Account]) == 0 {
 					delete(expected, req.Account)
 				}
-				req.Response <- *core.NewMonetaryInt(0)
+				req.Response <- core.NewMonetaryInt(0)
 			} else {
 				t.Fatalf("did not expect to need %v balance of %v", req.Asset, req.Account)
 			}

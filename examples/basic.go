@@ -41,12 +41,12 @@ func main() {
 	}
 
 	{
-		balances := map[string]map[string]core.MonetaryInt{
+		balances := map[string]map[string]*core.MonetaryInt{
 			"a": {
-				"COIN": *core.NewMonetaryInt(500000),
+				"COIN": core.NewMonetaryInt(500000),
 			},
 			"b": {
-				"COIN": *core.NewMonetaryInt(3500000),
+				"COIN": core.NewMonetaryInt(3500000),
 			},
 		}
 

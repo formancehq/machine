@@ -55,22 +55,23 @@ func (a Allotment) String() string {
 	return out + " }"
 }
 
-func (a Allotment) Allocate(amount MonetaryInt) []MonetaryInt {
-	amtBigint := big.Int(amount)
-	parts := make([]MonetaryInt, len(a))
-	totalAllocated := *NewMonetaryInt(0)
+func (a Allotment) Allocate(amount *MonetaryInt) []*MonetaryInt {
+	amtBigint := big.Int(*amount)
+	parts := make([]*MonetaryInt, len(a))
+	totalAllocated := NewMonetaryInt(0)
 	// for every part in the allotment, calculate the floored value
 	for i, allot := range a {
 		var res big.Int
 		res.Mul(&amtBigint, allot.Num())
 		res.Div(&res, allot.Denom())
-		parts[i] = MonetaryInt(res)
-		totalAllocated = *totalAllocated.Add(&parts[i])
+		mi := MonetaryInt(res)
+		parts[i] = &mi
+		totalAllocated = totalAllocated.Add(parts[i])
 	}
 	for i := range parts {
-		if totalAllocated.Lt(&amount) {
-			parts[i] = *parts[i].Add(NewMonetaryInt(1))
-			totalAllocated = *totalAllocated.Add(NewMonetaryInt(1))
+		if totalAllocated.Lt(amount) {
+			parts[i] = parts[i].Add(NewMonetaryInt(1))
+			totalAllocated = totalAllocated.Add(NewMonetaryInt(1))
 		}
 	}
 	return parts
