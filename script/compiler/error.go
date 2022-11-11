@@ -10,8 +10,8 @@ import (
 )
 
 type CompileError struct {
-	Startl, Startc int
-	Endl, Endc     int
+	StartL, StartC int
+	EndL, EndC     int
 	Msg            string
 }
 
@@ -25,50 +25,56 @@ func (c *CompileErrorList) Error() string {
 	lines := strings.SplitAfter(strings.ReplaceAll(source, "\r\n", "\n"), "\n")
 	lines[len(lines)-1] += "\n"
 
-	txt_bar_good := aurora.Blue("|")
+	txtBarGood := aurora.Blue("|")
 
 	s := ""
 	for _, e := range c.Errors {
-		ln_pad := int(math.Log10(float64(e.Endl))) + 1 // line number padding
+		lnPad := int(math.Log10(float64(e.EndL))) + 1 // line number padding
 		// error indicator
-		s += fmt.Sprintf("%v error:%v:%v\n", aurora.Red("-->"), e.Startl, e.Startc)
+		s += fmt.Sprintf("%v error:%v:%v\n", aurora.Red("-->"), e.StartL, e.StartC)
 		// initial empty line
-		s += fmt.Sprintf("%v %v\n", strings.Repeat(" ", ln_pad), txt_bar_good)
+		s += fmt.Sprintf("%v %v\n", strings.Repeat(" ", lnPad), txtBarGood)
 		// offending lines
-		for l := e.Startl; l <= e.Endl; l++ { // "print fail"
+		for l := e.StartL; l <= e.EndL; l++ { // "print fail"
 			line := lines[l-1]
 			before := ""
 			after := ""
 			start := 0
-			if l == e.Startl {
-				before = line[:e.Startc]
-				line = line[e.Startc:]
-				start = e.Startc
+			if l == e.StartL {
+				before = line[:e.StartC]
+				line = line[e.StartC:]
+				start = e.StartC
 			}
-			if l == e.Endl {
-				idx := e.Endc - start + 1
+			if l == e.EndL {
+				idx := e.EndC - start + 1
 				if idx >= len(line) { // because newline was erased
 					idx = len(line) - 1
 				}
 				after = line[idx:]
 				line = line[:idx]
 			}
-			s += aurora.Red(fmt.Sprintf("%0*d | ", ln_pad, l)).String()
-			s += fmt.Sprintf("%v%v%v", aurora.BrightBlack(before), line, aurora.BrightBlack(after))
+			s += aurora.Red(fmt.Sprintf("%0*d | ", lnPad, l)).String()
+			s += fmt.Sprintf("%v%v%v",
+				aurora.BrightBlack(before), line, aurora.BrightBlack(after))
 		}
 		// message
-		start := strings.IndexFunc(lines[e.Endl-1], func(r rune) bool {
+		start := strings.IndexFunc(lines[e.EndL-1], func(r rune) bool {
 			return r != ' '
 		})
-		span := e.Endc - start + 1
-		if e.Startl == e.Endl {
-			start = e.Startc
-			span = e.Endc - e.Startc
+		span := e.EndC - start + 1
+		if e.StartL == e.EndL {
+			start = e.StartC
+			span = e.EndC - e.StartC
 		}
 		if span == 0 {
 			span = 1
 		}
-		s += fmt.Sprintf("%v %v %v%v %v\n", strings.Repeat(" ", ln_pad), txt_bar_good, strings.Repeat(" ", start), aurora.Red(strings.Repeat("^", span)), e.Msg)
+		s += fmt.Sprintf("%v %v %v%v %v\n",
+			strings.Repeat(" ", lnPad),
+			txtBarGood,
+			strings.Repeat(" ", start),
+			aurora.Red(strings.Repeat("^", span)),
+			e.Msg)
 	}
 	return s
 }
@@ -78,45 +84,45 @@ type ErrorListener struct {
 	Errors []CompileError
 }
 
-func (l *ErrorListener) SyntaxError(recognizer antlr.Recognizer, offendingSymbol interface{}, startl, startc int, msg string, e antlr.RecognitionException) {
+func (l *ErrorListener) SyntaxError(recognizer antlr.Recognizer, offendingSymbol interface{}, startL, startC int, msg string, e antlr.RecognitionException) {
 	length := 1
 	if token, ok := offendingSymbol.(antlr.Token); ok {
 		length = len(token.GetText())
 	}
-	endl := startl
-	endc := startc + length - 1 // -1 so that end caracter is inside the offending token
+	endL := startL
+	endC := startC + length - 1 // -1 so that end character is inside the offending token
 	l.Errors = append(l.Errors, CompileError{
-		Startl: startl,
-		Startc: startc,
-		Endl:   endl,
-		Endc:   endc,
+		StartL: startL,
+		StartC: startC,
+		EndL:   endL,
+		EndC:   endC,
 		Msg:    msg,
 	})
 }
 
 func LogicError(c antlr.ParserRuleContext, err error) *CompileError {
-	endc := c.GetStop().GetColumn() + len(c.GetStop().GetText())
+	endC := c.GetStop().GetColumn() + len(c.GetStop().GetText())
 	// fmt.Println(c.GetStart().GetLine(),
 	// 	c.GetStart().GetColumn(),
 	// 	c.GetStop().GetLine(),
-	// 	endc)
+	// 	endC)
 	return &CompileError{
-		Startl: c.GetStart().GetLine(),
-		Startc: c.GetStart().GetColumn(),
-		Endl:   c.GetStop().GetLine(),
-		Endc:   endc,
+		StartL: c.GetStart().GetLine(),
+		StartC: c.GetStart().GetColumn(),
+		EndL:   c.GetStop().GetLine(),
+		EndC:   endC,
 		Msg:    err.Error(),
 	}
 }
 
-const INTERNAL_ERROR_MSG = "internal compiler error, please report to the issue tracker"
+const InternalErrorMsg = "internal compiler error, please report to the issue tracker"
 
 func InternalError(c antlr.ParserRuleContext) *CompileError {
 	return &CompileError{
-		Startl: c.GetStart().GetLine(),
-		Startc: c.GetStart().GetColumn(),
-		Endl:   c.GetStop().GetLine(),
-		Endc:   c.GetStop().GetColumn(),
-		Msg:    INTERNAL_ERROR_MSG,
+		StartL: c.GetStart().GetLine(),
+		StartC: c.GetStart().GetColumn(),
+		EndL:   c.GetStop().GetLine(),
+		EndC:   c.GetStop().GetColumn(),
+		Msg:    InternalErrorMsg,
 	}
 }

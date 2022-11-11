@@ -10,7 +10,7 @@ vars:
 tasks:
   default:
     cmds:
-      - task: generate_parser
+      - task: generate
       - task: lint
       - task: tests:local
 
@@ -31,14 +31,9 @@ tasks:
     cmds:
     - golangci-lint run -v --fix {{.PKG}}
 
-  generate_parser:
-    env:
-      ANTLR_VERSION: "4.10.1"
-      CLASSPATH: ".:/usr/local/lib/antlr-$ANLR_VERSION-complete.jar:$CLASSPATH"
+  generate:
     cmds:
-      - cd /usr/local/lib && sudo curl --continue-at - https://www.antlr.org/download/antlr-$ANTLR_VERSION-complete.jar -O
-      - rm -rf ./script/parser
-      - cd script && java -Xmx500M -cp "/usr/local/lib/antlr-$ANTLR_VERSION-complete.jar:$CLASSPATH" org.antlr.v4.Tool -Dlanguage=Go -o parser NumScript.g4
+      - go generate {{.PKG}}
 
   bench:
     cmds:

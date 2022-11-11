@@ -2,7 +2,7 @@ package core
 
 import "encoding/binary"
 
-// Represents an adress in the machine's resources, which include
+// Address represents an address in the machine's resources, which include
 // constants (literals) and variables passed to the program
 type Address uint16
 

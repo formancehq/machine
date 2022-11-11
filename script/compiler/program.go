@@ -27,7 +27,7 @@ func (p *parseVisitor) PushInteger(val core.Number) error {
 }
 
 func (p *parseVisitor) Bump(n int64) error {
-	err := p.PushInteger(*core.NewNumber(n))
+	err := p.PushInteger(core.NewNumber(n))
 	if err != nil {
 		return err
 	}

@@ -5,7 +5,8 @@ import (
 	"math/big"
 	"testing"
 
-	ledger "github.com/numary/ledger/pkg/core"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAccountTypedJSON(t *testing.T) {
@@ -14,9 +15,8 @@ func TestAccountTypedJSON(t *testing.T) {
 		"value": "users:001"
 	}`)
 	value, err := NewValueFromTypedJSON(j)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
+
 	if !ValueEquals(*value, Account("users:001")) {
 		t.Fatalf("unexpected value: %v", *value)
 	}
@@ -28,9 +28,8 @@ func TestAssetTypedJSON(t *testing.T) {
 		"value": "EUR/2"
 	}`)
 	value, err := NewValueFromTypedJSON(j)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
+
 	if !ValueEquals(*value, Asset("EUR/2")) {
 		t.Fatalf("unexpected value: %v", *value)
 	}
@@ -42,14 +41,12 @@ func TestNumberTypedJSON(t *testing.T) {
 		"value": 89849865111111111111111111111111111555555555555555555555555555555555555555555555555999999999999999999999
 	}`)
 	value, err := NewValueFromTypedJSON(j)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
+
 	num, err := ParseNumber("89849865111111111111111111111111111555555555555555555555555555555555555555555555555999999999999999999999")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !ValueEquals(*value, *num) {
+	require.NoError(t, err)
+
+	if !ValueEquals(*value, num) {
 		t.Fatalf("unexpected value: %v", *value)
 	}
 }
@@ -63,12 +60,11 @@ func TestMonetaryTypedJSON(t *testing.T) {
 		}
 	}`)
 	value, err := NewValueFromTypedJSON(j)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
+
 	if !ValueEquals(*value, Monetary{
-		Asset:  Asset("EUR/2"),
-		Amount: *ledger.NewMonetaryInt(123456),
+		Asset:  "EUR/2",
+		Amount: NewMonetaryInt(123456),
 	}) {
 		t.Fatalf("unexpected value: %v", *value)
 	}
@@ -80,13 +76,11 @@ func TestPortionTypedJSON(t *testing.T) {
 		"value": "90%"
 	}`)
 	value, err := NewValueFromTypedJSON(j)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
+
 	portion, err := NewPortionSpecific(*big.NewRat(90, 100))
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
+
 	if !ValueEquals(*value, *portion) {
 		t.Fatalf("unexpected value: %v", *value)
 	}
@@ -100,7 +94,47 @@ func TestInvalidTypedJSON(t *testing.T) {
 		}
 	}`)
 	_, err := NewValueFromTypedJSON(j)
-	if err == nil {
-		t.Fatalf("error expected but got none")
-	}
+	require.Error(t, err)
+}
+
+func TestMarshalJSON(t *testing.T) {
+	t.Run("account", func(t *testing.T) {
+		by, err := json.Marshal(Account("platform"))
+		require.NoError(t, err)
+		assert.Equal(t, `"platform"`, string(by))
+	})
+	t.Run("asset", func(t *testing.T) {
+		by, err := json.Marshal(Asset("COIN"))
+		require.NoError(t, err)
+		assert.Equal(t, `"COIN"`, string(by))
+	})
+	t.Run("number", func(t *testing.T) {
+		by, err := json.Marshal(
+			Number(big.NewInt(42)))
+		require.NoError(t, err)
+		assert.Equal(t, `42`, string(by))
+	})
+	t.Run("string", func(t *testing.T) {
+		by, err := json.Marshal(String("test"))
+		require.NoError(t, err)
+		assert.Equal(t, `"test"`, string(by))
+	})
+	t.Run("monetary", func(t *testing.T) {
+		by, err := json.Marshal(
+			Monetary{
+				Asset:  "COIN",
+				Amount: NewMonetaryInt(42),
+			})
+		require.NoError(t, err)
+		assert.Equal(t, `{"asset":"COIN","amount":42}`, string(by))
+	})
+	t.Run("portion", func(t *testing.T) {
+		by, err := json.Marshal(
+			Portion{
+				Remaining: true,
+				Specific:  big.NewRat(10, 12),
+			})
+		require.NoError(t, err)
+		assert.Equal(t, `{"remaining":true,"specific":"5/6"}`, string(by))
+	})
 }
