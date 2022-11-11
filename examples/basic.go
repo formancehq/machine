@@ -3,11 +3,9 @@ package main
 import (
 	"fmt"
 
-	"github.com/numary/machine/core"
-	"github.com/numary/machine/script/compiler"
-	"github.com/numary/machine/vm"
-
-	ledger "github.com/numary/ledger/pkg/core"
+	"github.com/formancehq/machine/core"
+	"github.com/formancehq/machine/script/compiler"
+	"github.com/formancehq/machine/vm"
 )
 
 func main() {
@@ -30,7 +28,7 @@ func main() {
 
 	m := vm.NewMachine(*program)
 
-	m.SetVars(map[string]core.Value{})
+	_ = m.SetVars(map[string]core.Value{})
 
 	{
 		ch, err := m.ResolveResources()
@@ -43,12 +41,12 @@ func main() {
 	}
 
 	{
-		balances := map[string]map[string]ledger.MonetaryInt{
+		balances := map[string]map[string]*core.MonetaryInt{
 			"a": {
-				"COIN": *ledger.NewMonetaryInt(500000),
+				"COIN": core.NewMonetaryInt(500000),
 			},
 			"b": {
-				"COIN": *ledger.NewMonetaryInt(3500000),
+				"COIN": core.NewMonetaryInt(3500000),
 			},
 		}
 
@@ -66,11 +64,11 @@ func main() {
 	}
 
 	m.Debug = true
-	exit_code, err := m.Execute()
+	exitCode, err := m.Execute()
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("Exit code:", exit_code)
+	fmt.Println("Exit code:", exitCode)
 	fmt.Println(m.Postings)
 	fmt.Println(m.TxMeta)
 }

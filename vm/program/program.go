@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/numary/machine/core"
+	"github.com/formancehq/machine/core"
 )
 
 type Program struct {
@@ -41,24 +41,6 @@ func (p Program) String() string {
 	}
 	return out
 }
-
-// func (p *Program) ParseVariables(vars map[string]core.Value) ([]core.Value, error) {
-// 	variables := make([]core.Value, len(p.Resources))
-// 	if len(vars) != len(p.Variables) {
-// 		return nil, fmt.Errorf(
-// 			"mismatching number of variables: %v != %v",
-// 			len(vars),
-// 			len(p.Variables))
-// 	}
-// 	for name, info := range p.Variables {
-// 		if val, ok := vars[name]; ok && val.GetType() == info.Ty {
-// 			variables[info.Addr.ToIdx()] = val
-// 		} else {
-// 			return nil, fmt.Errorf("missing variables: %v", name)
-// 		}
-// 	}
-// 	return variables, nil
-// }
 
 func (p *Program) ParseVariables(vars map[string]core.Value) (map[string]core.Value, error) {
 	variables := make(map[string]core.Value)

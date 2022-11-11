@@ -7,6 +7,12 @@ vars:
   TIMEOUT: 10m
 
 tasks:
+  default:
+    cmds:
+      - task: generate
+      - task: lint
+      - task: tests
+
   tests:
     cmds:
       - go test -v {{.FAILFAST}} -coverpkg {{.PKG}} -coverprofile {{.COVERAGE_FILE}} -covermode atomic -timeout {{.TIMEOUT}} {{.PKG}}
@@ -15,9 +21,9 @@ tasks:
     cmds:
     - golangci-lint run -v --fix {{.PKG}}
 
-  generate_parser:
+  generate:
     cmds:
-      - cd script && rm -r parser || sleep 1 && antlr4 -Dlanguage=Go -o parser NumScript.g4
+      - go generate {{.PKG}}
 
   bench:
     cmds:

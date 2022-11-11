@@ -1,9 +1,9 @@
-# Numary Machine [![test](https://github.com/numary/machine/actions/workflows/main.yml/badge.svg)](https://github.com/numary/machine/actions/workflows/main.yml)
+# Formance Machine [![test](https://github.com/formancehq/machine/actions/workflows/main.yml/badge.svg)](https://github.com/formancehq/machine/actions/workflows/main.yml)
 
 A virtual machine for moving money.
 
 This repo bundles:
-* The Numary Machine VM
+* The Formance Machine VM
 * A Numscript parser
 * A Numscript compiler
 
@@ -24,4 +24,4 @@ send [USD/2 1099] (
 
 # Documentation
 
-You can find the complete Numary documentation at [docs.numary.com](https://docs.numary.com)
+You can find the complete Formance documentation at [docs.formance.com](https://docs.formance.com)

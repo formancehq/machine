@@ -3,9 +3,9 @@ package compiler
 import (
 	"errors"
 
-	"github.com/numary/machine/core"
-	"github.com/numary/machine/script/parser"
-	"github.com/numary/machine/vm/program"
+	"github.com/formancehq/machine/core"
+	"github.com/formancehq/machine/script/parser"
+	"github.com/formancehq/machine/vm/program"
 )
 
 func (p *parseVisitor) VisitDestination(c parser.IDestinationContext) *CompileError {
@@ -26,7 +26,7 @@ func (p *parseVisitor) VisitDestinationRecursive(c parser.IDestinationContext) *
 		if err != nil {
 			return err
 		}
-		if ty != core.TYPE_ACCOUNT {
+		if ty != core.TypeAccount {
 			return LogicError(c,
 				errors.New("wrong type: expected account as destination"),
 			)
@@ -41,7 +41,7 @@ func (p *parseVisitor) VisitDestinationRecursive(c parser.IDestinationContext) *
 		// initialize the `kept` accumulator
 		p.AppendInstruction(program.OP_FUNDING_SUM)
 		p.AppendInstruction(program.OP_ASSET)
-		err := p.PushInteger(*core.NewNumber(0))
+		err := p.PushInteger(core.NewNumber(0))
 		if err != nil {
 			return LogicError(c, err)
 		}
@@ -53,12 +53,11 @@ func (p *parseVisitor) VisitDestinationRecursive(c parser.IDestinationContext) *
 		}
 
 		for i := 0; i < n; i++ {
-
-			ty, _, cerr := p.VisitExpr(amounts[i], true)
-			if cerr != nil {
-				return cerr
+			ty, _, compErr := p.VisitExpr(amounts[i], true)
+			if compErr != nil {
+				return compErr
 			}
-			if ty != core.TYPE_MONETARY {
+			if ty != core.TypeMonetary {
 				return LogicError(c, errors.New("wrong type: expected monetary as max"))
 			}
 			p.AppendInstruction(program.OP_TAKE_MAX)
@@ -67,9 +66,9 @@ func (p *parseVisitor) VisitDestinationRecursive(c parser.IDestinationContext) *
 				return LogicError(c, err)
 			}
 			p.AppendInstruction(program.OP_DELETE)
-			cerr = p.VisitKeptOrDestination(dests[i])
-			if cerr != nil {
-				return cerr
+			compErr = p.VisitKeptOrDestination(dests[i])
+			if compErr != nil {
+				return compErr
 			}
 			p.AppendInstruction(program.OP_FUNDING_SUM)
 			err = p.Bump(3)
@@ -85,7 +84,7 @@ func (p *parseVisitor) VisitDestinationRecursive(c parser.IDestinationContext) *
 			if err != nil {
 				return LogicError(c, err)
 			}
-			err = p.PushInteger(*core.NewNumber(2))
+			err = p.PushInteger(core.NewNumber(2))
 			if err != nil {
 				return LogicError(c, err)
 			}
@@ -111,7 +110,7 @@ func (p *parseVisitor) VisitDestinationRecursive(c parser.IDestinationContext) *
 		if err != nil {
 			return LogicError(c, err)
 		}
-		err = p.PushInteger(*core.NewNumber(2))
+		err = p.PushInteger(core.NewNumber(2))
 		if err != nil {
 			return LogicError(c, err)
 		}
@@ -157,22 +156,22 @@ func (p *parseVisitor) VisitAllocDestination(dests []parser.IKeptOrDestinationCo
 		return LogicError(dests[0], err)
 	}
 	for _, dest := range dests {
-		err := p.Bump(1)
+		err = p.Bump(1)
 		if err != nil {
 			return LogicError(dest, err)
 		}
 		p.AppendInstruction(program.OP_TAKE)
-		cerr := p.VisitKeptOrDestination(dest)
-		if cerr != nil {
-			return cerr
+		compErr := p.VisitKeptOrDestination(dest)
+		if compErr != nil {
+			return compErr
 		}
 		err = p.Bump(1)
 		if err != nil {
 			return LogicError(dest, err)
 		}
-		perr := p.PushInteger(*core.NewNumber(2))
-		if perr != nil {
-			return LogicError(dest, perr)
+		err = p.PushInteger(core.NewNumber(2))
+		if err != nil {
+			return LogicError(dest, err)
 		}
 		p.AppendInstruction(program.OP_FUNDING_ASSEMBLE)
 	}

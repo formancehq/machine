@@ -1,6 +1,6 @@
 package vm
 
-import "github.com/numary/machine/core"
+import "github.com/formancehq/machine/core"
 
 func (m *Machine) popValue() core.Value {
 	l := len(m.Stack)

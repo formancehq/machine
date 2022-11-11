@@ -14,8 +14,9 @@ const (
 	OP_MONETARY_ADD     // <monetary> <monetary> => <monetary>   // panics if not same asset
 	OP_MAKE_ALLOTMENT   // <portion>*N <int N> => <allotment(N)>
 	OP_TAKE_ALL         // <source: account> <overdraft: monetary> => <funding>
+	OP_TAKE_ALWAYS      // <source: account> <monetary> => <funding>   // takes amount from account unconditionally
 	OP_TAKE             // <funding> <monetary> => <remaining: funding> <taken: funding> // fails with EXIT_INSUFFICIENT_FUNDS if not enough
-	OP_TAKE_MAX         // <funding> <monetary> => <missing: monetary> <remaining: funding> <taken: funding> // (doesn't fail on insufficient funds)
+	OP_TAKE_MAX         // <funding> <monetary> => <missing: monetary> <remaining: funding> <taken: funding> // Doesn't fail on insufficient funds. Either missing or remaining is zero.
 	OP_FUNDING_ASSEMBLE // <funding>*N <int N> => <funding> (first has highest priority)
 	OP_FUNDING_SUM      // <funding> => <funding> <sum: monetary>
 	OP_FUNDING_REVERSE  // <funding> => <funding>
@@ -53,6 +54,8 @@ func OpcodeName(op byte) string {
 		return "OP_MAKE_ALLOTMENT"
 	case OP_TAKE_ALL:
 		return "OP_TAKE_ALL"
+	case OP_TAKE_ALWAYS:
+		return "OP_TAKE_ALWAYS"
 	case OP_TAKE:
 		return "OP_TAKE"
 	case OP_TAKE_MAX:

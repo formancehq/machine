@@ -3,41 +3,39 @@ package core
 import (
 	"fmt"
 	"reflect"
-
-	ledger "github.com/numary/ledger/pkg/core"
 )
 
 type Type byte
 
 const (
-	TYPE_ACCOUNT   = Type(iota + 1) // address of an account
-	TYPE_ASSET                      // name of an asset
-	TYPE_NUMBER                     // 64bit unsigned integer
-	TYPE_STRING                     // string
-	TYPE_MONETARY                   // [asset number]
-	TYPE_PORTION                    // rational number between 0 and 1 both exclusive
-	TYPE_ALLOTMENT                  // list of portions
-	TYPE_AMOUNT                     // either ALL or a SPECIFIC number
-	TYPE_FUNDING                    // (asset, []{amount, account})
+	TypeAccount   = Type(iota + 1) // address of an account
+	TypeAsset                      // name of an asset
+	TypeNumber                     // 64bit unsigned integer
+	TypeString                     // string
+	TypeMonetary                   // [asset number]
+	TypePortion                    // rational number between 0 and 1 both exclusive
+	TypeAllotment                  // list of portions
+	TypeAmount                     // either ALL or a SPECIFIC number
+	TypeFunding                    // (asset, []{amount, account})
 )
 
 func (t Type) String() string {
 	switch t {
-	case TYPE_ACCOUNT:
+	case TypeAccount:
 		return "account"
-	case TYPE_ASSET:
+	case TypeAsset:
 		return "asset"
-	case TYPE_NUMBER:
+	case TypeNumber:
 		return "number"
-	case TYPE_STRING:
+	case TypeString:
 		return "string"
-	case TYPE_MONETARY:
+	case TypeMonetary:
 		return "monetary"
-	case TYPE_PORTION:
+	case TypePortion:
 		return "portion"
-	case TYPE_ALLOTMENT:
+	case TypeAllotment:
 		return "allotment"
-	case TYPE_AMOUNT:
+	case TypeAmount:
 		return "amount"
 	default:
 		return "invalid type"
@@ -45,54 +43,29 @@ func (t Type) String() string {
 }
 
 type Value interface {
-	isValue()
 	GetType() Type
 }
 
 type Account string
 
-func (Account) isValue()      {}
-func (Account) GetType() Type { return TYPE_ACCOUNT }
+func (Account) GetType() Type { return TypeAccount }
 func (a Account) String() string {
 	return fmt.Sprintf("@%v", string(a))
 }
 
 type Asset string
 
-func (Asset) isValue()      {}
-func (Asset) GetType() Type { return TYPE_ASSET }
+func (Asset) GetType() Type { return TypeAsset }
 func (a Asset) String() string {
 	return fmt.Sprintf("%v", string(a))
 }
 
 type String string
 
-func (String) isValue()      {}
-func (String) GetType() Type { return TYPE_STRING }
+func (String) GetType() Type { return TypeString }
 func (s String) String() string {
 	return fmt.Sprintf("\"%v\"", string(s))
 }
-
-type Monetary struct {
-	Asset  Asset              `json:"asset"`
-	Amount ledger.MonetaryInt `json:"amount"`
-}
-
-func (a Monetary) String() string {
-	return fmt.Sprintf("[%v %v]", a.Asset, &a.Amount)
-}
-
-func (Monetary) isValue()      {}
-func (Monetary) GetType() Type { return TYPE_MONETARY }
-
-func (Allotment) isValue()      {}
-func (Allotment) GetType() Type { return TYPE_ALLOTMENT }
-
-func (Portion) isValue()      {}
-func (Portion) GetType() Type { return TYPE_PORTION }
-
-func (Funding) isValue()      {}
-func (Funding) GetType() Type { return TYPE_FUNDING }
 
 type HasAsset interface {
 	GetAsset() Asset
@@ -106,12 +79,12 @@ func ValueEquals(lhs, rhs Value) bool {
 	if reflect.TypeOf(lhs) != reflect.TypeOf(rhs) {
 		return false
 	}
-	if lhsn, ok := lhs.(Number); ok {
-		rhsn := rhs.(Number)
-		return lhsn.Equal(&rhsn)
+	if lhsn, ok := lhs.(*MonetaryInt); ok {
+		rhsn := rhs.(*MonetaryInt)
+		return lhsn.Equal(rhsn)
 	} else if lhsm, ok := lhs.(Monetary); ok {
 		rhsm := rhs.(Monetary)
-		return lhsm.Asset == rhsm.Asset && lhsm.Amount.Equal(&rhsm.Amount)
+		return lhsm.Asset == rhsm.Asset && lhsm.Amount.Equal(rhsm.Amount)
 	} else if lhsa, ok := lhs.(Allotment); ok {
 		rhsa := rhs.(Allotment)
 		if len(lhsa) != len(rhsa) {
@@ -124,10 +97,10 @@ func ValueEquals(lhs, rhs Value) bool {
 		}
 	} else if lhsp, ok := lhs.(Portion); ok {
 		rhsp := rhs.(Portion)
-		return lhsp.Equals(&rhsp)
+		return lhsp.Equals(rhsp)
 	} else if lhsf, ok := lhs.(Funding); ok {
 		rhsf := rhs.(Funding)
-		return lhsf.Equals(&rhsf)
+		return lhsf.Equals(rhsf)
 	} else if lhs != rhs {
 		return false
 	}

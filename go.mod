@@ -1,11 +1,10 @@
-module github.com/numary/machine
+module github.com/formancehq/machine
 
-go 1.18
+go 1.19
 
 require (
 	github.com/antlr/antlr4/runtime/Go/antlr v0.0.0-20220626175859-9abda183db8e
 	github.com/logrusorgru/aurora v2.0.3+incompatible
-	github.com/numary/ledger v1.8.0-alpha.1
 	github.com/stretchr/testify v1.8.0
 )
 

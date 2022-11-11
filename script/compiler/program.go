@@ -1,8 +1,8 @@
 package compiler
 
 import (
-	"github.com/numary/machine/core"
-	"github.com/numary/machine/vm/program"
+	"github.com/formancehq/machine/core"
+	"github.com/formancehq/machine/vm/program"
 )
 
 func (p *parseVisitor) AppendInstruction(instructions byte) {
@@ -27,7 +27,7 @@ func (p *parseVisitor) PushInteger(val core.Number) error {
 }
 
 func (p *parseVisitor) Bump(n int64) error {
-	err := p.PushInteger(*core.NewNumber(n))
+	err := p.PushInteger(core.NewNumber(n))
 	if err != nil {
 		return err
 	}
