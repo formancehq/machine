@@ -978,6 +978,7 @@ func TestSetAccountMeta(t *testing.T) {
 		set_account_meta(@alice, "ccc", 42)
 		set_account_meta(@alice, "ddd", "test")
 		set_account_meta(@alice, "eee", [COIN 30])
+		set_account_meta(@alice, "fff", 15%)
 		`,
 		Expected: CaseResult{
 			Instructions: []byte{
@@ -1001,6 +1002,10 @@ func TestSetAccountMeta(t *testing.T) {
 				program.OP_APUSH, 10, 00,
 				program.OP_APUSH, 02, 00,
 				program.OP_ACCOUNT_META,
+				program.OP_APUSH, 11, 00,
+				program.OP_APUSH, 12, 00,
+				program.OP_APUSH, 02, 00,
+				program.OP_ACCOUNT_META,
 			},
 			Resources: []program.Resource{
 				program.Constant{Inner: core.Account("platform")},
@@ -1017,6 +1022,11 @@ func TestSetAccountMeta(t *testing.T) {
 					Amount: core.NewMonetaryInt(30),
 				}},
 				program.Constant{Inner: core.String("eee")},
+				program.Constant{Inner: core.Portion{
+					Remaining: false,
+					Specific:  big.NewRat(15, 100),
+				}},
+				program.Constant{Inner: core.String("fff")},
 			},
 		},
 	})

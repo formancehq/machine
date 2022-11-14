@@ -985,6 +985,7 @@ func TestSetTxMeta(t *testing.T) {
 	set_tx_meta("ccc", 45)
 	set_tx_meta("ddd", "hello")
 	set_tx_meta("eee", [COIN 30])
+	set_tx_meta("fff", 15%)
 	`)
 	require.NoError(t, err)
 
@@ -1016,10 +1017,11 @@ func TestSetTxMeta(t *testing.T) {
 		"ccc": json.RawMessage(`{"type":"number","value":45}`),
 		"ddd": json.RawMessage(`{"type":"string","value":"hello"}`),
 		"eee": json.RawMessage(`{"type":"monetary","value":{"asset":"COIN","amount":30}}`),
+		"fff": json.RawMessage(`{"type":"portion","value":{"remaining":false,"specific":"3/20"}}`),
 	}
 
 	resMeta := m.GetTxMetaJSON()
-	assert.Equal(t, 5, len(resMeta))
+	assert.Equal(t, 6, len(resMeta))
 
 	for key, val := range resMeta {
 		assert.Equal(t, string(expectedMeta[key]), string(val.([]byte)))
@@ -1033,6 +1035,7 @@ func TestSetAccountMeta(t *testing.T) {
 	set_account_meta(@platform, "ccc", 45)
 	set_account_meta(@platform, "ddd", "hello")
 	set_account_meta(@platform, "eee", [COIN 30])
+	set_account_meta(@platform, "fff", 15%)
 	`)
 	require.NoError(t, err)
 
@@ -1064,6 +1067,7 @@ func TestSetAccountMeta(t *testing.T) {
 		"ccc": json.RawMessage(`{"type":"number","value":45}`),
 		"ddd": json.RawMessage(`{"type":"string","value":"hello"}`),
 		"eee": json.RawMessage(`{"type":"monetary","value":{"asset":"COIN","amount":30}}`),
+		"fff": json.RawMessage(`{"type":"portion","value":{"remaining":false,"specific":"3/20"}}`),
 	}
 
 	resMeta := m.GetAccountsMetaJSON()
@@ -1072,7 +1076,7 @@ func TestSetAccountMeta(t *testing.T) {
 	for acc, meta := range resMeta {
 		assert.Equal(t, "@platform", acc)
 		m := meta.(map[string][]byte)
-		assert.Equal(t, 5, len(m))
+		assert.Equal(t, 6, len(m))
 		for key, val := range m {
 			assert.Equal(t, string(expectedMeta[key]), string(val))
 		}

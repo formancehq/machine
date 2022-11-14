@@ -26,6 +26,9 @@ type NumScriptListener interface {
 	// EnterLitString is called when entering the LitString production.
 	EnterLitString(c *LitStringContext)
 
+	// EnterLitPortion is called when entering the LitPortion production.
+	EnterLitPortion(c *LitPortionContext)
+
 	// EnterLitMonetary is called when entering the LitMonetary production.
 	EnterLitMonetary(c *LitMonetaryContext)
 
@@ -151,6 +154,9 @@ type NumScriptListener interface {
 
 	// ExitLitString is called when exiting the LitString production.
 	ExitLitString(c *LitStringContext)
+
+	// ExitLitPortion is called when exiting the LitPortion production.
+	ExitLitPortion(c *LitPortionContext)
 
 	// ExitLitMonetary is called when exiting the LitMonetary production.
 	ExitLitMonetary(c *LitMonetaryContext)
