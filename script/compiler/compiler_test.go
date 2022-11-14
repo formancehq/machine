@@ -168,6 +168,7 @@ func TestSetTxMeta(t *testing.T) {
 		set_tx_meta("ccc", 42)
 		set_tx_meta("ddd", "test")
 		set_tx_meta("eee", [COIN 30])
+		set_tx_meta("fff", 15%)
 		`,
 		Expected: CaseResult{
 			Instructions: []byte{
@@ -186,6 +187,9 @@ func TestSetTxMeta(t *testing.T) {
 				program.OP_APUSH, 8, 00,
 				program.OP_APUSH, 9, 00,
 				program.OP_TX_META,
+				program.OP_APUSH, 10, 00,
+				program.OP_APUSH, 11, 00,
+				program.OP_TX_META,
 			},
 			Resources: []program.Resource{
 				program.Constant{Inner: core.Account("platform")},
@@ -201,6 +205,11 @@ func TestSetTxMeta(t *testing.T) {
 					Amount: core.NewMonetaryInt(30),
 				}},
 				program.Constant{Inner: core.String("eee")},
+				program.Constant{Inner: core.Portion{
+					Remaining: false,
+					Specific:  big.NewRat(15, 100),
+				}},
+				program.Constant{Inner: core.String("fff")},
 			},
 		},
 	})
