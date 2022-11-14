@@ -57,6 +57,12 @@ func (s *BaseNumScriptListener) EnterLitString(ctx *LitStringContext) {}
 // ExitLitString is called when production LitString is exited.
 func (s *BaseNumScriptListener) ExitLitString(ctx *LitStringContext) {}
 
+// EnterLitPortion is called when production LitPortion is entered.
+func (s *BaseNumScriptListener) EnterLitPortion(ctx *LitPortionContext) {}
+
+// ExitLitPortion is called when production LitPortion is exited.
+func (s *BaseNumScriptListener) ExitLitPortion(ctx *LitPortionContext) {}
+
 // EnterLitMonetary is called when production LitMonetary is entered.
 func (s *BaseNumScriptListener) EnterLitMonetary(ctx *LitMonetaryContext) {}
 

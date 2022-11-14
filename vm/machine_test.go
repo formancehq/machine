@@ -12,6 +12,7 @@ import (
 	"github.com/formancehq/machine/script/compiler"
 	"github.com/formancehq/machine/vm/program"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -984,31 +985,28 @@ func TestSetTxMeta(t *testing.T) {
 	set_tx_meta("ccc", 45)
 	set_tx_meta("ddd", "hello")
 	set_tx_meta("eee", [COIN 30])
+	set_tx_meta("fff", 15%)
 	`)
-
-	if err != nil {
-		t.Fatalf("did not expect error on Compile, got: %v", err)
-	}
+	require.NoError(t, err)
 
 	m := NewMachine(*p)
 
 	{
-		ch, _ := m.ResolveResources()
+		ch, err := m.ResolveResources()
+		require.NoError(t, err)
 		for range ch {
 		}
 	}
 
 	{
-		ch, _ := m.ResolveBalances()
+		ch, err := m.ResolveBalances()
+		require.NoError(t, err)
 		for range ch {
 		}
 	}
 
 	_, err = m.Execute()
-
-	if err != nil {
-		t.Fatalf("did not expect error on Execute, got: %v", err)
-	}
+	require.NoError(t, err)
 
 	expectedMeta := map[string]json.RawMessage{
 		"aaa": json.RawMessage(`{"type":"account","value":"platform"}`),
@@ -1016,10 +1014,11 @@ func TestSetTxMeta(t *testing.T) {
 		"ccc": json.RawMessage(`{"type":"number","value":45}`),
 		"ddd": json.RawMessage(`{"type":"string","value":"hello"}`),
 		"eee": json.RawMessage(`{"type":"monetary","value":{"asset":"COIN","amount":30}}`),
+		"fff": json.RawMessage(`{"type":"portion","value":{"remaining":false,"specific":"3/20"}}`),
 	}
 
 	resMeta := m.GetTxMetaJSON()
-	assert.Equal(t, 5, len(resMeta))
+	assert.Equal(t, 6, len(resMeta))
 
 	for key, val := range resMeta {
 		assert.Equal(t, string(expectedMeta[key]), string(val.([]byte)))
