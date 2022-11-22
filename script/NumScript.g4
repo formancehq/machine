@@ -34,12 +34,12 @@ TY_PORTION: 'portion';
 TY_STRING: 'string';
 STRING: '"' [a-zA-Z0-9_\- ]* '"';
 PORTION:
-  ( [0-9]+ [ ]? '/' [ ]? [0-9]+
-  | [0-9]+     ('.'      [0-9]+)? '%'
+  ( [0-9]+[0-9_]* [ ]? '/' [ ]? [0-9]+[0-9_]*
+  | [0-9]+     ('.'      [0-9]+[0-9_]*)? '%'
   );
 REMAINING: 'remaining';
 KEPT: 'kept';
-NUMBER: [0-9]+;
+NUMBER: [0-9]+ [0-9_]*;
 PERCENT: '%';
 VARIABLE_NAME: '$' [a-z_]+ [a-z0-9_]*;
 ACCOUNT: '@' [a-zA-Z_]+ [a-zA-Z0-9_:]*;

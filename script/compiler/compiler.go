@@ -139,7 +139,8 @@ func (p *parseVisitor) VisitLit(c parser.ILiteralContext, push bool) (core.Type,
 		}
 		return core.TypeAsset, addr, nil
 	case *parser.LitNumberContext:
-		number, err := core.ParseNumber(c.GetText())
+		nStr := strings.ReplaceAll(c.GetText(), "_", "")
+		number, err := core.ParseNumber(nStr)
 		if err != nil {
 			return 0, nil, LogicError(c, err)
 		}
@@ -176,7 +177,8 @@ func (p *parseVisitor) VisitLit(c parser.ILiteralContext, push bool) (core.Type,
 		return core.TypePortion, addr, nil
 	case *parser.LitMonetaryContext:
 		asset := c.Monetary().GetAsset().GetText()
-		amt, err := core.ParseMonetaryInt(c.Monetary().GetAmt().GetText())
+		amtStr := strings.ReplaceAll(c.Monetary().GetAmt().GetText(), "_", "")
+		amt, err := core.ParseMonetaryInt(amtStr)
 		if err != nil {
 			return 0, nil, LogicError(c, err)
 		}
