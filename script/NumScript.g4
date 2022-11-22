@@ -115,7 +115,7 @@ valueAwareSource
 statement
   : PRINT expr=expression # Print
   | SET_TX_META '(' key=STRING ',' value=expression ')' # SetTxMeta
-  | SET_ACCOUNT_META '(' acc=ACCOUNT ',' key=STRING ',' value=expression ')' # SetAccountMeta
+  | SET_ACCOUNT_META '(' acc=expression ',' key=STRING ',' value=expression ')' # SetAccountMeta
   | FAIL # Fail
   | SEND (mon=expression | monAll=monetaryAll) LPAREN NEWLINE
       ( SOURCE '=' src=valueAwareSource NEWLINE DESTINATION '=' dest=destination

@@ -1029,56 +1029,113 @@ func TestSetTxMeta(t *testing.T) {
 }
 
 func TestSetAccountMeta(t *testing.T) {
-	p, err := compiler.Compile(`
-	set_account_meta(@platform, "aaa", @platform)
-	set_account_meta(@platform, "bbb", GEM)
-	set_account_meta(@platform, "ccc", 45)
-	set_account_meta(@platform, "ddd", "hello")
-	set_account_meta(@platform, "eee", [COIN 30])
-	set_account_meta(@platform, "fff", 15%)
-	`)
-	require.NoError(t, err)
-
-	m := NewMachine(*p)
-
-	{
-		ch, err := m.ResolveResources()
+	t.Run("all types", func(t *testing.T) {
+		p, err := compiler.Compile(`
+			set_account_meta(@platform, "aaa", @platform)
+			set_account_meta(@platform, "bbb", GEM)
+			set_account_meta(@platform, "ccc", 45)
+			set_account_meta(@platform, "ddd", "hello")
+			set_account_meta(@platform, "eee", [COIN 30])
+			set_account_meta(@platform, "fff", 15%)`)
 		require.NoError(t, err)
-		for req := range ch {
-			require.NoError(t, req.Error)
-		}
-	}
 
-	{
-		ch, err := m.ResolveBalances()
+		m := NewMachine(*p)
+
+		{
+			ch, err := m.ResolveResources()
+			require.NoError(t, err)
+			for req := range ch {
+				require.NoError(t, req.Error)
+			}
+		}
+
+		{
+			ch, err := m.ResolveBalances()
+			require.NoError(t, err)
+			for req := range ch {
+				require.NoError(t, req.Error)
+			}
+		}
+
+		exitCode, err := m.Execute()
 		require.NoError(t, err)
-		for req := range ch {
-			require.NoError(t, req.Error)
+		require.Equal(t, EXIT_OK, exitCode)
+
+		expectedMeta := map[string]json.RawMessage{
+			"aaa": json.RawMessage(`{"type":"account","value":"platform"}`),
+			"bbb": json.RawMessage(`{"type":"asset","value":"GEM"}`),
+			"ccc": json.RawMessage(`{"type":"number","value":45}`),
+			"ddd": json.RawMessage(`{"type":"string","value":"hello"}`),
+			"eee": json.RawMessage(`{"type":"monetary","value":{"asset":"COIN","amount":30}}`),
+			"fff": json.RawMessage(`{"type":"portion","value":{"remaining":false,"specific":"3/20"}}`),
 		}
-	}
 
-	exitCode, err := m.Execute()
-	require.NoError(t, err)
-	require.Equal(t, EXIT_OK, exitCode)
+		resMeta := m.GetAccountsMetaJSON()
+		assert.Equal(t, 1, len(resMeta))
 
-	expectedMeta := map[string]json.RawMessage{
-		"aaa": json.RawMessage(`{"type":"account","value":"platform"}`),
-		"bbb": json.RawMessage(`{"type":"asset","value":"GEM"}`),
-		"ccc": json.RawMessage(`{"type":"number","value":45}`),
-		"ddd": json.RawMessage(`{"type":"string","value":"hello"}`),
-		"eee": json.RawMessage(`{"type":"monetary","value":{"asset":"COIN","amount":30}}`),
-		"fff": json.RawMessage(`{"type":"portion","value":{"remaining":false,"specific":"3/20"}}`),
-	}
-
-	resMeta := m.GetAccountsMetaJSON()
-	assert.Equal(t, 1, len(resMeta))
-
-	for acc, meta := range resMeta {
-		assert.Equal(t, "@platform", acc)
-		m := meta.(map[string][]byte)
-		assert.Equal(t, 6, len(m))
-		for key, val := range m {
-			assert.Equal(t, string(expectedMeta[key]), string(val))
+		for acc, meta := range resMeta {
+			assert.Equal(t, "@platform", acc)
+			m := meta.(map[string][]byte)
+			assert.Equal(t, 6, len(m))
+			for key, val := range m {
+				assert.Equal(t, string(expectedMeta[key]), string(val))
+			}
 		}
-	}
+	})
+
+	t.Run("with vars", func(t *testing.T) {
+		p, err := compiler.Compile(`
+			vars {
+				account $acc
+			}
+			send [EUR/2 100] (
+				source = @world
+				destination = $acc
+			)
+			set_account_meta($acc, "fees", 1%)
+		`)
+		require.NoError(t, err)
+
+		m := NewMachine(*p)
+
+		require.NoError(t, m.SetVars(map[string]core.Value{
+			"acc": core.Account("test"),
+		}))
+
+		{
+			ch, err := m.ResolveResources()
+			require.NoError(t, err)
+			for req := range ch {
+				require.NoError(t, req.Error)
+			}
+		}
+
+		{
+			ch, err := m.ResolveBalances()
+			require.NoError(t, err)
+			for req := range ch {
+				require.NoError(t, req.Error)
+			}
+		}
+
+		exitCode, err := m.Execute()
+		require.NoError(t, err)
+		require.Equal(t, EXIT_OK, exitCode)
+
+		expectedMeta := map[string]json.RawMessage{
+			"fees": json.RawMessage(`{"type":"portion","value":{"remaining":false,"specific":"1/100"}}`),
+		}
+
+		resMeta := m.GetAccountsMetaJSON()
+		assert.Equal(t, 1, len(resMeta))
+
+		for acc, meta := range resMeta {
+			assert.Equal(t, "@test", acc)
+			m := meta.(map[string][]byte)
+			assert.Equal(t, 1, len(m))
+			for key, val := range m {
+				assert.Equal(t, string(expectedMeta[key]), string(val))
+			}
+		}
+	})
 }

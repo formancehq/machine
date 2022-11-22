@@ -286,11 +286,13 @@ func (p *parseVisitor) VisitSetAccountMeta(ctx *parser.SetAccountMetaContext) *C
 	}
 	p.PushAddress(*keyAddr)
 
-	accAddr, err := p.AllocateResource(program.Constant{
-		Inner: core.Account(ctx.GetAcc().GetText()[1:]),
-	})
-	if err != nil {
-		return LogicError(ctx, err)
+	ty, accAddr, compErr := p.VisitExpr(ctx.GetAcc(), false)
+	if compErr != nil {
+		return compErr
+	}
+	if ty != core.TypeAccount {
+		return LogicError(ctx, fmt.Errorf(
+			"variable is of type %s, and should be of type account", ty))
 	}
 	p.PushAddress(*accAddr)
 

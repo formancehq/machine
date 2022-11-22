@@ -140,7 +140,7 @@ func numscriptParserInit() {
 		1, 0, 0, 0, 169, 170, 5, 13, 0, 0, 170, 217, 3, 8, 4, 0, 171, 172, 5, 11,
 		0, 0, 172, 173, 5, 24, 0, 0, 173, 174, 5, 37, 0, 0, 174, 175, 5, 4, 0,
 		0, 175, 176, 3, 8, 4, 0, 176, 177, 5, 25, 0, 0, 177, 217, 1, 0, 0, 0, 178,
-		179, 5, 12, 0, 0, 179, 180, 5, 24, 0, 0, 180, 181, 5, 44, 0, 0, 181, 182,
+		179, 5, 12, 0, 0, 179, 180, 5, 24, 0, 0, 180, 181, 3, 8, 4, 0, 181, 182,
 		5, 4, 0, 0, 182, 183, 5, 37, 0, 0, 183, 184, 5, 4, 0, 0, 184, 185, 3, 8,
 		4, 0, 185, 186, 5, 25, 0, 0, 186, 217, 1, 0, 0, 0, 187, 217, 5, 14, 0,
 		0, 188, 191, 5, 15, 0, 0, 189, 192, 3, 8, 4, 0, 190, 192, 3, 2, 1, 0, 191,
@@ -4255,7 +4255,7 @@ func (s *SetTxMetaContext) ExitRule(listener antlr.ParseTreeListener) {
 
 type SetAccountMetaContext struct {
 	*StatementContext
-	acc   antlr.Token
+	acc   IExpressionContext
 	key   antlr.Token
 	value IExpressionContext
 }
@@ -4270,15 +4270,15 @@ func NewSetAccountMetaContext(parser antlr.Parser, ctx antlr.ParserRuleContext) 
 	return p
 }
 
-func (s *SetAccountMetaContext) GetAcc() antlr.Token { return s.acc }
-
 func (s *SetAccountMetaContext) GetKey() antlr.Token { return s.key }
-
-func (s *SetAccountMetaContext) SetAcc(v antlr.Token) { s.acc = v }
 
 func (s *SetAccountMetaContext) SetKey(v antlr.Token) { s.key = v }
 
+func (s *SetAccountMetaContext) GetAcc() IExpressionContext { return s.acc }
+
 func (s *SetAccountMetaContext) GetValue() IExpressionContext { return s.value }
+
+func (s *SetAccountMetaContext) SetAcc(v IExpressionContext) { s.acc = v }
 
 func (s *SetAccountMetaContext) SetValue(v IExpressionContext) { s.value = v }
 
@@ -4298,20 +4298,37 @@ func (s *SetAccountMetaContext) RPAREN() antlr.TerminalNode {
 	return s.GetToken(NumScriptParserRPAREN, 0)
 }
 
-func (s *SetAccountMetaContext) ACCOUNT() antlr.TerminalNode {
-	return s.GetToken(NumScriptParserACCOUNT, 0)
+func (s *SetAccountMetaContext) AllExpression() []IExpressionContext {
+	children := s.GetChildren()
+	len := 0
+	for _, ctx := range children {
+		if _, ok := ctx.(IExpressionContext); ok {
+			len++
+		}
+	}
+
+	tst := make([]IExpressionContext, len)
+	i := 0
+	for _, ctx := range children {
+		if t, ok := ctx.(IExpressionContext); ok {
+			tst[i] = t.(IExpressionContext)
+			i++
+		}
+	}
+
+	return tst
 }
 
-func (s *SetAccountMetaContext) STRING() antlr.TerminalNode {
-	return s.GetToken(NumScriptParserSTRING, 0)
-}
-
-func (s *SetAccountMetaContext) Expression() IExpressionContext {
+func (s *SetAccountMetaContext) Expression(i int) IExpressionContext {
 	var t antlr.RuleContext
+	j := 0
 	for _, ctx := range s.GetChildren() {
 		if _, ok := ctx.(IExpressionContext); ok {
-			t = ctx.(antlr.RuleContext)
-			break
+			if j == i {
+				t = ctx.(antlr.RuleContext)
+				break
+			}
+			j++
 		}
 	}
 
@@ -4320,6 +4337,10 @@ func (s *SetAccountMetaContext) Expression() IExpressionContext {
 	}
 
 	return t.(IExpressionContext)
+}
+
+func (s *SetAccountMetaContext) STRING() antlr.TerminalNode {
+	return s.GetToken(NumScriptParserSTRING, 0)
 }
 
 func (s *SetAccountMetaContext) EnterRule(listener antlr.ParseTreeListener) {
@@ -4608,9 +4629,9 @@ func (p *NumScriptParser) Statement() (localctx IStatementContext) {
 		{
 			p.SetState(180)
 
-			var _m = p.Match(NumScriptParserACCOUNT)
+			var _x = p.expression(0)
 
-			localctx.(*SetAccountMetaContext).acc = _m
+			localctx.(*SetAccountMetaContext).acc = _x
 		}
 		{
 			p.SetState(181)

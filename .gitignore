@@ -7,3 +7,4 @@ main.go
 machine.go
 .idea
 vendor
+.DS_Store
