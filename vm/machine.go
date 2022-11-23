@@ -37,8 +37,9 @@ type Machine struct {
 	Balances            map[core.Account]map[core.Asset]*core.MonetaryInt // keeps tracks of balances throughout execution
 	setBalanceCalled    bool
 	Stack               []core.Value
-	Postings            []Posting             // accumulates postings throughout execution
-	TxMeta              map[string]core.Value // accumulates transaction meta throughout execution
+	Postings            []Posting                              // accumulates postings throughout execution
+	TxMeta              map[string]core.Value                  // accumulates transaction meta throughout execution
+	AccountsMeta        map[core.Account]map[string]core.Value // accumulates accounts meta throughout execution
 	Printer             func(chan core.Value)
 	printChan           chan core.Value
 	Debug               bool
@@ -64,6 +65,7 @@ func NewMachine(p program.Program) *Machine {
 		Printer:             StdOutPrinter,
 		Postings:            make([]Posting, 0),
 		TxMeta:              map[string]core.Value{},
+		AccountsMeta:        map[core.Account]map[string]core.Value{},
 	}
 
 	return &m
@@ -78,14 +80,45 @@ func StdOutPrinter(c chan core.Value) {
 func (m *Machine) GetTxMetaJSON() Metadata {
 	meta := make(Metadata)
 	for k, v := range m.TxMeta {
-		valJSON, _ := json.Marshal(v)
-		v, _ := json.Marshal(core.ValueJSON{
+		valJSON, err := json.Marshal(v)
+		if err != nil {
+			panic(err)
+		}
+		v, err := json.Marshal(core.ValueJSON{
 			Type:  v.GetType().String(),
 			Value: valJSON,
 		})
+		if err != nil {
+			panic(err)
+		}
 		meta[k] = v
 	}
 	return meta
+}
+
+func (m *Machine) GetAccountsMetaJSON() Metadata {
+	res := Metadata{}
+	for account, meta := range m.AccountsMeta {
+		for k, v := range meta {
+			if _, ok := res[account.String()]; !ok {
+				res[account.String()] = map[string][]byte{}
+			}
+			valJSON, err := json.Marshal(v)
+			if err != nil {
+				panic(err)
+			}
+			v, err := json.Marshal(core.ValueJSON{
+				Type:  v.GetType().String(),
+				Value: valJSON,
+			})
+			if err != nil {
+				panic(err)
+			}
+			res[account.String()].(map[string][]byte)[k] = v
+		}
+	}
+
+	return res
 }
 
 func (m *Machine) getResource(addr core.Address) (*core.Value, bool) {
@@ -373,10 +406,20 @@ func (m *Machine) tick() (bool, byte) {
 				Amount:      amt,
 			})
 		}
+
 	case program.OP_TX_META:
 		k := m.popString()
 		v := m.popValue()
 		m.TxMeta[string(k)] = v
+
+	case program.OP_ACCOUNT_META:
+		a := m.popAccount()
+		k := m.popString()
+		v := m.popValue()
+		if m.AccountsMeta[a] == nil {
+			m.AccountsMeta[a] = map[string]core.Value{}
+		}
+		m.AccountsMeta[a][string(k)] = v
 
 	default:
 		return true, EXIT_FAIL_INVALID

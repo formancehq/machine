@@ -8,6 +8,7 @@ LINE_COMMENT: '//' .*? NEWLINE -> skip;
 VARS: 'vars';
 META: 'meta';
 SET_TX_META: 'set_tx_meta';
+SET_ACCOUNT_META: 'set_account_meta';
 PRINT: 'print';
 FAIL: 'fail';
 SEND: 'send';
@@ -96,7 +97,6 @@ sourceAccountOverdraft
   | 'allowing unbounded overdraft' # SrcAccountOverdraftUnbounded
   ;
 
-
 sourceAccount: account=expression (overdraft=sourceAccountOverdraft)?;
 sourceInOrder: LBRACE NEWLINE (sources+=source NEWLINE)+ RBRACE;
 sourceMaxed: MAX max=expression FROM src=source;
@@ -115,6 +115,7 @@ valueAwareSource
 statement
   : PRINT expr=expression # Print
   | SET_TX_META '(' key=STRING ',' value=expression ')' # SetTxMeta
+  | SET_ACCOUNT_META '(' acc=expression ',' key=STRING ',' value=expression ')' # SetAccountMeta
   | FAIL # Fail
   | SEND (mon=expression | monAll=monetaryAll) LPAREN NEWLINE
       ( SOURCE '=' src=valueAwareSource NEWLINE DESTINATION '=' dest=destination
@@ -126,7 +127,6 @@ type_: TY_ACCOUNT | TY_ASSET | TY_NUMBER | TY_STRING | TY_MONETARY | TY_PORTION;
 origin
   : META '(' acc=expression ',' key=STRING ')'
   ;
-
 
 varDecl: ty=type_ name=variable (EQ orig=origin)?;
 

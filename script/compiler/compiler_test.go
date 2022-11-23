@@ -46,20 +46,25 @@ func test(t *testing.T, c TestCase) {
 			t.Error(errors.New("did not receive any output"))
 			return
 		} else if len(c.Expected.Instructions) > 0 && !bytes.Equal(p.Instructions, c.Expected.Instructions) {
-			t.Error(fmt.Errorf("generated program is incorrect: %v", *p))
-			fmt.Println("has:", p.Instructions, "want:", c.Expected.Instructions)
+			t.Error(fmt.Errorf(
+				"unexpected instructions:\n%v\nhas: %+v\nwant:%+v",
+				*p, p.Instructions, c.Expected.Instructions))
 			return
 		} else if len(p.Resources) != len(c.Expected.Resources) {
-			t.Error(fmt.Errorf("unexpected program resources (=/= lengths): %v", *p))
+			t.Error(fmt.Errorf(
+				"unexpected resources\n%v\nhas: \n%+v\nwant:\n%+v",
+				*p, p.Resources, c.Expected.Resources))
 			return
 		} else {
 			for i := range c.Expected.Resources {
-				if !checkResourceEquals(p.Resources[i], c.Expected.Resources[i]) {
+				if !checkResourcesEqual(p.Resources[i], c.Expected.Resources[i]) {
 					t.Error(fmt.Errorf("%v: %v is not %v: %v",
 						p.Resources[i], reflect.TypeOf(p.Resources[i]).Name(),
 						c.Expected.Resources[i], reflect.TypeOf(c.Expected.Resources[i]).Name(),
 					))
-					t.Error(fmt.Errorf("unexpected program resources: %v", *p))
+					t.Error(fmt.Errorf(
+						"unexpected resources\n%v\nhas: \n%+v\nwant:\n%+v",
+						*p, p.Resources, c.Expected.Resources))
 					return
 				}
 			}
@@ -67,7 +72,7 @@ func test(t *testing.T, c TestCase) {
 	}
 }
 
-func checkResourceEquals(res program.Resource, expected program.Resource) bool {
+func checkResourcesEqual(res, expected program.Resource) bool {
 	if reflect.TypeOf(res) != reflect.TypeOf(expected) {
 		return false
 	}
@@ -98,7 +103,6 @@ func TestSimplePrint(t *testing.T) {
 			Resources: []program.Resource{
 				program.Constant{Inner: core.NewMonetaryInt(1)},
 			},
-			Error: "",
 		},
 	})
 }
@@ -120,7 +124,6 @@ func TestCompositeExpr(t *testing.T) {
 				program.Constant{Inner: core.NewMonetaryInt(15)},
 				program.Constant{Inner: core.NewMonetaryInt(2)},
 			},
-			Error: "",
 		},
 	})
 }
@@ -131,7 +134,6 @@ func TestFail(t *testing.T) {
 		Expected: CaseResult{
 			Instructions: []byte{program.OP_FAIL},
 			Resources:    []program.Resource{},
-			Error:        "",
 		},
 	})
 }
@@ -148,7 +150,6 @@ func TestCRLF(t *testing.T) {
 				program.Constant{Inner: core.Account("a")},
 				program.Constant{Inner: core.Account("b")},
 			},
-			Error: "",
 		},
 	})
 }
@@ -160,7 +161,6 @@ func TestConstant(t *testing.T) {
 		Expected: CaseResult{
 			Instructions: []byte{program.OP_APUSH, 00, 00, program.OP_PRINT},
 			Resources:    []program.Resource{program.Constant{Inner: user}},
-			Error:        "",
 		},
 	})
 }
@@ -168,23 +168,54 @@ func TestConstant(t *testing.T) {
 func TestSetTxMeta(t *testing.T) {
 	test(t, TestCase{
 		Case: `
-		set_tx_meta("beneficiary", @platform)
+		set_tx_meta("aaa", @platform)
+		set_tx_meta("bbb", GEM)
+		set_tx_meta("ccc", 42)
+		set_tx_meta("ddd", "test")
+		set_tx_meta("eee", [COIN 30])
+		set_tx_meta("fff", 15%)
 		`,
 		Expected: CaseResult{
 			Instructions: []byte{
 				program.OP_APUSH, 00, 00,
 				program.OP_APUSH, 01, 00,
 				program.OP_TX_META,
+				program.OP_APUSH, 02, 00,
+				program.OP_APUSH, 03, 00,
+				program.OP_TX_META,
+				program.OP_APUSH, 04, 00,
+				program.OP_APUSH, 05, 00,
+				program.OP_TX_META,
+				program.OP_APUSH, 06, 00,
+				program.OP_APUSH, 07, 00,
+				program.OP_TX_META,
+				program.OP_APUSH, 8, 00,
+				program.OP_APUSH, 9, 00,
+				program.OP_TX_META,
+				program.OP_APUSH, 10, 00,
+				program.OP_APUSH, 11, 00,
+				program.OP_TX_META,
 			},
 			Resources: []program.Resource{
-				program.Constant{
-					Inner: core.Account("platform"),
-				},
-				program.Constant{
-					Inner: core.String("beneficiary"),
-				},
+				program.Constant{Inner: core.Account("platform")},
+				program.Constant{Inner: core.String("aaa")},
+				program.Constant{Inner: core.Asset("GEM")},
+				program.Constant{Inner: core.String("bbb")},
+				program.Constant{Inner: core.NewNumber(42)},
+				program.Constant{Inner: core.String("ccc")},
+				program.Constant{Inner: core.String("test")},
+				program.Constant{Inner: core.String("ddd")},
+				program.Constant{Inner: core.Monetary{
+					Asset:  "COIN",
+					Amount: core.NewMonetaryInt(30),
+				}},
+				program.Constant{Inner: core.String("eee")},
+				program.Constant{Inner: core.Portion{
+					Remaining: false,
+					Specific:  big.NewRat(15, 100),
+				}},
+				program.Constant{Inner: core.String("fff")},
 			},
-			Error: "",
 		},
 	})
 }
@@ -204,15 +235,9 @@ func TestSetTxMetaVars(t *testing.T) {
 				program.OP_TX_META,
 			},
 			Resources: []program.Resource{
-				program.Parameter{
-					Typ:  core.TypePortion,
-					Name: "commission",
-				},
-				program.Constant{
-					Inner: core.String("fee"),
-				},
+				program.Parameter{Typ: core.TypePortion, Name: "commission"},
+				program.Constant{Inner: core.String("fee")},
 			},
-			Error: "",
 		},
 	})
 }
@@ -958,3 +983,163 @@ func TestDestinationInOrderWrongType(t *testing.T) {
 // 		},
 // 	})
 // }
+
+func TestSetAccountMeta(t *testing.T) {
+	t.Run("all types", func(t *testing.T) {
+		test(t, TestCase{
+			Case: `
+			set_account_meta(@alice, "aaa", @platform)
+			set_account_meta(@alice, "bbb", GEM)
+			set_account_meta(@alice, "ccc", 42)
+			set_account_meta(@alice, "ddd", "test")
+			set_account_meta(@alice, "eee", [COIN 30])
+			set_account_meta(@alice, "fff", 15%)
+			`,
+			Expected: CaseResult{
+				Instructions: []byte{
+					program.OP_APUSH, 00, 00,
+					program.OP_APUSH, 01, 00,
+					program.OP_APUSH, 02, 00,
+					program.OP_ACCOUNT_META,
+					program.OP_APUSH, 03, 00,
+					program.OP_APUSH, 04, 00,
+					program.OP_APUSH, 02, 00,
+					program.OP_ACCOUNT_META,
+					program.OP_APUSH, 05, 00,
+					program.OP_APUSH, 06, 00,
+					program.OP_APUSH, 02, 00,
+					program.OP_ACCOUNT_META,
+					program.OP_APUSH, 7, 00,
+					program.OP_APUSH, 8, 00,
+					program.OP_APUSH, 02, 00,
+					program.OP_ACCOUNT_META,
+					program.OP_APUSH, 9, 00,
+					program.OP_APUSH, 10, 00,
+					program.OP_APUSH, 02, 00,
+					program.OP_ACCOUNT_META,
+					program.OP_APUSH, 11, 00,
+					program.OP_APUSH, 12, 00,
+					program.OP_APUSH, 02, 00,
+					program.OP_ACCOUNT_META,
+				},
+				Resources: []program.Resource{
+					program.Constant{Inner: core.Account("platform")},
+					program.Constant{Inner: core.String("aaa")},
+					program.Constant{Inner: core.Account("alice")},
+					program.Constant{Inner: core.Asset("GEM")},
+					program.Constant{Inner: core.String("bbb")},
+					program.Constant{Inner: core.NewNumber(42)},
+					program.Constant{Inner: core.String("ccc")},
+					program.Constant{Inner: core.String("test")},
+					program.Constant{Inner: core.String("ddd")},
+					program.Constant{Inner: core.Monetary{
+						Asset:  "COIN",
+						Amount: core.NewMonetaryInt(30),
+					}},
+					program.Constant{Inner: core.String("eee")},
+					program.Constant{Inner: core.Portion{
+						Remaining: false,
+						Specific:  big.NewRat(15, 100),
+					}},
+					program.Constant{Inner: core.String("fff")},
+				},
+			},
+		})
+	})
+
+	t.Run("with vars", func(t *testing.T) {
+		test(t, TestCase{
+			Case: `
+			vars {
+				account $acc
+			}
+			send [EUR/2 100] (
+				source = @world
+				destination = $acc
+			)
+			set_account_meta($acc, "fees", 1%)
+			`,
+			Expected: CaseResult{
+				Instructions: []byte{
+					program.OP_APUSH, 02, 00,
+					program.OP_APUSH, 01, 00,
+					program.OP_ASSET,
+					program.OP_APUSH, 03, 00,
+					program.OP_MONETARY_NEW,
+					program.OP_TAKE_ALL,
+					program.OP_APUSH, 01, 00,
+					program.OP_TAKE_MAX,
+					program.OP_APUSH, 04, 00,
+					program.OP_BUMP,
+					program.OP_REPAY,
+					program.OP_APUSH, 02, 00,
+					program.OP_APUSH, 05, 00,
+					program.OP_BUMP,
+					program.OP_TAKE_ALWAYS,
+					program.OP_APUSH, 05, 00,
+					program.OP_FUNDING_ASSEMBLE,
+					program.OP_FUNDING_SUM,
+					program.OP_TAKE,
+					program.OP_APUSH, 00, 00,
+					program.OP_SEND,
+					program.OP_REPAY,
+					program.OP_APUSH, 06, 00,
+					program.OP_APUSH, 07, 00,
+					program.OP_APUSH, 00, 00,
+					program.OP_ACCOUNT_META,
+				},
+				Resources: []program.Resource{
+					program.Parameter{Typ: core.TypeAccount, Name: "acc"},
+					program.Constant{Inner: core.Monetary{Asset: "EUR/2", Amount: core.NewMonetaryInt(100)}},
+					program.Constant{Inner: core.Account("world")},
+					program.Constant{Inner: core.NewMonetaryInt(0)},
+					program.Constant{Inner: core.NewMonetaryInt(1)},
+					program.Constant{Inner: core.NewMonetaryInt(2)},
+					program.Constant{Inner: core.Portion{
+						Remaining: false,
+						Specific:  big.NewRat(1, 100),
+					}},
+					program.Constant{Inner: core.String("fees")},
+				},
+			},
+		})
+	})
+
+	t.Run("errors", func(t *testing.T) {
+		test(t, TestCase{
+			Case: `
+			set_account_meta(@alice, "fees")
+			`,
+			Expected: CaseResult{
+				Error: "mismatched input",
+			},
+		})
+		test(t, TestCase{
+			Case: `
+			set_account_meta("test")
+			`,
+			Expected: CaseResult{
+				Error: "mismatched input",
+			},
+		})
+		test(t, TestCase{
+			Case: `
+			set_account_meta(@alice, "t1", "t2", "t3")
+			`,
+			Expected: CaseResult{
+				Error: "mismatched input",
+			},
+		})
+		test(t, TestCase{
+			Case: `
+			vars {
+				portion $p
+			}
+			set_account_meta($p, "fees", 1%)
+			`,
+			Expected: CaseResult{
+				Error: "should be of type account",
+			},
+		})
+	})
+}

@@ -271,6 +271,36 @@ func (p *parseVisitor) VisitSetTxMeta(ctx *parser.SetTxMetaContext) *CompileErro
 	return nil
 }
 
+// set_account_meta statement
+func (p *parseVisitor) VisitSetAccountMeta(ctx *parser.SetAccountMetaContext) *CompileError {
+	_, _, compErr := p.VisitExpr(ctx.GetValue(), true)
+	if compErr != nil {
+		return compErr
+	}
+
+	keyAddr, err := p.AllocateResource(program.Constant{
+		Inner: core.String(strings.Trim(ctx.GetKey().GetText(), `"`)),
+	})
+	if err != nil {
+		return LogicError(ctx, err)
+	}
+	p.PushAddress(*keyAddr)
+
+	ty, accAddr, compErr := p.VisitExpr(ctx.GetAcc(), false)
+	if compErr != nil {
+		return compErr
+	}
+	if ty != core.TypeAccount {
+		return LogicError(ctx, fmt.Errorf(
+			"variable is of type %s, and should be of type account", ty))
+	}
+	p.PushAddress(*accAddr)
+
+	p.AppendInstruction(program.OP_ACCOUNT_META)
+
+	return nil
+}
+
 // print statement
 func (p *parseVisitor) VisitPrint(ctx *parser.PrintContext) *CompileError {
 	_, _, err := p.VisitExpr(ctx.GetExpr(), true)
@@ -373,6 +403,11 @@ func (p *parseVisitor) VisitScript(c parser.IScriptContext) *CompileError {
 				}
 			case *parser.SetTxMetaContext:
 				err := p.VisitSetTxMeta(c)
+				if err != nil {
+					return err
+				}
+			case *parser.SetAccountMetaContext:
+				err := p.VisitSetAccountMeta(c)
 				if err != nil {
 					return err
 				}
