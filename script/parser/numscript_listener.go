@@ -125,8 +125,11 @@ type NumScriptListener interface {
 	// EnterType_ is called when entering the type_ production.
 	EnterType_(c *Type_Context)
 
-	// EnterOrigin is called when entering the origin production.
-	EnterOrigin(c *OriginContext)
+	// EnterOriginAccountMeta is called when entering the OriginAccountMeta production.
+	EnterOriginAccountMeta(c *OriginAccountMetaContext)
+
+	// EnterOriginAccountBalance is called when entering the OriginAccountBalance production.
+	EnterOriginAccountBalance(c *OriginAccountBalanceContext)
 
 	// EnterVarDecl is called when entering the varDecl production.
 	EnterVarDecl(c *VarDeclContext)
@@ -254,8 +257,11 @@ type NumScriptListener interface {
 	// ExitType_ is called when exiting the type_ production.
 	ExitType_(c *Type_Context)
 
-	// ExitOrigin is called when exiting the origin production.
-	ExitOrigin(c *OriginContext)
+	// ExitOriginAccountMeta is called when exiting the OriginAccountMeta production.
+	ExitOriginAccountMeta(c *OriginAccountMetaContext)
+
+	// ExitOriginAccountBalance is called when exiting the OriginAccountBalance production.
+	ExitOriginAccountBalance(c *OriginAccountBalanceContext)
 
 	// ExitVarDecl is called when exiting the varDecl production.
 	ExitVarDecl(c *VarDeclContext)

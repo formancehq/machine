@@ -1,7 +1,6 @@
 package compiler
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
@@ -9,6 +8,7 @@ import (
 	"github.com/formancehq/machine/core"
 	"github.com/formancehq/machine/script/parser"
 	"github.com/formancehq/machine/vm/program"
+	"github.com/pkg/errors"
 )
 
 type parseVisitor struct {
@@ -342,30 +342,64 @@ func (p *parseVisitor) VisitVars(c *parser.VarListDeclContext) *CompileError {
 			return InternalError(c)
 		}
 
-		var addr core.Address
-		cOrig := v.GetOrig()
-		if cOrig != nil {
-			srcTy, src, compErr := p.VisitExpr(cOrig.GetAcc(), false)
+		var addr *core.Address
+		var err error
+		if v.GetOrig() == nil {
+			addr, err = p.AllocateResource(program.Variable{Typ: ty, Name: name})
+			if err != nil {
+				return &CompileError{
+					Msg: errors.Wrap(err,
+						"allocating variable resource").Error(),
+				}
+			}
+			p.varIdx[name] = *addr
+			continue
+		}
+
+		switch c := v.GetOrig().(type) {
+		case *parser.OriginAccountMetaContext:
+			srcTy, src, compErr := p.VisitExpr(c.GetAccount(), false)
 			if compErr != nil {
 				return compErr
 			}
 			if srcTy != core.TypeAccount {
-				return LogicError(cOrig, errors.New("wrong type: expected account"))
+				return LogicError(c, errors.New(
+					"variable type should be 'account' to pull account metadata"))
 			}
-			key := strings.Trim(cOrig.GetKey().GetText(), `"`)
-			a, err := p.AllocateResource(program.Metadata{SourceAccount: *src, Key: key, Typ: ty})
+			key := strings.Trim(c.GetKey().GetText(), `"`)
+			addr, err = p.AllocateResource(program.VariableAccountMetadata{
+				Typ:     ty,
+				Account: *src,
+				Key:     key,
+			})
+		case *parser.OriginAccountBalanceContext:
+			if ty != core.TypeMonetary {
+				return LogicError(c, fmt.Errorf(
+					"variable type should be 'monetary' to pull account balance"))
+			}
+			accTy, accAddr, compErr := p.VisitExpr(c.GetAccount(), false)
+			if compErr != nil {
+				return compErr
+			}
+			if accTy != core.TypeAccount {
+				return LogicError(c, errors.New(
+					"variable type should be 'account' to pull account balance"))
+			}
+
+			asset := core.Asset(c.GetAsset().GetText())
+			addr, err = p.AllocateResource(program.VariableAccountBalance{
+				Account: *accAddr,
+				Asset:   string(asset),
+			})
 			if err != nil {
-				return LogicError(cOrig, err)
+				return LogicError(c, err)
 			}
-			addr = *a
-		} else {
-			a, err := p.AllocateResource(program.Parameter{Typ: ty, Name: name})
-			if err != nil {
-				return LogicError(cOrig, err)
-			}
-			addr = *a
 		}
-		p.varIdx[name] = addr
+		if err != nil {
+			return LogicError(c, err)
+		}
+
+		p.varIdx[name] = *addr
 	}
 
 	return nil
@@ -378,8 +412,7 @@ func (p *parseVisitor) VisitScript(c parser.IScriptContext) *CompileError {
 		if vars != nil {
 			switch c := vars.(type) {
 			case *parser.VarListDeclContext:
-				err := p.VisitVars(c)
-				if err != nil {
+				if err := p.VisitVars(c); err != nil {
 					return err
 				}
 			default:
@@ -388,31 +421,23 @@ func (p *parseVisitor) VisitScript(c parser.IScriptContext) *CompileError {
 		}
 
 		for _, stmt := range c.GetStmts() {
+			var err *CompileError
 			switch c := stmt.(type) {
 			case *parser.PrintContext:
-				err := p.VisitPrint(c)
-				if err != nil {
-					return err
-				}
+				err = p.VisitPrint(c)
 			case *parser.FailContext:
 				p.AppendInstruction(program.OP_FAIL)
 			case *parser.SendContext:
-				err := p.VisitSend(c)
-				if err != nil {
-					return err
-				}
+				err = p.VisitSend(c)
 			case *parser.SetTxMetaContext:
-				err := p.VisitSetTxMeta(c)
-				if err != nil {
-					return err
-				}
+				err = p.VisitSetTxMeta(c)
 			case *parser.SetAccountMetaContext:
-				err := p.VisitSetAccountMeta(c)
-				if err != nil {
-					return err
-				}
+				err = p.VisitSetAccountMeta(c)
 			default:
 				return InternalError(c)
+			}
+			if err != nil {
+				return err
 			}
 		}
 	default:

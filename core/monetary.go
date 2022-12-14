@@ -14,7 +14,8 @@ type Monetary struct {
 func (Monetary) GetType() Type { return TypeMonetary }
 
 func (m Monetary) String() string {
-	return fmt.Sprintf("[%v %v]", m.Asset, &m.Amount)
+	amt := *m.Amount
+	return fmt.Sprintf("[%v %s]", m.Asset, amt.String())
 }
 
 type MonetaryInt big.Int

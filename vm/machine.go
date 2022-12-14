@@ -209,35 +209,43 @@ func (m *Machine) tick() (bool, byte) {
 		}
 		m.Stack = append(m.Stack, *v)
 		m.P += 2
+
 	case program.OP_IPUSH:
 		bytes := m.Program.Instructions[m.P+1 : m.P+9]
 		v := core.Number(big.NewInt(int64(binary.LittleEndian.Uint64(bytes))))
 		m.Stack = append(m.Stack, v)
 		m.P += 8
+
 	case program.OP_BUMP:
 		n := big.Int(*m.popNumber())
 		idx := len(m.Stack) - int(n.Uint64()) - 1
 		v := m.Stack[idx]
 		m.Stack = append(m.Stack[:idx], m.Stack[idx+1:]...)
 		m.Stack = append(m.Stack, v)
+
 	case program.OP_DELETE:
 		n := m.popValue()
 		if n.GetType() == core.TypeFunding {
 			return true, EXIT_FAIL_INVALID
 		}
+
 	case program.OP_IADD:
 		b := m.popNumber()
 		a := m.popNumber()
 		m.pushValue(a.Add(b))
+
 	case program.OP_ISUB:
 		b := m.popNumber()
 		a := m.popNumber()
 		m.pushValue(a.Sub(b))
+
 	case program.OP_PRINT:
 		a := m.popValue()
 		m.printChan <- a
+
 	case program.OP_FAIL:
 		return true, EXIT_FAIL
+
 	case program.OP_ASSET:
 		v := m.popValue()
 		switch v := v.(type) {
@@ -282,6 +290,7 @@ func (m *Machine) tick() (bool, byte) {
 			return true, EXIT_FAIL_INVALID
 		}
 		m.pushValue(*allotment)
+
 	case program.OP_TAKE_ALL:
 		overdraft := m.popMonetary()
 		account := m.popAccount()
@@ -534,21 +543,22 @@ func (m *Machine) ResolveBalances() (chan BalanceRequest, error) {
 	return resChan, nil
 }
 
-type MetadataRequest struct {
+type ResourceRequest struct {
 	Account  string
 	Key      string
+	Asset    string
 	Response chan core.Value
 	Error    error
 }
 
-func (m *Machine) ResolveResources() (chan MetadataRequest, error) {
+func (m *Machine) ResolveResources() (chan ResourceRequest, error) {
 	if m.resolveCalled {
 		return nil, errors.New("tried to call ResolveResources twice")
 	}
 	m.resolveCalled = true
-	ch := make(chan MetadataRequest)
+	resChan := make(chan ResourceRequest)
 	go func() {
-		defer close(ch)
+		defer close(resChan)
 		for len(m.Resources) != len(m.UnresolvedResources) {
 			idx := len(m.Resources)
 			res := m.UnresolvedResources[idx]
@@ -556,32 +566,32 @@ func (m *Machine) ResolveResources() (chan MetadataRequest, error) {
 			switch res := res.(type) {
 			case program.Constant:
 				val = res.Inner
-			case program.Parameter:
+			case program.Variable:
 				var ok bool
 				val, ok = m.Vars[res.Name]
 				if !ok {
-					ch <- MetadataRequest{
+					resChan <- ResourceRequest{
 						Error: fmt.Errorf("missing variable: %v", res.Name),
 					}
 					return
 				}
-			case program.Metadata:
-				sourceAccount, ok := m.getResource(res.SourceAccount)
+			case program.VariableAccountMetadata:
+				sourceAccount, ok := m.getResource(res.Account)
 				if !ok {
-					ch <- MetadataRequest{
+					resChan <- ResourceRequest{
 						Error: errors.New("tried to request metadata of an account which has not yet been solved"),
 					}
 					return
 				}
 				if (*sourceAccount).GetType() != core.TypeAccount {
-					ch <- MetadataRequest{
+					resChan <- ResourceRequest{
 						Error: fmt.Errorf("tried to request metadata on wrong entity: %v instead of ACCOUNT", (*sourceAccount).GetType()),
 					}
 					return
 				}
 				account := (*sourceAccount).(core.Account)
 				resp := make(chan core.Value)
-				ch <- MetadataRequest{
+				resChan <- ResourceRequest{
 					Account:  string(account),
 					Key:      res.Key,
 					Response: resp,
@@ -589,22 +599,65 @@ func (m *Machine) ResolveResources() (chan MetadataRequest, error) {
 				val = <-resp
 				close(resp)
 				if val == nil {
-					ch <- MetadataRequest{
+					resChan <- ResourceRequest{
 						Error: errors.New("tried to set nil as resource"),
 					}
 					return
 				}
 				if val.GetType() != res.Typ {
-					ch <- MetadataRequest{
+					resChan <- ResourceRequest{
 						Error: fmt.Errorf("wrong type: expected %v, got %v", res.Typ, val.GetType()),
 					}
 					return
 				}
+			case program.VariableAccountBalance:
+				sourceAccount, ok := m.getResource(res.Account)
+				if !ok {
+					resChan <- ResourceRequest{
+						Error: errors.New("tried to request balance of an account which has not yet been solved"),
+					}
+					return
+				}
+				if (*sourceAccount).GetType() != core.TypeAccount {
+					resChan <- ResourceRequest{
+						Error: fmt.Errorf("tried to request balance on wrong entity: %v instead of ACCOUNT", (*sourceAccount).GetType()),
+					}
+					return
+				}
+				account := (*sourceAccount).(core.Account)
+				resp := make(chan core.Value)
+				resChan <- ResourceRequest{
+					Account:  string(account),
+					Asset:    res.Asset,
+					Response: resp,
+				}
+				amount := <-resp
+				close(resp)
+				if amount == nil {
+					resChan <- ResourceRequest{
+						Error: errors.New("received nil amount"),
+					}
+					return
+				}
+				if amount.GetType() != core.TypeNumber {
+					resChan <- ResourceRequest{
+						Error: fmt.Errorf(
+							"request balance: wrong type received: expected %v, got %v",
+							core.TypeNumber, amount.GetType()),
+					}
+					return
+				}
+				val = core.Monetary{
+					Asset:  core.Asset(res.Asset),
+					Amount: amount.(core.Number),
+				}
+			default:
+				panic(fmt.Errorf("type %T not implemented", res))
 			}
 			m.Resources = append(m.Resources, val)
 		}
 	}()
-	return ch, nil
+	return resChan, nil
 }
 
 func (m *Machine) SetVars(vars map[string]core.Value) error {

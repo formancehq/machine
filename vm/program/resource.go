@@ -17,21 +17,31 @@ type Constant struct {
 func (c Constant) GetType() core.Type { return c.Inner.GetType() }
 func (c Constant) String() string     { return fmt.Sprintf("%v", c.Inner) }
 
-type Parameter struct {
+type Variable struct {
 	Typ  core.Type
 	Name string
 }
 
-func (p Parameter) GetType() core.Type { return p.Typ }
-func (p Parameter) String() string     { return fmt.Sprintf("<%v %v>", p.Typ, p.Name) }
+func (p Variable) GetType() core.Type { return p.Typ }
+func (p Variable) String() string     { return fmt.Sprintf("<%v %v>", p.Typ, p.Name) }
 
-type Metadata struct {
-	SourceAccount core.Address
-	Key           string
-	Typ           core.Type
+type VariableAccountMetadata struct {
+	Typ     core.Type
+	Account core.Address
+	Key     string
 }
 
-func (m Metadata) GetType() core.Type { return m.Typ }
-func (m Metadata) String() string {
-	return fmt.Sprintf("<%v meta(%v, %v)>", m.Typ, m.SourceAccount, m.Key)
+func (m VariableAccountMetadata) GetType() core.Type { return m.Typ }
+func (m VariableAccountMetadata) String() string {
+	return fmt.Sprintf("<%v meta(%v, %v)>", m.Typ, m.Account, m.Key)
+}
+
+type VariableAccountBalance struct {
+	Account core.Address
+	Asset   string
+}
+
+func (a VariableAccountBalance) GetType() core.Type { return core.TypeMonetary }
+func (a VariableAccountBalance) String() string {
+	return fmt.Sprintf("<%v balance(%v, %v)>", core.TypeMonetary, a.Account, a.Asset)
 }

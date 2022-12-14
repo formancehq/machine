@@ -261,11 +261,17 @@ func (s *BaseNumScriptListener) EnterType_(ctx *Type_Context) {}
 // ExitType_ is called when production type_ is exited.
 func (s *BaseNumScriptListener) ExitType_(ctx *Type_Context) {}
 
-// EnterOrigin is called when production origin is entered.
-func (s *BaseNumScriptListener) EnterOrigin(ctx *OriginContext) {}
+// EnterOriginAccountMeta is called when production OriginAccountMeta is entered.
+func (s *BaseNumScriptListener) EnterOriginAccountMeta(ctx *OriginAccountMetaContext) {}
 
-// ExitOrigin is called when production origin is exited.
-func (s *BaseNumScriptListener) ExitOrigin(ctx *OriginContext) {}
+// ExitOriginAccountMeta is called when production OriginAccountMeta is exited.
+func (s *BaseNumScriptListener) ExitOriginAccountMeta(ctx *OriginAccountMetaContext) {}
+
+// EnterOriginAccountBalance is called when production OriginAccountBalance is entered.
+func (s *BaseNumScriptListener) EnterOriginAccountBalance(ctx *OriginAccountBalanceContext) {}
+
+// ExitOriginAccountBalance is called when production OriginAccountBalance is exited.
+func (s *BaseNumScriptListener) ExitOriginAccountBalance(ctx *OriginAccountBalanceContext) {}
 
 // EnterVarDecl is called when production varDecl is entered.
 func (s *BaseNumScriptListener) EnterVarDecl(ctx *VarDeclContext) {}
