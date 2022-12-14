@@ -260,16 +260,19 @@ func TestVariablesJSON(t *testing.T) {
 		account $rider
 		account $driver
 		string 	$description
+		number 	$nb
 	}
 	send [EUR/2 999] (
 		source=$rider
 		destination=$driver
 	)
-	set_tx_meta("description", $description)`)
+	set_tx_meta("description", $description)
+	set_tx_meta("ride", $nb)`)
 	tc.setVarsFromJSON(t, `{
 		"rider": "users:001",
 		"driver": "users:002",
-		"description": "midnight ride"
+		"description": "midnight ride",
+		"nb": 1
 	}`)
 	tc.setBalance("users:001", "EUR/2", 1000)
 	tc.expected = CaseResult{
@@ -284,6 +287,7 @@ func TestVariablesJSON(t *testing.T) {
 		},
 		Metadata: map[string]core.Value{
 			"description": core.String("midnight ride"),
+			"ride":        core.NewMonetaryInt(1),
 		},
 		ExitCode: EXIT_OK,
 	}
