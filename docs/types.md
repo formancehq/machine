@@ -1,4 +1,4 @@
-# Numary Machine Types
+# Formance Machine Types
 
 ```
 # Integers

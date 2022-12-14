@@ -328,8 +328,6 @@ func (p *parseVisitor) VisitVars(c *parser.VarListDeclContext) *CompileError {
 		switch v.GetTy().GetText() {
 		case "account":
 			ty = core.TypeAccount
-		case "asset":
-			ty = core.TypeAsset
 		case "number":
 			ty = core.TypeNumber
 		case "string":

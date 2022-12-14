@@ -1,13 +1,15 @@
 name: Pull Request - Open
+
 on:
   pull_request:
     types: [assigned, opened, synchronize, reopened]
+
 jobs:
-  Pr:
-    uses: numary/gh-workflows/.github/workflows/pr-style.yml@main
+  pr-style:
+    uses: formancehq/gh-workflows/.github/workflows/pr-style.yml@main
 
-  Test:
-    uses: numary/gh-workflows/.github/workflows/golang-test.yml@main
+  test:
+    uses: formancehq/gh-workflows/.github/workflows/golang-test.yml@main
 
-  Lint:
-    uses: numary/gh-workflows/.github/workflows/golang-lint.yml@main
+  lint:
+    uses: formancehq/gh-workflows/.github/workflows/golang-lint.yml@main

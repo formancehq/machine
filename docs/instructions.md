@@ -1,4 +1,4 @@
-# Numary Machine Instruction Set
+# Formance Machine Instruction Set
 
 ```
 INIT

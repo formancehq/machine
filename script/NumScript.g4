@@ -28,7 +28,6 @@ LBRACE: '{';
 RBRACE: '}';
 EQ: '=';
 TY_ACCOUNT: 'account';
-TY_ASSET: 'asset';
 TY_NUMBER: 'number';
 TY_MONETARY: 'monetary';
 TY_PORTION: 'portion';
@@ -123,7 +122,7 @@ statement
       | DESTINATION '=' dest=destination NEWLINE SOURCE '=' src=valueAwareSource) NEWLINE RPAREN # Send
   ;
 
-type_: TY_ACCOUNT | TY_ASSET | TY_NUMBER | TY_STRING | TY_MONETARY | TY_PORTION;
+type_: TY_ACCOUNT | TY_NUMBER | TY_STRING | TY_MONETARY | TY_PORTION;
 
 origin
     : META '(' account=expression ',' key=STRING ')' # OriginAccountMeta

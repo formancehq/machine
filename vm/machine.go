@@ -217,7 +217,7 @@ func (m *Machine) tick() (bool, byte) {
 		m.P += 8
 
 	case program.OP_BUMP:
-		n := big.Int(*m.popNumber())
+		n := big.Int(*pop[core.Number](m))
 		idx := len(m.Stack) - int(n.Uint64()) - 1
 		v := m.Stack[idx]
 		m.Stack = append(m.Stack[:idx], m.Stack[idx+1:]...)
@@ -230,13 +230,13 @@ func (m *Machine) tick() (bool, byte) {
 		}
 
 	case program.OP_IADD:
-		b := m.popNumber()
-		a := m.popNumber()
+		b := pop[core.Number](m)
+		a := pop[core.Number](m)
 		m.pushValue(a.Add(b))
 
 	case program.OP_ISUB:
-		b := m.popNumber()
-		a := m.popNumber()
+		b := pop[core.Number](m)
+		a := pop[core.Number](m)
 		m.pushValue(a.Sub(b))
 
 	case program.OP_PRINT:
@@ -260,16 +260,16 @@ func (m *Machine) tick() (bool, byte) {
 		}
 
 	case program.OP_MONETARY_NEW:
-		amount := m.popNumber()
-		asset := m.popAsset()
+		amount := pop[core.Number](m)
+		asset := pop[core.Asset](m)
 		m.pushValue(core.Monetary{
 			Asset:  asset,
 			Amount: amount,
 		})
 
 	case program.OP_MONETARY_ADD:
-		b := m.popMonetary()
-		a := m.popMonetary()
+		b := pop[core.Monetary](m)
+		a := pop[core.Monetary](m)
 		if a.Asset != b.Asset {
 			return true, EXIT_FAIL_INVALID
 		}
@@ -279,10 +279,10 @@ func (m *Machine) tick() (bool, byte) {
 		})
 
 	case program.OP_MAKE_ALLOTMENT:
-		n := m.popNumber()
+		n := pop[core.Number](m)
 		portions := make([]core.Portion, n.Uint64())
 		for i := uint64(0); i < n.Uint64(); i++ {
-			p := m.popPortion()
+			p := pop[core.Portion](m)
 			portions[i] = p
 		}
 		allotment, err := core.NewAllotment(portions)
@@ -292,8 +292,8 @@ func (m *Machine) tick() (bool, byte) {
 		m.pushValue(*allotment)
 
 	case program.OP_TAKE_ALL:
-		overdraft := m.popMonetary()
-		account := m.popAccount()
+		overdraft := pop[core.Monetary](m)
+		account := pop[core.Account](m)
 		funding, err := m.withdrawAll(account, overdraft.Asset, overdraft.Amount)
 		if err != nil {
 			return true, EXIT_FAIL_INVALID
@@ -301,8 +301,8 @@ func (m *Machine) tick() (bool, byte) {
 		m.pushValue(*funding)
 
 	case program.OP_TAKE_ALWAYS:
-		mon := m.popMonetary()
-		account := m.popAccount()
+		mon := pop[core.Monetary](m)
+		account := pop[core.Account](m)
 		funding, err := m.withdrawAlways(account, mon)
 		if err != nil {
 			return true, EXIT_FAIL_INVALID
@@ -310,8 +310,8 @@ func (m *Machine) tick() (bool, byte) {
 		m.pushValue(*funding)
 
 	case program.OP_TAKE:
-		mon := m.popMonetary()
-		funding := m.popFunding()
+		mon := pop[core.Monetary](m)
+		funding := pop[core.Funding](m)
 		if funding.Asset != mon.Asset {
 			return true, EXIT_FAIL_INVALID
 		}
@@ -323,8 +323,8 @@ func (m *Machine) tick() (bool, byte) {
 		m.pushValue(result)
 
 	case program.OP_TAKE_MAX:
-		mon := m.popMonetary()
-		funding := m.popFunding()
+		mon := pop[core.Monetary](m)
+		funding := pop[core.Funding](m)
 		if funding.Asset != mon.Asset {
 			return true, EXIT_FAIL_INVALID
 		}
@@ -342,19 +342,19 @@ func (m *Machine) tick() (bool, byte) {
 		m.pushValue(result)
 
 	case program.OP_FUNDING_ASSEMBLE:
-		num := m.popNumber()
+		num := pop[core.Number](m)
 		n := int(num.Uint64())
 		if n == 0 {
 			return true, EXIT_FAIL_INVALID
 		}
-		first := m.popFunding()
+		first := pop[core.Funding](m)
 		result := core.Funding{
 			Asset: first.Asset,
 		}
 		fundings_rev := make([]core.Funding, n)
 		fundings_rev[0] = first
 		for i := 1; i < n; i++ {
-			f := m.popFunding()
+			f := pop[core.Funding](m)
 			if f.Asset != result.Asset {
 				return true, EXIT_FAIL_INVALID
 			}
@@ -370,7 +370,7 @@ func (m *Machine) tick() (bool, byte) {
 		m.pushValue(result)
 
 	case program.OP_FUNDING_SUM:
-		funding := m.popFunding()
+		funding := pop[core.Funding](m)
 		sum := funding.Total()
 		m.pushValue(funding)
 		m.pushValue(core.Monetary{
@@ -379,13 +379,13 @@ func (m *Machine) tick() (bool, byte) {
 		})
 
 	case program.OP_FUNDING_REVERSE:
-		funding := m.popFunding()
+		funding := pop[core.Funding](m)
 		result := funding.Reverse()
 		m.pushValue(result)
 
 	case program.OP_ALLOC:
-		allotment := m.popAllotment()
-		monetary := m.popMonetary()
+		allotment := pop[core.Allotment](m)
+		monetary := pop[core.Monetary](m)
 		total := monetary.Amount
 		parts := allotment.Allocate(total)
 		for i := len(parts) - 1; i >= 0; i-- {
@@ -396,11 +396,11 @@ func (m *Machine) tick() (bool, byte) {
 		}
 
 	case program.OP_REPAY:
-		m.repay(m.popFunding())
+		m.repay(pop[core.Funding](m))
 
 	case program.OP_SEND:
-		dest := m.popAccount()
-		funding := m.popFunding()
+		dest := pop[core.Account](m)
+		funding := pop[core.Funding](m)
 		m.credit(dest, funding)
 		for _, part := range funding.Parts {
 			src := part.Account
@@ -417,13 +417,13 @@ func (m *Machine) tick() (bool, byte) {
 		}
 
 	case program.OP_TX_META:
-		k := m.popString()
+		k := pop[core.String](m)
 		v := m.popValue()
 		m.TxMeta[string(k)] = v
 
 	case program.OP_ACCOUNT_META:
-		a := m.popAccount()
-		k := m.popString()
+		a := pop[core.Account](m)
+		k := pop[core.String](m)
 		v := m.popValue()
 		if m.AccountsMeta[a] == nil {
 			m.AccountsMeta[a] = map[string]core.Value{}
