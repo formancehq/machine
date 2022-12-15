@@ -571,7 +571,7 @@ func (m *Machine) ResolveResources() (chan ResourceRequest, error) {
 				val, ok = m.Vars[res.Name]
 				if !ok {
 					resChan <- ResourceRequest{
-						Error: fmt.Errorf("missing variable: %v", res.Name),
+						Error: fmt.Errorf("missing variable '%s'", res.Name),
 					}
 					return
 				}
@@ -579,13 +579,17 @@ func (m *Machine) ResolveResources() (chan ResourceRequest, error) {
 				sourceAccount, ok := m.getResource(res.Account)
 				if !ok {
 					resChan <- ResourceRequest{
-						Error: errors.New("tried to request metadata of an account which has not yet been solved"),
+						Error: fmt.Errorf(
+							"variable '%s': tried to request metadata of an account which has not yet been solved",
+							res.Name),
 					}
 					return
 				}
 				if (*sourceAccount).GetType() != core.TypeAccount {
 					resChan <- ResourceRequest{
-						Error: fmt.Errorf("tried to request metadata on wrong entity: %v instead of ACCOUNT", (*sourceAccount).GetType()),
+						Error: fmt.Errorf(
+							"variable '%s': tried to request metadata on wrong entity: %v instead of account",
+							res.Name, (*sourceAccount).GetType()),
 					}
 					return
 				}
@@ -600,13 +604,14 @@ func (m *Machine) ResolveResources() (chan ResourceRequest, error) {
 				close(resp)
 				if val == nil {
 					resChan <- ResourceRequest{
-						Error: errors.New("tried to set nil as resource"),
+						Error: fmt.Errorf("variable '%s': tried to set nil as resource", res.Name),
 					}
 					return
 				}
 				if val.GetType() != res.Typ {
 					resChan <- ResourceRequest{
-						Error: fmt.Errorf("wrong type: expected %v, got %v", res.Typ, val.GetType()),
+						Error: fmt.Errorf("variable '%s': wrong type: expected %v, got %v",
+							res.Name, res.Typ, val.GetType()),
 					}
 					return
 				}
@@ -614,13 +619,17 @@ func (m *Machine) ResolveResources() (chan ResourceRequest, error) {
 				sourceAccount, ok := m.getResource(res.Account)
 				if !ok {
 					resChan <- ResourceRequest{
-						Error: errors.New("tried to request balance of an account which has not yet been solved"),
+						Error: fmt.Errorf(
+							"variable '%s': tried to request balance of an account which has not yet been solved",
+							res.Name),
 					}
 					return
 				}
 				if (*sourceAccount).GetType() != core.TypeAccount {
 					resChan <- ResourceRequest{
-						Error: fmt.Errorf("tried to request balance on wrong entity: %v instead of ACCOUNT", (*sourceAccount).GetType()),
+						Error: fmt.Errorf(
+							"variable '%s': tried to request balance on wrong entity: %v instead of account",
+							res.Name, (*sourceAccount).GetType()),
 					}
 					return
 				}
@@ -635,21 +644,30 @@ func (m *Machine) ResolveResources() (chan ResourceRequest, error) {
 				close(resp)
 				if amount == nil {
 					resChan <- ResourceRequest{
-						Error: errors.New("received nil amount"),
+						Error: fmt.Errorf("variable '%s': received nil amount", res.Name),
 					}
 					return
 				}
 				if amount.GetType() != core.TypeNumber {
 					resChan <- ResourceRequest{
 						Error: fmt.Errorf(
-							"request balance: wrong type received: expected %v, got %v",
-							core.TypeNumber, amount.GetType()),
+							"variable '%s': tried to request balance: wrong type received: expected %v, got %v",
+							res.Name, core.TypeNumber, amount.GetType()),
+					}
+					return
+				}
+				amt := amount.(core.Number)
+				if amt.Ltz() {
+					resChan <- ResourceRequest{
+						Error: fmt.Errorf(
+							"variable '%s': tried to request the balance of account %s for asset %s: received %s: monetary amounts must be non-negative",
+							res.Name, account, res.Asset, amt),
 					}
 					return
 				}
 				val = core.Monetary{
 					Asset:  core.Asset(res.Asset),
-					Amount: amount.(core.Number),
+					Amount: amt,
 				}
 			default:
 				panic(fmt.Errorf("type %T not implemented", res))

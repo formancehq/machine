@@ -99,7 +99,7 @@ func test(t *testing.T, testCase TestCase) {
 					req.Response <- val
 				}
 				if req.Error != nil {
-					panic(req.Error)
+					return 0, req.Error
 				}
 			}
 		}
@@ -111,10 +111,10 @@ func test(t *testing.T, testCase TestCase) {
 			}
 			for req := range ch {
 				val := testCase.balances[req.Account][req.Asset]
-				if req.Error != nil {
-					panic(req.Error)
-				}
 				req.Response <- val
+				if req.Error != nil {
+					return 0, req.Error
+				}
 			}
 		}
 
@@ -1345,7 +1345,7 @@ func TestVariableBalance(t *testing.T) {
 		tc.compile(t, script)
 		tc.setBalance("world", "USD/2", -40)
 		tc.expected = CaseResult{
-			ExitCode: EXIT_FAIL_INSUFFICIENT_FUNDS,
+			Error: "must be non-negative",
 		}
 		test(t, tc)
 	})

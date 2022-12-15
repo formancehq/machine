@@ -27,21 +27,23 @@ func (p Variable) String() string     { return fmt.Sprintf("<%v %v>", p.Typ, p.N
 
 type VariableAccountMetadata struct {
 	Typ     core.Type
+	Name    string
 	Account core.Address
 	Key     string
 }
 
 func (m VariableAccountMetadata) GetType() core.Type { return m.Typ }
 func (m VariableAccountMetadata) String() string {
-	return fmt.Sprintf("<%v meta(%v, %v)>", m.Typ, m.Account, m.Key)
+	return fmt.Sprintf("<%v %v meta(%v, %v)>", m.Typ, m.Name, m.Account, m.Key)
 }
 
 type VariableAccountBalance struct {
+	Name    string
 	Account core.Address
 	Asset   string
 }
 
 func (a VariableAccountBalance) GetType() core.Type { return core.TypeMonetary }
 func (a VariableAccountBalance) String() string {
-	return fmt.Sprintf("<%v balance(%v, %v)>", core.TypeMonetary, a.Account, a.Asset)
+	return fmt.Sprintf("<%v %v balance(%v, %v)>", core.TypeMonetary, a.Name, a.Account, a.Asset)
 }

@@ -367,6 +367,7 @@ func (p *parseVisitor) VisitVars(c *parser.VarListDeclContext) *CompileError {
 			key := strings.Trim(c.GetKey().GetText(), `"`)
 			addr, err = p.AllocateResource(program.VariableAccountMetadata{
 				Typ:     ty,
+				Name:    name,
 				Account: *src,
 				Key:     key,
 			})
@@ -386,6 +387,7 @@ func (p *parseVisitor) VisitVars(c *parser.VarListDeclContext) *CompileError {
 
 			asset := core.Asset(c.GetAsset().GetText())
 			addr, err = p.AllocateResource(program.VariableAccountBalance{
+				Name:    name,
 				Account: *accAddr,
 				Asset:   string(asset),
 			})
