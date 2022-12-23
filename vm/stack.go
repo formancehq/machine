@@ -1,6 +1,10 @@
 package vm
 
-import "github.com/formancehq/machine/core"
+import (
+	"fmt"
+
+	"github.com/formancehq/machine/core"
+)
 
 func (m *Machine) popValue() core.Value {
 	l := len(m.Stack)
@@ -9,68 +13,12 @@ func (m *Machine) popValue() core.Value {
 	return x
 }
 
-func (m *Machine) popAccount() core.Account {
-	if a, ok := m.popValue().(core.Account); ok {
-		return a
-	} else {
-		panic("unexpected type on stack")
-	}
-}
-
-func (m *Machine) popNumber() core.Number {
-	if n, ok := m.popValue().(core.Number); ok {
-		return n
-	} else {
-		panic("unexpected type on stack")
-	}
-}
-
-func (m *Machine) popString() core.String {
-	if s, ok := m.popValue().(core.String); ok {
-		return s
-	} else {
-		panic("unexpected type on stack")
-	}
-}
-
-func (m *Machine) popMonetary() core.Monetary {
-	if m, ok := m.popValue().(core.Monetary); ok {
-		return m
-	} else {
-		panic("unexpected type on stack")
-	}
-}
-
-func (m *Machine) popAsset() core.Asset {
-	if v, ok := m.popValue().(core.Asset); ok {
+func pop[T core.Value](m *Machine) T {
+	x := m.popValue()
+	if v, ok := x.(T); ok {
 		return v
-	} else {
-		panic("unexpected type on stack")
 	}
-}
-
-func (m *Machine) popFunding() core.Funding {
-	if v, ok := m.popValue().(core.Funding); ok {
-		return v
-	} else {
-		panic("unexpected type on stack")
-	}
-}
-
-func (m *Machine) popAllotment() core.Allotment {
-	if m, ok := m.popValue().(core.Allotment); ok {
-		return m
-	} else {
-		panic("unexpected type on stack")
-	}
-}
-
-func (m *Machine) popPortion() core.Portion {
-	if m, ok := m.popValue().(core.Portion); ok {
-		return m
-	} else {
-		panic("unexpected type on stack")
-	}
+	panic(fmt.Errorf("unexpected type '%T' on stack", x))
 }
 
 func (m *Machine) pushValue(v core.Value) {

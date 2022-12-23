@@ -45,7 +45,7 @@ func (p Program) String() string {
 func (p *Program) ParseVariables(vars map[string]core.Value) (map[string]core.Value, error) {
 	variables := make(map[string]core.Value)
 	for _, res := range p.Resources {
-		if param, ok := res.(Parameter); ok {
+		if param, ok := res.(Variable); ok {
 			if val, ok := vars[param.Name]; ok && val.GetType() == param.Typ {
 				variables[param.Name] = val
 				delete(vars, param.Name)
@@ -63,7 +63,7 @@ func (p *Program) ParseVariables(vars map[string]core.Value) (map[string]core.Va
 func (p *Program) ParseVariablesJSON(vars map[string]json.RawMessage) (map[string]core.Value, error) {
 	variables := make(map[string]core.Value)
 	for _, res := range p.Resources {
-		if param, ok := res.(Parameter); ok {
+		if param, ok := res.(Variable); ok {
 			data, ok := vars[param.Name]
 			if !ok {
 				return nil, fmt.Errorf("missing variable: %q", param.Name)

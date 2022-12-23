@@ -10,52 +10,58 @@ import (
 
 func main() {
 	program, err := compiler.Compile(`
-	send [COIN 99] (
-		source = {
-			15% from {
-				@a
-				@b
-			}
-			remaining from @a
+		// This is a comment
+		vars {
+			account $dest
 		}
-		destination = @world
-	)
-	`)
+		send [COIN 99] (
+			source = {
+				15% from {
+					@alice
+					@bob
+				}
+				remaining from @bob
+			}
+			destination = $dest
+		)`)
 	if err != nil {
 		panic(err)
 	}
 	fmt.Print(program)
 
-	m := vm.NewMachine(*program)
+	machine := vm.NewMachine(*program)
+	machine.Debug = true
 
-	_ = m.SetVars(map[string]core.Value{})
+	if err = machine.SetVars(map[string]core.Value{
+		"dest": core.Account("charlie"),
+	}); err != nil {
+		panic(err)
+	}
 
-	{
-		ch, err := m.ResolveResources()
-		if err != nil {
-			panic(err)
-		}
-		for range ch {
-
-		}
+	initialBalances := map[string]map[string]*core.MonetaryInt{
+		"alice": {"COIN": core.NewMonetaryInt(10)},
+		"bob":   {"COIN": core.NewMonetaryInt(100)},
 	}
 
 	{
-		balances := map[string]map[string]*core.MonetaryInt{
-			"a": {
-				"COIN": core.NewMonetaryInt(500000),
-			},
-			"b": {
-				"COIN": core.NewMonetaryInt(3500000),
-			},
-		}
-
-		ch, err := m.ResolveBalances()
+		ch, err := machine.ResolveResources()
 		if err != nil {
 			panic(err)
 		}
 		for req := range ch {
-			val := balances[req.Account][req.Asset]
+			if req.Error != nil {
+				panic(req.Error)
+			}
+		}
+	}
+
+	{
+		ch, err := machine.ResolveBalances()
+		if err != nil {
+			panic(err)
+		}
+		for req := range ch {
+			val := initialBalances[req.Account][req.Asset]
 			if req.Error != nil {
 				panic(req.Error)
 			}
@@ -63,12 +69,12 @@ func main() {
 		}
 	}
 
-	m.Debug = true
-	exitCode, err := m.Execute()
+	exitCode, err := machine.Execute()
 	if err != nil {
 		panic(err)
 	}
+
 	fmt.Println("Exit code:", exitCode)
-	fmt.Println(m.Postings)
-	fmt.Println(m.TxMeta)
+	fmt.Println(machine.Postings)
+	fmt.Println(machine.TxMeta)
 }

@@ -28,18 +28,18 @@ LBRACE: '{';
 RBRACE: '}';
 EQ: '=';
 TY_ACCOUNT: 'account';
-TY_ASSET: 'asset';
 TY_NUMBER: 'number';
 TY_MONETARY: 'monetary';
 TY_PORTION: 'portion';
 TY_STRING: 'string';
 STRING: '"' [a-zA-Z0-9_\- ]* '"';
 PORTION:
-  ( [0-9]+ [ ]? '/' [ ]? [0-9]+
-  | [0-9]+     ('.'      [0-9]+)? '%'
-  );
+    ( [0-9]+ [ ]? '/' [ ]? [0-9]+
+    | [0-9]+     ('.'      [0-9]+)? '%'
+    );
 REMAINING: 'remaining';
 KEPT: 'kept';
+BALANCE: 'balance';
 NUMBER: [0-9]+;
 PERCENT: '%';
 VARIABLE_NAME: '$' [a-z_]+ [a-z0-9_]*;
@@ -51,13 +51,13 @@ monetary: LBRACK asset=ASSET amt=NUMBER RBRACK;
 monetaryAll: LBRACK asset=ASSET '*' RBRACK;
 
 literal
-  : ACCOUNT # LitAccount
-  | ASSET # LitAsset
-  | NUMBER # LitNumber
-  | STRING # LitString
-  | PORTION # LitPortion
-  | monetary # LitMonetary
-  ;
+    : ACCOUNT # LitAccount
+    | ASSET # LitAsset
+    | NUMBER # LitNumber
+    | STRING # LitString
+    | PORTION # LitPortion
+    | monetary # LitMonetary
+    ;
 
 variable: VARIABLE_NAME;
 
@@ -122,11 +122,12 @@ statement
       | DESTINATION '=' dest=destination NEWLINE SOURCE '=' src=valueAwareSource) NEWLINE RPAREN # Send
   ;
 
-type_: TY_ACCOUNT | TY_ASSET | TY_NUMBER | TY_STRING | TY_MONETARY | TY_PORTION;
+type_: TY_ACCOUNT | TY_NUMBER | TY_STRING | TY_MONETARY | TY_PORTION;
 
 origin
-  : META '(' acc=expression ',' key=STRING ')'
-  ;
+    : META '(' account=expression ',' key=STRING ')' # OriginAccountMeta
+    | BALANCE '(' account=expression ',' asset=ASSET ')' # OriginAccountBalance
+    ;
 
 varDecl: ty=type_ name=variable (EQ orig=origin)?;
 

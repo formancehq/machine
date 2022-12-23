@@ -4,7 +4,7 @@ vars:
   PKG: ./...
   COVERAGE_FILE: coverage.out
   FAILFAST: -failfast
-  TIMEOUT: 10m
+  TIMEOUT: 1m
   RUN: "''"
 
 tasks:
