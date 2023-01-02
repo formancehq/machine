@@ -46,34 +46,12 @@ type Value interface {
 	GetType() Type
 }
 
-type Account string
-
-func (Account) GetType() Type { return TypeAccount }
-func (a Account) String() string {
-	return fmt.Sprintf("@%v", string(a))
-}
-
-type Asset string
-
-func (Asset) GetType() Type { return TypeAsset }
-func (a Asset) String() string {
-	return fmt.Sprintf("%v", string(a))
-}
-
 type String string
 
 func (String) GetType() Type { return TypeString }
 func (s String) String() string {
 	return fmt.Sprintf("\"%v\"", string(s))
 }
-
-type HasAsset interface {
-	GetAsset() Asset
-}
-
-func (a Asset) GetAsset() Asset    { return a }
-func (m Monetary) GetAsset() Asset { return m.Asset }
-func (f Funding) GetAsset() Asset  { return f.Asset }
 
 func ValueEquals(lhs, rhs Value) bool {
 	if reflect.TypeOf(lhs) != reflect.TypeOf(rhs) {

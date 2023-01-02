@@ -1,9 +1,10 @@
 package core
 
 import (
-	"errors"
 	"fmt"
 	"math/big"
+
+	"github.com/pkg/errors"
 )
 
 type Monetary struct {
@@ -14,8 +15,23 @@ type Monetary struct {
 func (Monetary) GetType() Type { return TypeMonetary }
 
 func (m Monetary) String() string {
+	if m.Amount == nil {
+		return fmt.Sprintf("[%s nil]", m.Asset)
+	}
 	amt := *m.Amount
 	return fmt.Sprintf("[%v %s]", m.Asset, amt.String())
+}
+
+func (m Monetary) GetAsset() Asset { return m.Asset }
+
+func ParseMonetary(mon Monetary) error {
+	if err := ParseAsset(mon.Asset); err != nil {
+		return errors.Wrapf(err, "parsing monetary with asset '%s'", string(mon.Asset))
+	}
+	if mon.Amount == nil {
+		return errors.Errorf("parsing monetary: nil amount")
+	}
+	return nil
 }
 
 type MonetaryInt big.Int

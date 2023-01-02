@@ -12,6 +12,8 @@ type FundingPart struct {
 
 func (Funding) GetType() Type { return TypeFunding }
 
+func (f Funding) GetAsset() Asset { return f.Asset }
+
 func (lhs FundingPart) Equals(rhs FundingPart) bool {
 	return lhs.Account == rhs.Account && lhs.Amount.Equal(rhs.Amount)
 }
