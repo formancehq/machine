@@ -1350,3 +1350,183 @@ func TestVariableBalance(t *testing.T) {
 		test(t, tc)
 	})
 }
+
+func TestVariablesParsing(t *testing.T) {
+	t.Run("account", func(t *testing.T) {
+		p, err := compiler.Compile(`
+			vars {
+				account $acc
+			}
+			set_tx_meta("account", $acc)
+		`)
+		require.NoError(t, err)
+
+		m := NewMachine(*p)
+
+		require.NoError(t, m.SetVars(map[string]core.Value{
+			"acc": core.Account("valid:acc"),
+		}))
+
+		require.Error(t, m.SetVars(map[string]core.Value{
+			"acc": core.Account("invalid-acc"),
+		}))
+
+		require.NoError(t, m.SetVarsFromJSON(map[string]json.RawMessage{
+			"acc": json.RawMessage(`"valid:acc"`),
+		}))
+
+		require.Error(t, m.SetVarsFromJSON(map[string]json.RawMessage{
+			"acc": json.RawMessage(`"invalid-acc"`),
+		}))
+	})
+
+	t.Run("monetary", func(t *testing.T) {
+		p, err := compiler.Compile(`
+			vars {
+				monetary $mon
+			}
+			set_tx_meta("monetary", $mon)
+		`)
+		require.NoError(t, err)
+
+		m := NewMachine(*p)
+
+		require.NoError(t, m.SetVars(map[string]core.Value{
+			"mon": core.Monetary{
+				Asset:  "EUR/2",
+				Amount: core.NewMonetaryInt(100),
+			},
+		}))
+
+		require.Error(t, m.SetVars(map[string]core.Value{
+			"mon": core.Monetary{
+				Asset:  "invalid-asset",
+				Amount: core.NewMonetaryInt(100),
+			},
+		}))
+
+		require.Error(t, m.SetVars(map[string]core.Value{
+			"mon": core.Monetary{
+				Asset:  "EUR/2",
+				Amount: nil,
+			},
+		}))
+
+		require.NoError(t, m.SetVarsFromJSON(map[string]json.RawMessage{
+			"mon": json.RawMessage(`{"asset":"EUR/2","amount":100}`),
+		}))
+
+		require.Error(t, m.SetVarsFromJSON(map[string]json.RawMessage{
+			"mon": json.RawMessage(`{"asset":"invalid-asset","amount":100}`),
+		}))
+
+		require.Error(t, m.SetVarsFromJSON(map[string]json.RawMessage{
+			"mon": json.RawMessage(`{"asset":"EUR/2","amount":null}`),
+		}))
+	})
+
+	t.Run("portion", func(t *testing.T) {
+		p, err := compiler.Compile(`
+			vars {
+				portion $por
+			}
+			set_tx_meta("portion", $por)
+		`)
+		require.NoError(t, err)
+
+		m := NewMachine(*p)
+
+		require.NoError(t, m.SetVars(map[string]core.Value{
+			"por": core.Portion{
+				Remaining: false,
+				Specific:  big.NewRat(1, 2),
+			},
+		}))
+
+		require.Error(t, m.SetVars(map[string]core.Value{
+			"por": core.Portion{
+				Remaining: false,
+				Specific:  nil,
+			},
+		}))
+
+		require.Error(t, m.SetVars(map[string]core.Value{
+			"por": core.Portion{
+				Remaining: true,
+				Specific:  big.NewRat(1, 2),
+			},
+		}))
+
+		require.NoError(t, m.SetVarsFromJSON(map[string]json.RawMessage{
+			"por": json.RawMessage(`"1/2"`),
+		}))
+
+		require.NoError(t, m.SetVarsFromJSON(map[string]json.RawMessage{
+			"por": json.RawMessage(`"50%"`),
+		}))
+
+		require.Error(t, m.SetVarsFromJSON(map[string]json.RawMessage{
+			"por": json.RawMessage(`"3/2"`),
+		}))
+
+		require.Error(t, m.SetVarsFromJSON(map[string]json.RawMessage{
+			"por": json.RawMessage(`"200%"`),
+		}))
+
+		require.Error(t, m.SetVarsFromJSON(map[string]json.RawMessage{
+			"por": json.RawMessage(`""`),
+		}))
+	})
+
+	t.Run("string", func(t *testing.T) {
+		p, err := compiler.Compile(`
+			vars {
+				string $str
+			}
+			set_tx_meta("string", $str)
+		`)
+		require.NoError(t, err)
+
+		m := NewMachine(*p)
+
+		require.NoError(t, m.SetVars(map[string]core.Value{
+			"str": core.String("valid string"),
+		}))
+
+		require.NoError(t, m.SetVarsFromJSON(map[string]json.RawMessage{
+			"str": json.RawMessage(`"valid string"`),
+		}))
+
+		require.Error(t, m.SetVarsFromJSON(map[string]json.RawMessage{
+			"str": json.RawMessage(`100`),
+		}))
+	})
+
+	t.Run("number", func(t *testing.T) {
+		p, err := compiler.Compile(`
+			vars {
+				number $nbr
+			}
+			set_tx_meta("number", $nbr)
+		`)
+		require.NoError(t, err)
+
+		m := NewMachine(*p)
+
+		require.NoError(t, m.SetVars(map[string]core.Value{
+			"nbr": core.NewMonetaryInt(100),
+		}))
+
+		require.NoError(t, m.SetVarsFromJSON(map[string]json.RawMessage{
+			"nbr": json.RawMessage(`100`),
+		}))
+
+		require.Error(t, m.SetVarsFromJSON(map[string]json.RawMessage{
+			"nbr": json.RawMessage(`"string"`),
+		}))
+
+		require.Error(t, m.SetVarsFromJSON(map[string]json.RawMessage{
+			"nbr": json.RawMessage(`nil`),
+		}))
+	})
+}

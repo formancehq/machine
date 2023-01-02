@@ -2,8 +2,9 @@ package core
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
+
+	"github.com/pkg/errors"
 )
 
 type ValueJSON struct {
@@ -11,7 +12,7 @@ type ValueJSON struct {
 	Value json.RawMessage `json:"value"`
 }
 
-func TypenameToType(name string) (Type, bool) {
+func TypeFromName(name string) (Type, bool) {
 	switch name {
 	case "account":
 		return TypeAccount, true
@@ -30,13 +31,11 @@ func TypenameToType(name string) (Type, bool) {
 
 func NewValueFromTypedJSON(rawInput json.RawMessage) (*Value, error) {
 	var input ValueJSON
-
-	err := json.Unmarshal(rawInput, &input)
-	if err != nil {
+	if err := json.Unmarshal(rawInput, &input); err != nil {
 		return nil, err
 	}
 
-	typ, ok := TypenameToType(input.Type)
+	typ, ok := TypeFromName(input.Type)
 	if !ok {
 		return nil, fmt.Errorf("unknown type: %v", input.Type)
 	}
@@ -49,42 +48,44 @@ func NewValueFromJSON(typ Type, data json.RawMessage) (*Value, error) {
 	switch typ {
 	case TypeAccount:
 		var account Account
-		err := json.Unmarshal(data, &account)
-		if err != nil {
+		if err := json.Unmarshal(data, &account); err != nil {
 			return nil, err
+		}
+		if err := ParseAccount(account); err != nil {
+			return nil, errors.Wrapf(err, "value '%s'", string(account))
 		}
 		value = account
 	case TypeAsset:
 		var asset Asset
-		err := json.Unmarshal(data, &asset)
-		if err != nil {
+		if err := json.Unmarshal(data, &asset); err != nil {
 			return nil, err
 		}
 		value = asset
 	case TypeNumber:
 		var number Number
-		err := json.Unmarshal(data, &number)
-		if err != nil {
+		if err := json.Unmarshal(data, &number); err != nil {
 			return nil, err
 		}
 		value = number
 	case TypeMonetary:
-		var mon struct {
+		var monTmp struct {
 			Asset  string       `json:"asset"`
 			Amount *MonetaryInt `json:"amount"`
 		}
-		err := json.Unmarshal(data, &mon)
-		if err != nil {
+		if err := json.Unmarshal(data, &monTmp); err != nil {
 			return nil, err
 		}
-		value = Monetary{
-			Asset:  Asset(mon.Asset),
-			Amount: mon.Amount,
+		mon := Monetary{
+			Asset:  Asset(monTmp.Asset),
+			Amount: monTmp.Amount,
 		}
+		if err := ParseMonetary(mon); err != nil {
+			return nil, errors.Wrapf(err, "value '%s'", mon.String())
+		}
+		value = mon
 	case TypePortion:
 		var s string
-		err := json.Unmarshal(data, &s)
-		if err != nil {
+		if err := json.Unmarshal(data, &s); err != nil {
 			return nil, err
 		}
 		res, err := ParsePortionSpecific(s)
@@ -94,13 +95,13 @@ func NewValueFromJSON(typ Type, data json.RawMessage) (*Value, error) {
 		value = *res
 	case TypeString:
 		var s String
-		err := json.Unmarshal(data, &s)
-		if err != nil {
+		if err := json.Unmarshal(data, &s); err != nil {
 			return nil, err
 		}
 		value = s
 	default:
 		return nil, errors.New("invalid type")
 	}
+
 	return &value, nil
 }

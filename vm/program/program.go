@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/formancehq/machine/core"
+	"github.com/pkg/errors"
 )
 
 type Program struct {
@@ -45,12 +46,43 @@ func (p Program) String() string {
 func (p *Program) ParseVariables(vars map[string]core.Value) (map[string]core.Value, error) {
 	variables := make(map[string]core.Value)
 	for _, res := range p.Resources {
-		if param, ok := res.(Variable); ok {
-			if val, ok := vars[param.Name]; ok && val.GetType() == param.Typ {
-				variables[param.Name] = val
-				delete(vars, param.Name)
+		if variable, ok := res.(Variable); ok {
+			if val, ok := vars[variable.Name]; ok && val.GetType() == variable.Typ {
+				variables[variable.Name] = val
+
+				switch val.GetType() {
+				case core.TypeAccount:
+					if err := core.ParseAccount(val.(core.Account)); err != nil {
+						return nil, errors.Wrapf(err, "invalid variable $%s value '%s'",
+							variable.Name, string(val.(core.Account)))
+					}
+				case core.TypeMonetary:
+					if err := core.ParseMonetary(val.(core.Monetary)); err != nil {
+						return nil, errors.Wrapf(err, "invalid variable $%s value '%s'",
+							variable.Name, val.(core.Monetary).String())
+					}
+				case core.TypePortion:
+					if err := core.ValidatePortionSpecific(val.(core.Portion)); err != nil {
+						return nil, errors.Wrapf(err, "invalid variable $%s value '%s'",
+							variable.Name, val.(core.Portion).String())
+					}
+				case core.TypeString:
+					_, ok := val.(core.String)
+					if !ok {
+						return nil, fmt.Errorf("invalid variable $%s value '%s'",
+							variable.Name, val)
+					}
+				case core.TypeNumber:
+					_, ok := val.(core.Number)
+					if !ok {
+						return nil, fmt.Errorf("invalid variable $%s value '%s'",
+							variable.Name, val)
+					}
+				}
+
+				delete(vars, variable.Name)
 			} else {
-				return nil, fmt.Errorf("missing variables: %q", param.Name)
+				return nil, fmt.Errorf("missing variables: %q", variable.Name)
 			}
 		}
 	}
@@ -68,11 +100,13 @@ func (p *Program) ParseVariablesJSON(vars map[string]json.RawMessage) (map[strin
 			if !ok {
 				return nil, fmt.Errorf("missing variable: %q", param.Name)
 			}
-			value, err := core.NewValueFromJSON(param.Typ, data)
+			val, err := core.NewValueFromJSON(param.Typ, data)
 			if err != nil {
-				return nil, fmt.Errorf("invalid json for variable of %v of type %v: %v", param.Name, param.Typ, err)
+				return nil, fmt.Errorf(
+					"invalid json for variable %s of type %v: %w",
+					param.Name, param.Typ, err)
 			}
-			variables[param.Name] = *value
+			variables[param.Name] = *val
 			delete(vars, param.Name)
 		}
 	}
