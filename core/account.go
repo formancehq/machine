@@ -3,11 +3,11 @@ package core
 import (
 	"fmt"
 	"regexp"
-
-	"github.com/pkg/errors"
 )
 
 const accountPattern = "^[a-zA-Z_]+[a-zA-Z0-9_:]*$"
+
+var accountRegexp = regexp.MustCompile(accountPattern)
 
 type Account string
 
@@ -17,11 +17,7 @@ func (a Account) String() string {
 }
 
 func ParseAccount(acc Account) error {
-	r, err := regexp.Compile(accountPattern)
-	if err != nil {
-		panic(errors.Wrap(err, "compiling accountPattern regexp"))
-	}
-	if !r.MatchString(string(acc)) {
+	if !accountRegexp.MatchString(string(acc)) {
 		return fmt.Errorf("accounts should respect pattern %s", accountPattern)
 	}
 	return nil

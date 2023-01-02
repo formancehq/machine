@@ -3,11 +3,11 @@ package core
 import (
 	"fmt"
 	"regexp"
-
-	"github.com/pkg/errors"
 )
 
 const assetPattern = "^[A-Z/0-9]+$"
+
+var assetRegexp = regexp.MustCompile(assetPattern)
 
 type Asset string
 
@@ -23,11 +23,7 @@ type HasAsset interface {
 func (a Asset) GetAsset() Asset { return a }
 
 func ParseAsset(ass Asset) error {
-	r, err := regexp.Compile(assetPattern)
-	if err != nil {
-		panic(errors.Wrap(err, "compiling assetPattern regexp"))
-	}
-	if !r.MatchString(string(ass)) {
+	if !assetRegexp.MatchString(string(ass)) {
 		return fmt.Errorf("assets should respect pattern %s", assetPattern)
 	}
 	return nil
