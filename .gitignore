@@ -8,3 +8,4 @@ machine.go
 .idea
 vendor
 .DS_Store
+script/antlr-*
