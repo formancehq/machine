@@ -1380,6 +1380,27 @@ func TestVariablesParsing(t *testing.T) {
 		}))
 	})
 
+	// TODO: handle properly in ledger v1.10
+	t.Run("account empty string", func(t *testing.T) {
+		p, err := compiler.Compile(`
+			vars {
+				account $acc
+			}
+			set_tx_meta("account", $acc)
+		`)
+		require.NoError(t, err)
+
+		m := NewMachine(*p)
+
+		require.NoError(t, m.SetVars(map[string]core.Value{
+			"acc": core.Account(""),
+		}))
+
+		require.NoError(t, m.SetVarsFromJSON(map[string]json.RawMessage{
+			"acc": json.RawMessage(`""`),
+		}))
+	})
+
 	t.Run("monetary", func(t *testing.T) {
 		p, err := compiler.Compile(`
 			vars {
