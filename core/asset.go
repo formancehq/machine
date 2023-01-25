@@ -24,7 +24,7 @@ func (a Asset) GetAsset() Asset { return a }
 
 func ParseAsset(ass Asset) error {
 	if !assetRegexp.MatchString(string(ass)) {
-		return fmt.Errorf("assets should respect pattern %s", assetPattern)
+		return fmt.Errorf("asset should respect pattern '%s'", assetPattern)
 	}
 	return nil
 }

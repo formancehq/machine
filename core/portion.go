@@ -83,14 +83,12 @@ func ParsePortionSpecific(input string) (*Portion, error) {
 	if res == nil {
 		return nil, errors.New("invalid format")
 	}
-
 	return NewPortionSpecific(*res)
 }
 
 func (p Portion) String() string {
 	if p.Remaining {
 		return "remaining"
-	} else {
-		return fmt.Sprintf("%v", p.Specific)
 	}
+	return fmt.Sprintf("%v", p.Specific)
 }

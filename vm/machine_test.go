@@ -2,9 +2,7 @@ package vm
 
 import (
 	"encoding/json"
-	"fmt"
 	"math/big"
-	"strings"
 	"sync"
 	"testing"
 
@@ -62,13 +60,9 @@ func (c *TestCase) compile(t *testing.T, code string) {
 func (c *TestCase) setVarsFromJSON(t *testing.T, str string) {
 	var jsonVars map[string]json.RawMessage
 	err := json.Unmarshal([]byte(str), &jsonVars)
-	if err != nil {
-		t.Fatalf("unmarshal error: %v", err)
-	}
+	require.NoError(t, err)
 	v, err := c.program.ParseVariablesJSON(jsonVars)
-	if err != nil {
-		t.Fatalf("parse variables error: %v", err)
-	}
+	require.NoError(t, err)
 	c.vars = v
 }
 
@@ -140,28 +134,16 @@ func testImpl(t *testing.T, prog *program.Program, expected CaseResult, exec fun
 		}
 		wg.Done()
 	}
-	exit_code, err := exec(machine)
 
-	if err != nil && expected.Error != "" {
-		if !strings.Contains(err.Error(), expected.Error) {
-			t.Error(fmt.Errorf("unexpected execution error: %v", err))
-			return
-		} else {
-			return
-		}
-	} else if err != nil {
-		t.Error(fmt.Errorf("did not expect an execution error: %v", err))
-		return
-	} else if expected.Error != "" {
-		t.Error(fmt.Errorf("expected an execution error"))
-		return
+	exitCode, err := exec(machine)
+	require.Equal(t, expected.ExitCode, exitCode)
+	if expected.Error != "" {
+		require.ErrorContains(t, err, expected.Error)
+	} else {
+		require.NoError(t, err)
 	}
 
-	if exit_code != expected.ExitCode {
-		t.Error(fmt.Errorf("unexpected exit code: %v", exit_code))
-		return
-	}
-	if exit_code != EXIT_OK {
+	if exitCode != EXIT_OK {
 		return
 	}
 
@@ -1550,4 +1532,28 @@ func TestVariablesParsing(t *testing.T) {
 			"nbr": json.RawMessage(`nil`),
 		}))
 	})
+}
+
+func TestVariablesErrors(t *testing.T) {
+	tc := NewTestCase()
+	tc.compile(t, `vars {
+		monetary $mon
+	}
+	send $mon (
+		source = @alice
+		destination = @bob
+	)`)
+	tc.setBalance("alice", "COIN", 10)
+	tc.vars = map[string]core.Value{
+		"mon": core.Monetary{
+			Asset:  "COIN",
+			Amount: core.NewMonetaryInt(-1),
+		},
+	}
+	tc.expected = CaseResult{
+		Printed:  []core.Value{},
+		Postings: []Posting{},
+		Error:    "negative amount",
+	}
+	test(t, tc)
 }

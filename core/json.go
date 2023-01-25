@@ -52,7 +52,7 @@ func NewValueFromJSON(typ Type, data json.RawMessage) (*Value, error) {
 			return nil, err
 		}
 		if err := ParseAccount(account); err != nil {
-			return nil, errors.Wrapf(err, "value '%s'", string(account))
+			return nil, errors.Wrapf(err, "value %s", string(account))
 		}
 		value = account
 	case TypeAsset:
@@ -80,7 +80,7 @@ func NewValueFromJSON(typ Type, data json.RawMessage) (*Value, error) {
 			Amount: monTmp.Amount,
 		}
 		if err := ParseMonetary(mon); err != nil {
-			return nil, errors.Wrapf(err, "value '%s'", mon.String())
+			return nil, errors.Wrapf(err, "value %s", mon.String())
 		}
 		value = mon
 	case TypePortion:
@@ -100,7 +100,7 @@ func NewValueFromJSON(typ Type, data json.RawMessage) (*Value, error) {
 		}
 		value = s
 	default:
-		return nil, errors.New("invalid type")
+		return nil, fmt.Errorf("invalid type '%v'", typ)
 	}
 
 	return &value, nil

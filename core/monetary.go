@@ -26,10 +26,13 @@ func (m Monetary) GetAsset() Asset { return m.Asset }
 
 func ParseMonetary(mon Monetary) error {
 	if err := ParseAsset(mon.Asset); err != nil {
-		return errors.Wrapf(err, "parsing monetary with asset '%s'", string(mon.Asset))
+		return errors.Wrapf(err, "asset '%s'", mon.Asset)
 	}
 	if mon.Amount == nil {
-		return errors.Errorf("parsing monetary: nil amount")
+		return errors.Errorf("nil amount")
+	}
+	if mon.Amount.Ltz() {
+		return errors.Errorf("negative amount")
 	}
 	return nil
 }
@@ -143,10 +146,8 @@ func NewMonetaryInt(i int64) *MonetaryInt {
 
 func ParseMonetaryInt(s string) (*MonetaryInt, error) {
 	i, ok := big.NewInt(0).SetString(s, 10)
-
 	if !ok {
 		return nil, errors.New("invalid monetary int")
 	}
-
 	return (*MonetaryInt)(i), nil
 }
