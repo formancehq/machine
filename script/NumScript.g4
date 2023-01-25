@@ -40,6 +40,7 @@ PORTION:
 REMAINING: 'remaining';
 KEPT: 'kept';
 BALANCE: 'balance';
+SAVE: 'save';
 NUMBER: [0-9]+;
 PERCENT: '%';
 VARIABLE_NAME: '$' [a-z_]+ [a-z0-9_]*;
@@ -56,78 +57,74 @@ literal
     | NUMBER # LitNumber
     | STRING # LitString
     | PORTION # LitPortion
-    | monetary # LitMonetary
-    ;
+    | monetary # LitMonetary;
 
 variable: VARIABLE_NAME;
 
 expression
   : lhs=expression op=(OP_ADD|OP_SUB) rhs=expression # ExprAddSub
   | lit=literal # ExprLiteral
-  | var_=variable # ExprVariable
-  ;
+  | var_=variable # ExprVariable;
 
 allotmentPortion
   : PORTION # allotmentPortionConst
   | por=variable # allotmentPortionVar
-  | REMAINING # allotmentPortionRemaining
-  ;
+  | REMAINING # allotmentPortionRemaining;
 
 destinationInOrder: LBRACE NEWLINE
-  (MAX amounts+=expression dests+=keptOrDestination NEWLINE)+
-  REMAINING remainingDest=keptOrDestination NEWLINE
-RBRACE;
+      (MAX amounts+=expression dests+=keptOrDestination NEWLINE)+
+      REMAINING remainingDest=keptOrDestination NEWLINE
+    RBRACE;
+
 destinationAllotment: LBRACE NEWLINE
-  (portions+=allotmentPortion dests+=keptOrDestination NEWLINE)+
-RBRACE;
+      (portions+=allotmentPortion dests+=keptOrDestination NEWLINE)+
+    RBRACE;
 
 keptOrDestination
   : TO destination # isDestination
-  | KEPT # isKept
-  ;
+  | KEPT # isKept;
 
 destination
   : expression # DestAccount
   | destinationInOrder # DestInOrder
-  | destinationAllotment # DestAllotment
-  ;
+  | destinationAllotment # DestAllotment;
 
 sourceAccountOverdraft
   : 'allowing overdraft up to' specific=expression # SrcAccountOverdraftSpecific
-  | 'allowing unbounded overdraft' # SrcAccountOverdraftUnbounded
-  ;
+  | 'allowing unbounded overdraft' # SrcAccountOverdraftUnbounded;
 
 sourceAccount: account=expression (overdraft=sourceAccountOverdraft)?;
+
 sourceInOrder: LBRACE NEWLINE (sources+=source NEWLINE)+ RBRACE;
+
 sourceMaxed: MAX max=expression FROM src=source;
+
 source
-  : sourceAccount # SrcAccount
-  | sourceMaxed # SrcMaxed
-  | sourceInOrder # SrcInOrder
-  ;
+    : sourceAccount # SrcAccount
+    | sourceMaxed # SrcMaxed
+    | sourceInOrder # SrcInOrder;
 
 sourceAllotment: LBRACE NEWLINE (portions+=allotmentPortion FROM sources+=source NEWLINE)+ RBRACE;
+
 valueAwareSource
-  : source # Src
-  | sourceAllotment # SrcAllotment
-  ;
+    : source # Src
+    | sourceAllotment # SrcAllotment;
 
 statement
-  : PRINT expr=expression # Print
-  | SET_TX_META '(' key=STRING ',' value=expression ')' # SetTxMeta
-  | SET_ACCOUNT_META '(' acc=expression ',' key=STRING ',' value=expression ')' # SetAccountMeta
-  | FAIL # Fail
-  | SEND (mon=expression | monAll=monetaryAll) LPAREN NEWLINE
-      ( SOURCE '=' src=valueAwareSource NEWLINE DESTINATION '=' dest=destination
-      | DESTINATION '=' dest=destination NEWLINE SOURCE '=' src=valueAwareSource) NEWLINE RPAREN # Send
-  ;
+    : PRINT expr=expression # Print
+    | SAVE (mon=expression | monAll=monetaryAll) FROM acc=expression # SaveFromAccount
+    | SET_TX_META '(' key=STRING ',' value=expression ')' # SetTxMeta
+    | SET_ACCOUNT_META '(' acc=expression ',' key=STRING ',' value=expression ')' # SetAccountMeta
+    | FAIL # Fail
+    | SEND (mon=expression | monAll=monetaryAll) LPAREN NEWLINE
+        ( SOURCE '=' src=valueAwareSource NEWLINE DESTINATION '=' dest=destination
+        | DESTINATION '=' dest=destination NEWLINE SOURCE '=' src=valueAwareSource) NEWLINE RPAREN # Send;
 
 type_: TY_ACCOUNT | TY_NUMBER | TY_STRING | TY_MONETARY | TY_PORTION;
 
 origin
     : META '(' account=expression ',' key=STRING ')' # OriginAccountMeta
-    | BALANCE '(' account=expression ',' asset=ASSET ')' # OriginAccountBalance
-    ;
+    | BALANCE '(' account=expression ',' asset=ASSET ')' # OriginAccountBalance;
 
 varDecl: ty=type_ name=variable (EQ orig=origin)?;
 
@@ -139,5 +136,4 @@ script:
   stmts+=statement
   (NEWLINE stmts+=statement)*
   NEWLINE*
-  EOF
-  ;
+  EOF;

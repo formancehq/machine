@@ -476,37 +476,42 @@ func (m *Machine) ResolveBalances() (chan BalanceRequest, error) {
 	if len(m.Resources) != len(m.UnresolvedResources) {
 		return nil, errors.New("tried to resolve balances before resources")
 	}
+
 	if m.setBalanceCalled {
 		return nil, errors.New("tried to call ResolveBalances twice")
 	}
+
 	m.setBalanceCalled = true
 	resChan := make(chan BalanceRequest)
+
 	go func() {
 		defer close(resChan)
 		m.Balances = make(map[core.Account]map[core.Asset]*core.MonetaryInt)
 		// for every account that we need balances of, check if it's there
-		for addr, neededAssets := range m.Program.NeededBalances {
-			account, ok := m.getResource(addr)
+		for accAddr, assetsAddr := range m.Program.NeededBalances {
+			account, ok := m.getResource(accAddr)
 			if !ok {
 				resChan <- BalanceRequest{
 					Error: errors.New("invalid program (resolve balances: invalid address of account)"),
 				}
 				return
 			}
+
 			if account, ok := (*account).(core.Account); ok {
 				m.Balances[account] = make(map[core.Asset]*core.MonetaryInt)
 				// for every asset, send request
-				for addr := range neededAssets {
-					mon, ok := m.getResource(addr)
+				for assetAddr := range assetsAddr {
+					mon, ok := m.getResource(assetAddr)
 					if !ok {
 						resChan <- BalanceRequest{
 							Error: errors.New("invalid program (resolve balances: invalid address of monetary)"),
 						}
 						return
 					}
+
 					if ha, ok := (*mon).(core.HasAsset); ok {
 						asset := ha.GetAsset()
-						if string(account) == "world" {
+						if string(account) == core.World {
 							m.Balances[account][asset] = core.NewMonetaryInt(0)
 							continue
 						}
@@ -540,6 +545,7 @@ func (m *Machine) ResolveBalances() (chan BalanceRequest, error) {
 			}
 		}
 	}()
+
 	return resChan, nil
 }
 

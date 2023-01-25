@@ -2,9 +2,7 @@ package vm
 
 import (
 	"encoding/json"
-	"fmt"
 	"math/big"
-	"strings"
 	"sync"
 	"testing"
 
@@ -128,9 +126,7 @@ func testImpl(t *testing.T, prog *program.Program, expected CaseResult, exec fun
 	var wg sync.WaitGroup
 	wg.Add(1)
 
-	if prog == nil {
-		t.Fatal("no program")
-	}
+	require.NotNil(t, prog)
 
 	machine := NewMachine(*prog)
 	machine.Debug = DEBUG
@@ -140,27 +136,15 @@ func testImpl(t *testing.T, prog *program.Program, expected CaseResult, exec fun
 		}
 		wg.Done()
 	}
+
 	exit_code, err := exec(machine)
-
-	if err != nil && expected.Error != "" {
-		if !strings.Contains(err.Error(), expected.Error) {
-			t.Error(fmt.Errorf("unexpected execution error: %v", err))
-			return
-		} else {
-			return
-		}
-	} else if err != nil {
-		t.Error(fmt.Errorf("did not expect an execution error: %v", err))
-		return
-	} else if expected.Error != "" {
-		t.Error(fmt.Errorf("expected an execution error"))
-		return
+	require.Equal(t, expected.ExitCode, exit_code)
+	if expected.Error != "" {
+		require.ErrorContains(t, err, expected.Error)
+	} else {
+		require.NoError(t, err)
 	}
 
-	if exit_code != expected.ExitCode {
-		t.Error(fmt.Errorf("unexpected exit code: %v", exit_code))
-		return
-	}
 	if exit_code != EXIT_OK {
 		return
 	}
@@ -1551,3 +1535,42 @@ func TestVariablesParsing(t *testing.T) {
 		}))
 	})
 }
+
+/*
+func TestSaveFromAccount(t *testing.T) {
+	t.Run("1", func(t *testing.T) {
+		script := `
+			save [USD 10] from @alice
+
+			send [USD 30] (
+			   source = {
+				  @alice
+				  @world
+			   }
+			   destination = @bob
+			)`
+		tc := NewTestCase()
+		tc.compile(t, script)
+		tc.setBalance("alice", "USD", 20)
+		tc.expected = CaseResult{
+			Printed: []core.Value{},
+			Postings: []Posting{
+				{
+					Asset:       "USD",
+					Amount:      core.NewMonetaryInt(10),
+					Source:      "alice",
+					Destination: "bob",
+				},
+				{
+					Asset:       "USD",
+					Amount:      core.NewMonetaryInt(20),
+					Source:      "world",
+					Destination: "bob",
+				},
+			},
+			ExitCode: EXIT_OK,
+		}
+		test(t, tc)
+	})
+}
+*/

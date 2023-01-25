@@ -31,42 +31,36 @@ func test(t *testing.T, c TestCase) {
 	if c.Expected.Error != "" {
 		if err == nil {
 			t.Error(errors.New("expected error and got none"))
-			return
 		} else if err.Error() == "" {
 			t.Error(errors.New("error was not fed to the error listener"))
 		} else if !strings.Contains(err.Error(), c.Expected.Error) {
 			t.Error(fmt.Errorf("error is not the one expected: %v", err))
-			return
 		}
+		return
+	}
+
+	if err != nil {
+		t.Error(fmt.Errorf("did not expect error: %v", err))
+	} else if p == nil {
+		t.Error(errors.New("did not receive any output"))
+	} else if len(c.Expected.Instructions) > 0 && !bytes.Equal(p.Instructions, c.Expected.Instructions) {
+		t.Error(fmt.Errorf(
+			"unexpected instructions:\n%v\nhas: %+v\nwant:%+v",
+			*p, p.Instructions, c.Expected.Instructions))
+	} else if len(p.Resources) != len(c.Expected.Resources) {
+		t.Error(fmt.Errorf(
+			"unexpected resources\n%v\nhas: \n%+v\nwant:\n%+v",
+			*p, p.Resources, c.Expected.Resources))
 	} else {
-		if err != nil {
-			t.Error(fmt.Errorf("did not expect error: %v", err))
-			return
-		} else if p == nil {
-			t.Error(errors.New("did not receive any output"))
-			return
-		} else if len(c.Expected.Instructions) > 0 && !bytes.Equal(p.Instructions, c.Expected.Instructions) {
-			t.Error(fmt.Errorf(
-				"unexpected instructions:\n%v\nhas: %+v\nwant:%+v",
-				*p, p.Instructions, c.Expected.Instructions))
-			return
-		} else if len(p.Resources) != len(c.Expected.Resources) {
-			t.Error(fmt.Errorf(
-				"unexpected resources\n%v\nhas: \n%+v\nwant:\n%+v",
-				*p, p.Resources, c.Expected.Resources))
-			return
-		} else {
-			for i := range c.Expected.Resources {
-				if !checkResourcesEqual(p.Resources[i], c.Expected.Resources[i]) {
-					t.Error(fmt.Errorf("%v: %v is not %v: %v",
-						p.Resources[i], reflect.TypeOf(p.Resources[i]).Name(),
-						c.Expected.Resources[i], reflect.TypeOf(c.Expected.Resources[i]).Name(),
-					))
-					t.Error(fmt.Errorf(
-						"unexpected resources\n%v\nhas: \n%+v\nwant:\n%+v",
-						*p, p.Resources, c.Expected.Resources))
-					return
-				}
+		for i := range c.Expected.Resources {
+			if !checkResourcesEqual(p.Resources[i], c.Expected.Resources[i]) {
+				t.Error(fmt.Errorf("%v: %v is not %v: %v",
+					p.Resources[i], reflect.TypeOf(p.Resources[i]).Name(),
+					c.Expected.Resources[i], reflect.TypeOf(c.Expected.Resources[i]).Name(),
+				))
+				t.Error(fmt.Errorf(
+					"unexpected resources\n%v\nhas: \n%+v\nwant:\n%+v",
+					*p, p.Resources, c.Expected.Resources))
 			}
 		}
 	}
@@ -1329,5 +1323,63 @@ func TestVariableBalance(t *testing.T) {
 				Error: "mismatched input 'balance'",
 			},
 		})
+	})
+}
+
+func TestSaveFromAccount(t *testing.T) {
+	test(t, TestCase{
+		Case: `save [EUR 10] from @alice`,
+		Expected: CaseResult{
+			Instructions: []byte{
+				program.OP_APUSH, 00, 00,
+				program.OP_APUSH, 01, 00,
+				program.OP_SAVE,
+			},
+			Resources: []program.Resource{
+				program.Constant{Inner: core.Monetary{Asset: "EUR", Amount: core.NewMonetaryInt(10)}},
+				program.Constant{Inner: core.Account("alice")},
+			},
+		},
+	})
+
+	test(t, TestCase{
+		Case: `
+			save [EUR 10] from @alice
+
+			send [EUR 20] (
+				source = @alice
+				destination = @bob
+			)`,
+		Expected: CaseResult{
+			Instructions: []byte{
+				program.OP_APUSH, 00, 00,
+				program.OP_APUSH, 01, 00,
+				program.OP_SAVE,
+				program.OP_APUSH, 01, 00,
+				program.OP_APUSH, 02, 00,
+				program.OP_ASSET,
+				program.OP_APUSH, 03, 00,
+				program.OP_MONETARY_NEW,
+				program.OP_TAKE_ALL,
+				program.OP_APUSH, 02, 00,
+				program.OP_TAKE,
+				program.OP_APUSH, 04, 00,
+				program.OP_BUMP,
+				program.OP_REPAY,
+				program.OP_FUNDING_SUM,
+				program.OP_TAKE,
+				program.OP_APUSH, 05, 00,
+				program.OP_SEND,
+				program.OP_REPAY,
+			},
+			Resources: []program.Resource{
+				program.Constant{Inner: core.Monetary{Asset: "EUR", Amount: core.NewMonetaryInt(10)}},
+				program.Constant{Inner: core.Account("alice")},
+				program.Constant{Inner: core.Monetary{Asset: "EUR", Amount: core.NewMonetaryInt(20)}},
+				program.Constant{Inner: core.NewMonetaryInt(0)},
+				program.Constant{Inner: core.NewMonetaryInt(1)},
+				program.Constant{Inner: core.Account("bob")},
+			},
+		},
 	})
 }

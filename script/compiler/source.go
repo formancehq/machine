@@ -14,7 +14,8 @@ type FallbackAccount core.Address
 // VisitValueAwareSource returns the resource addresses of all the accounts
 func (p *parseVisitor) VisitValueAwareSource(c parser.IValueAwareSourceContext, pushAsset func(), monAddr *core.Address) (map[core.Address]struct{}, *CompileError) {
 	neededAccounts := map[core.Address]struct{}{}
-	isAll := monAddr == nil
+	var isAll bool = monAddr == nil
+
 	switch c := c.(type) {
 	case *parser.SrcContext:
 		accounts, _, unbounded, compErr := p.VisitSource(c.Source(), pushAsset, isAll)
@@ -26,11 +27,11 @@ func (p *parseVisitor) VisitValueAwareSource(c parser.IValueAwareSourceContext, 
 		}
 		if !isAll {
 			p.PushAddress(*monAddr)
-			err := p.TakeFromSource(unbounded)
-			if err != nil {
+			if err := p.TakeFromSource(unbounded); err != nil {
 				return nil, LogicError(c, err)
 			}
 		}
+
 	case *parser.SrcAllotmentContext:
 		if isAll {
 			return nil, LogicError(c, errors.New("cannot take all balance of an allotment source"))
@@ -49,51 +50,48 @@ func (p *parseVisitor) VisitValueAwareSource(c parser.IValueAwareSourceContext, 
 			for k, v := range accounts {
 				neededAccounts[k] = v
 			}
-			err := p.Bump(int64(i + 1))
-			if err != nil {
+			if err := p.Bump(int64(i + 1)); err != nil {
 				return nil, LogicError(c, err)
 			}
-			err = p.TakeFromSource(fallback)
-			if err != nil {
+			if err := p.TakeFromSource(fallback); err != nil {
 				return nil, LogicError(c, err)
 			}
 		}
-		err := p.PushInteger(core.NewNumber(int64(n)))
-		if err != nil {
+
+		if err := p.PushInteger(core.NewNumber(int64(n))); err != nil {
 			return nil, LogicError(c, err)
 		}
 		p.AppendInstruction(program.OP_FUNDING_ASSEMBLE)
 	}
+
 	return neededAccounts, nil
 }
 
 func (p *parseVisitor) TakeFromSource(fallback *FallbackAccount) error {
 	if fallback == nil {
 		p.AppendInstruction(program.OP_TAKE)
-		err := p.Bump(1)
-		if err != nil {
+		if err := p.Bump(1); err != nil {
 			return err
 		}
 		p.AppendInstruction(program.OP_REPAY)
-	} else {
-		p.AppendInstruction(program.OP_TAKE_MAX)
-		err := p.Bump(1)
-		if err != nil {
-			return err
-		}
-		p.AppendInstruction(program.OP_REPAY)
-		p.PushAddress(core.Address(*fallback))
-		err = p.Bump(2)
-		if err != nil {
-			return err
-		}
-		p.AppendInstruction(program.OP_TAKE_ALWAYS)
-		err = p.PushInteger(core.NewNumber(2))
-		if err != nil {
-			return err
-		}
-		p.AppendInstruction(program.OP_FUNDING_ASSEMBLE)
+		return nil
 	}
+
+	p.AppendInstruction(program.OP_TAKE_MAX)
+	if err := p.Bump(1); err != nil {
+		return err
+	}
+	p.AppendInstruction(program.OP_REPAY)
+	p.PushAddress(core.Address(*fallback))
+	if err := p.Bump(2); err != nil {
+		return err
+	}
+	p.AppendInstruction(program.OP_TAKE_ALWAYS)
+	if err := p.PushInteger(core.NewNumber(2)); err != nil {
+		return err
+	}
+	p.AppendInstruction(program.OP_FUNDING_ASSEMBLE)
+
 	return nil
 }
 
@@ -118,12 +116,10 @@ func (p *parseVisitor) VisitSource(c parser.ISourceContext, pushAsset func(), is
 			fallback = &f
 		}
 
-		overdraft := c.SourceAccount().GetOverdraft()
-		if overdraft == nil {
+		if overdraft := c.SourceAccount().GetOverdraft(); overdraft == nil {
 			// no overdraft: use zero monetary
 			pushAsset()
-			err := p.PushInteger(core.NewNumber(0))
-			if err != nil {
+			if err := p.PushInteger(core.NewNumber(0)); err != nil {
 				return nil, nil, nil, LogicError(c, err)
 			}
 			p.AppendInstruction(program.OP_MONETARY_NEW)
@@ -144,8 +140,7 @@ func (p *parseVisitor) VisitSource(c parser.ISourceContext, pushAsset func(), is
 				p.AppendInstruction(program.OP_TAKE_ALL)
 			case *parser.SrcAccountOverdraftUnboundedContext:
 				pushAsset()
-				err := p.PushInteger(core.NewNumber(0))
-				if err != nil {
+				if err := p.PushInteger(core.NewNumber(0)); err != nil {
 					return nil, nil, nil, LogicError(c, err)
 				}
 				p.AppendInstruction(program.OP_MONETARY_NEW)
@@ -177,30 +172,27 @@ func (p *parseVisitor) VisitSource(c parser.ISourceContext, pushAsset func(), is
 			neededAccounts[k] = v
 		}
 		p.AppendInstruction(program.OP_TAKE_MAX)
-		err := p.Bump(1)
-		if err != nil {
+		if err := p.Bump(1); err != nil {
 			return nil, nil, nil, LogicError(c, err)
 		}
 		p.AppendInstruction(program.OP_REPAY)
 		if subsourceFallback != nil {
 			p.PushAddress(core.Address(*subsourceFallback))
-			err := p.Bump(2)
-			if err != nil {
+			if err := p.Bump(2); err != nil {
 				return nil, nil, nil, LogicError(c, err)
 			}
 			p.AppendInstruction(program.OP_TAKE_ALL)
-			err = p.PushInteger(core.NewNumber(2))
-			if err != nil {
+			if err := p.PushInteger(core.NewNumber(2)); err != nil {
 				return nil, nil, nil, LogicError(c, err)
 			}
 			p.AppendInstruction(program.OP_FUNDING_ASSEMBLE)
 		} else {
-			err := p.Bump(1)
-			if err != nil {
+			if err := p.Bump(1); err != nil {
 				return nil, nil, nil, LogicError(c, err)
 			}
 			p.AppendInstruction(program.OP_DELETE)
 		}
+
 	case *parser.SrcInOrderContext:
 		sources := c.SourceInOrder().GetSources()
 		n := len(sources)
@@ -211,23 +203,25 @@ func (p *parseVisitor) VisitSource(c parser.ISourceContext, pushAsset func(), is
 			}
 			fallback = subsourceFallback
 			if subsourceFallback != nil && i != n-1 {
-				return nil, nil, nil, LogicError(c, errors.New("an unbounded subsource can only be in last position"))
+				return nil, nil, nil, LogicError(c, errors.New(
+					"an unbounded subsource can only be in last position"))
 			}
 			for k, v := range accounts {
 				neededAccounts[k] = v
 			}
 			for k, v := range emptied {
 				if _, ok := emptiedAccounts[k]; ok {
-					return nil, nil, nil, LogicError(sources[i], fmt.Errorf("%v is already empty at this stage", p.resources[k]))
+					return nil, nil, nil, LogicError(sources[i], fmt.Errorf(
+						"%v is already empty at this stage", p.resources[k]))
 				}
 				emptiedAccounts[k] = v
 			}
 		}
-		err := p.PushInteger(core.NewNumber(int64(n)))
-		if err != nil {
+		if err := p.PushInteger(core.NewNumber(int64(n))); err != nil {
 			return nil, nil, nil, LogicError(c, err)
 		}
 		p.AppendInstruction(program.OP_FUNDING_ASSEMBLE)
 	}
+
 	return neededAccounts, emptiedAccounts, fallback, nil
 }
