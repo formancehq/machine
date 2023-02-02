@@ -259,38 +259,36 @@ func TestAmountZero(t *testing.T) {
 		}
 		test(t, tc)
 	})
-	/*
-		t.Run("with variable", func(t *testing.T) {
-			tc := NewTestCase()
-			tc.compile(t, `
-			vars {
-				monetary $mon
-			}
-			send $mon (
-				source = @world
-				destination = @alice
-			)`)
-			tc.vars = map[string]core.Value{
-				"mon": core.Monetary{
-					Asset:  "EUR",
-					Amount: core.NewMonetaryInt(0),
+	t.Run("with variable", func(t *testing.T) {
+		tc := NewTestCase()
+		tc.compile(t, `
+		vars {
+			monetary $mon
+		}
+		send $mon (
+			source = @world
+			destination = @alice
+		)`)
+		tc.vars = map[string]core.Value{
+			"mon": core.Monetary{
+				Asset:  "EUR",
+				Amount: core.NewMonetaryInt(0),
+			},
+		}
+		tc.expected = CaseResult{
+			Printed: []core.Value{},
+			Postings: []Posting{
+				{
+					Asset:       "EUR",
+					Amount:      core.NewMonetaryInt(0),
+					Source:      "world",
+					Destination: "alice",
 				},
-			}
-			tc.expected = CaseResult{
-				Printed: []core.Value{},
-				Postings: []Posting{
-					{
-						Asset:       "EUR",
-						Amount:      core.NewMonetaryInt(0),
-						Source:      "world",
-						Destination: "alice",
-					},
-				},
-				ExitCode: EXIT_OK,
-			}
-			test(t, tc)
-		})
-	*/
+			},
+			ExitCode: EXIT_OK,
+		}
+		test(t, tc)
+	})
 }
 
 func TestVariablesJSON(t *testing.T) {
