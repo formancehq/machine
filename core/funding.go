@@ -55,7 +55,7 @@ func (f Funding) Take(amount *MonetaryInt) (Funding, Funding, error) {
 	}
 	remainingToWithdraw := amount
 	i := 0
-	for remainingToWithdraw.Gt(NewMonetaryInt(0)) && i < len(f.Parts) {
+	for remainingToWithdraw.Gte(NewMonetaryInt(0)) && i < len(f.Parts) {
 		amtToWithdraw := f.Parts[i].Amount
 		// if this part has excess balance, put it in the remainder & only take what's needed
 		if amtToWithdraw.Gt(remainingToWithdraw) {
@@ -95,7 +95,7 @@ func (f Funding) TakeMax(amount *MonetaryInt) (Funding, Funding) {
 	}
 	remainingToWithdraw := amount
 	i := 0
-	for remainingToWithdraw.Gt(NewMonetaryInt(0)) && i < len(f.Parts) {
+	for remainingToWithdraw.Gte(NewMonetaryInt(0)) && i < len(f.Parts) {
 		amtToWithdraw := f.Parts[i].Amount
 		// if this part has excess balance, put it in the remainder & only take what's needed
 		if amtToWithdraw.Gt(remainingToWithdraw) {

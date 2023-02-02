@@ -402,19 +402,40 @@ func (m *Machine) tick() (bool, byte) {
 		dest := pop[core.Account](m)
 		funding := pop[core.Funding](m)
 		m.credit(dest, funding)
+		accToAmountMap := map[core.Account]*core.MonetaryInt{}
+		amountZero := true
 		for _, part := range funding.Parts {
-			src := part.Account
-			amt := part.Amount
-			if amt.Eq(core.NewMonetaryInt(0)) {
-				continue
+			if _, ok := accToAmountMap[part.Account]; !ok {
+				accToAmountMap[part.Account] = core.NewMonetaryInt(0)
 			}
-			m.Postings = append(m.Postings, Posting{
-				Source:      string(src),
-				Destination: string(dest),
-				Asset:       string(funding.Asset),
-				Amount:      amt,
-			})
+			accToAmountMap[part.Account] = accToAmountMap[part.Account].Add(part.Amount)
+
+			if part.Amount.Gt(core.NewMonetaryInt(0)) {
+				amountZero = false
+			}
 		}
+		newPostings := make([]Posting, 0)
+		for _, part := range funding.Parts {
+			alreadyInserted := false
+			for _, p := range newPostings {
+				if string(part.Account) == p.Source {
+					alreadyInserted = true
+				}
+			}
+			if !alreadyInserted {
+				amt := accToAmountMap[part.Account]
+				if !amountZero && amt.Eq(core.NewMonetaryInt(0)) {
+					continue
+				}
+				newPostings = append(newPostings, Posting{
+					Source:      string(part.Account),
+					Destination: string(dest),
+					Asset:       string(funding.Asset),
+					Amount:      amt,
+				})
+			}
+		}
+		m.Postings = append(m.Postings, newPostings...)
 
 	case program.OP_TX_META:
 		k := pop[core.String](m)

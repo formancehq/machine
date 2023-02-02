@@ -37,6 +37,10 @@ func TestFundingTake(t *testing.T) {
 				Account: "bbb",
 				Amount:  NewMonetaryInt(10),
 			},
+			{
+				Account: "ccc",
+				Amount:  NewMonetaryInt(0),
+			},
 		},
 	}
 	if !ValueEquals(result, expectedResult) {

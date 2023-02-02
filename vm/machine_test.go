@@ -234,6 +234,63 @@ func TestVariables(t *testing.T) {
 		},
 		ExitCode: EXIT_OK,
 	}
+	test(t, tc)
+}
+
+func TestAmountZero(t *testing.T) {
+	t.Run("without variable", func(t *testing.T) {
+		tc := NewTestCase()
+		tc.compile(t, `
+		send [EUR 0] (
+			source = @world
+			destination = @alice
+		)`)
+		tc.expected = CaseResult{
+			Printed: []core.Value{},
+			Postings: []Posting{
+				{
+					Asset:       "EUR",
+					Amount:      core.NewMonetaryInt(0),
+					Source:      "world",
+					Destination: "alice",
+				},
+			},
+			ExitCode: EXIT_OK,
+		}
+		test(t, tc)
+	})
+	/*
+		t.Run("with variable", func(t *testing.T) {
+			tc := NewTestCase()
+			tc.compile(t, `
+			vars {
+				monetary $mon
+			}
+			send $mon (
+				source = @world
+				destination = @alice
+			)`)
+			tc.vars = map[string]core.Value{
+				"mon": core.Monetary{
+					Asset:  "EUR",
+					Amount: core.NewMonetaryInt(0),
+				},
+			}
+			tc.expected = CaseResult{
+				Printed: []core.Value{},
+				Postings: []Posting{
+					{
+						Asset:       "EUR",
+						Amount:      core.NewMonetaryInt(0),
+						Source:      "world",
+						Destination: "alice",
+					},
+				},
+				ExitCode: EXIT_OK,
+			}
+			test(t, tc)
+		})
+	*/
 }
 
 func TestVariablesJSON(t *testing.T) {
@@ -541,16 +598,53 @@ func TestNoEmptyPostings(t *testing.T) {
 	test(t, tc)
 }
 
-func TestNoEmptyPostings2(t *testing.T) {
+func TestEmptyPostings(t *testing.T) {
 	tc := NewTestCase()
-	tc.compile(t, `send [GEM *] (
-		source = @foo
-		destination = @bar
-	)`)
-	tc.setBalance("foo", "GEM", 0)
+	tc.compile(t, `
+		send [GEM *] (
+			source = {
+				@alice
+				@bob
+			}
+			destination = @dest
+		)
+		send [USD 1] (
+			source = @world
+			destination = @dest
+		)
+		send [GEM 0] (
+			source = @bob
+			destination = @dest
+		)
+	`)
 	tc.expected = CaseResult{
-		Printed:  []core.Value{},
-		Postings: []Posting{},
+		Printed: []core.Value{},
+		Postings: []Posting{
+			{
+				Source:      "alice",
+				Destination: "dest",
+				Amount:      core.NewMonetaryInt(0),
+				Asset:       "GEM",
+			},
+			{
+				Source:      "bob",
+				Destination: "dest",
+				Amount:      core.NewMonetaryInt(0),
+				Asset:       "GEM",
+			},
+			{
+				Source:      "world",
+				Destination: "dest",
+				Amount:      core.NewMonetaryInt(1),
+				Asset:       "USD",
+			},
+			{
+				Source:      "bob",
+				Destination: "dest",
+				Amount:      core.NewMonetaryInt(0),
+				Asset:       "GEM",
+			},
+		},
 		ExitCode: EXIT_OK,
 	}
 	test(t, tc)
